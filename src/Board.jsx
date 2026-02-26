@@ -38,22 +38,26 @@ const Board = () => {
     const [playerSide, setPlayerSide] = useState('w');
     
     const selectField = (row, col) => {
-        if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
+        
+        const prevFigure = selectedCell ? field[selectedCell.row][selectedCell.col] : null;
+        const newFigure = field[row][col];
+
+        if (prevFigure?.row === row && prevFigure?.col === col) {
             setSelectedCell(null);
         } 
-        else if (selectedCell && field[selectedCell.row][selectedCell.col]?.color != playerSide) {
-            setSelectedCell(null);
-        }
-        else if (selectedCell && field[selectedCell.row][selectedCell.col] && (!field[row][col] || field[row][col].color != field[selectedCell.row][selectedCell.col].color)) {
+        // else if (prevFigure && newFigure?.color != playerSide) {
+        //     setSelectedCell(null);
+        // }
+        else if (prevFigure && (!newFigure || newFigure.color != prevFigure.color)) {
             
-            const checkMovement = move(field, field[selectedCell.row][selectedCell.col], selectedCell, {row, col});
-            // console.log(field);
+            const checkMovement = move(field, prevFigure, selectedCell, {row, col});
             if (checkMovement) {
                 const newField = field.map(row => [...row]);
-
-                newField[selectedCell.row][selectedCell.col].movements++;
-                newField[row][col] = newField[selectedCell.row][selectedCell.col];
-                newField[selectedCell.row][selectedCell.col] = null;
+                
+                const figure = newField[selectedCell.row][selectedCell.col];
+                figure.movements++;
+                newField[row][col] = figure;
+                newField[selectedCell.row][selectedCell.col] = null;    
 
                 setField(newField);
                 setSelectedCell(null);
@@ -61,7 +65,6 @@ const Board = () => {
             }
         }
         else {
-            // console.log(`cell: ${field[row][col]?.type}`);
             setSelectedCell({row, col});
         }
     };
