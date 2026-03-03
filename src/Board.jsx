@@ -1,42 +1,41 @@
 import { useState } from 'react';
 import NewCell from "./NewCell.jsx";
 import "./Board.css";
-import move from "./rules.js";
+import move from "rules-lib";
 
-class figure {
+class Figure {
     movements = 0;
-    constructor (type, color) {
+    constructor(type, color) {
         this.type = type;
         this.color = color;
     }   
 }
 
 const defField = [
-    [new figure('rook','b'),new figure('knight','b'),new figure('bishop','b'),
-    new figure('king','b'),
-    new figure('queen','b'),
-    new figure('bishop','b'),new figure('knight','b'),new figure('rook','b')],
+    [new Figure('rook','b'),new Figure('knight','b'),new Figure('bishop','b'),
+    new Figure('queen','b'),
+    new Figure('king','b'),
+    new Figure('bishop','b'),new Figure('knight','b'),new Figure('rook','b')],
     
-    Array.from({ length: 8 }, () => new figure('pawn', 'b')),
+    Array.from({ length: 8 }, () => new Figure('pawn', 'b')),
     
     Array(8).fill(null),
     Array(8).fill(null),
     Array(8).fill(null),
     Array(8).fill(null),
     
-    Array.from({ length: 8 }, () => new figure('pawn', 'w')),
+    Array.from({ length: 8 }, () => new Figure('pawn', 'w')),
     
-    [new figure('rook','w'),new figure('knight','w'),new figure('bishop','w'),
-    new figure('king','w'),
-    new figure('queen','w'),
-    new figure('bishop','w'),new figure('knight','w'),new figure('rook','w')],
+    [new Figure('rook','w'),new Figure('knight','w'),new Figure('bishop','w'),
+    new Figure('queen','w'),
+    new Figure('king','w'),
+    new Figure('bishop','w'),new Figure('knight','w'),new Figure('rook','w')],
 ]
 
 const Board = () => {
     const [field, setField] = useState(defField);
     const [selectedCell, setSelectedCell] = useState(null);
     const [playerSide, setPlayerSide] = useState('w');
-    
     const selectField = (row, col) => {
         
         const prevFigure = selectedCell ? field[selectedCell.row][selectedCell.col] : null;
