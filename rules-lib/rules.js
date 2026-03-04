@@ -1,6 +1,7 @@
-const move = (board, figure, from, to) => {
+const checkMove = (board, from, to) => {
+    const figure = board[from.row][from.col];
+    if(!figure) return false;
     if(figure.color === board[to.row][to.col]?.color) return false;
-    
     switch(figure.type) {
         case 'pawn': return pawnMove(figure, board, from, to);
         case 'king': return kingMove(from, to);
@@ -105,4 +106,4 @@ const rookMove = (board, from, to) => {
     return forwardMove(board, from, to, dx, dy);
 }
 
-export default move;
+export default checkMove;

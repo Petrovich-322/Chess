@@ -13,7 +13,6 @@ dist-ssr
 *.local
 
 test
-server_t
 
 
 

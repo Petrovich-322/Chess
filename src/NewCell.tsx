@@ -1,4 +1,22 @@
-const NewCell = (props) => {
+
+interface Figure {
+    color: string;
+    type: string;
+}
+
+interface Index {
+    rowIndex: number;
+    colIndex: number;
+}
+
+interface NewCellProps {
+    index: Index;
+    figure: Figure;
+    color: string;
+    isSelected: boolean;
+    onSelect: (rowIndex: number, colIndex: number) => void;
+}
+const NewCell = (props: NewCellProps) => {
     const {
         index,
         figure,
