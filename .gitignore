@@ -13,7 +13,7 @@ dist-ssr
 *.local
 
 test
-
+prod
 
 
 .vscode/*

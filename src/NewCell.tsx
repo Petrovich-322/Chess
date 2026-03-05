@@ -14,6 +14,7 @@ interface NewCellProps {
     figure: Figure;
     color: string;
     isSelected: boolean;
+    isAvailable: boolean;
     onSelect: (rowIndex: number, colIndex: number) => void;
 }
 const NewCell = (props: NewCellProps) => {
@@ -25,7 +26,7 @@ const NewCell = (props: NewCellProps) => {
         onSelect,
     } = props;
 
-    const divClassList = `cell ${color}-cell ${isSelected ? 'selected' : ''}`;
+    const divClassList = `cell ${color}-cell ${isSelected ? 'selected' : ''} ${props.isAvailable ? 'available' : ''}`;
     const figureClassList = `figure ${figure?.color}-figure ${figure?.type}-figure`;
 
     // if(figure)console.log(`${figure.color}-${figure.type}.png`);

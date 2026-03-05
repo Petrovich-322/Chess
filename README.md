@@ -2,4 +2,4 @@
 
 Author: Podgornij Ehor
 
-This project is a simple web chess app
+This project is a simple web chess app ( )

@@ -7,7 +7,7 @@ const Home = () => {
 
     const createRoom = async () => {
         const response = await fetch('http://localhost:3000/create-room');
-        const data = await response.json().then(data => {
+        await response.json().then(data => {
             navigate(`/game/${data.roomId}`);
         });
     }
