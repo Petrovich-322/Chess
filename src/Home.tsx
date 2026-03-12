@@ -1,15 +1,29 @@
-import Board from "./Board";    
 import { useNavigate } from 'react-router-dom';
+
+import getUserId from './services/userId';
+import { hostAdress } from './services/host';
+
 import "./Home.css";
+
+getUserId();
 
 const Home = () => {        
     const navigate = useNavigate();
-
+    
     const createRoom = async () => {
-        const response = await fetch('http://localhost:3000/create-room');
-        await response.json().then(data => {
-            navigate(`/game/${data.roomId}`);
-        });
+        try {
+            const response = await fetch(`${hostAdress}/create-room`);
+            
+            if(!response.ok) {
+                throw new Error (`failed to create-room ${response.status}`);
+            }
+
+            await response.json().then(data => {
+                navigate(`/game/${data.roomPath}`);
+            });
+        } catch (err) {
+            alert(`server is not responding properly ${err}`);
+        }
     }
     
     return (

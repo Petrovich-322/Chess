@@ -1,60 +1,76 @@
-'use client';
-
 import { io } from 'socket.io-client';
 import { useState, useEffect, use } from 'react';
 import { useParams } from 'react-router-dom';
-import createBoard from '../entities/createBoard.ts';
-import NewCell from './NewCell';
+
 import { checkMove } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
+import { playerStatus } from './services/player.ts';
+import createBoard from './services/createBoard.ts';   
+import getUserId from './services/userId.ts'; 
+
+import NewCell from './NewCell';
 import './Board.css';
+import { hostAdress } from './services/host.ts';
 
+const socket = io(`${hostAdress}`);
 
-const defField = createBoard();
-let playerSide: string | null = null;
-
-// const socket = io('https://nondisputatiously-tetched-kimber.ngrok-free.dev');
-const socket = io('http://localhost:3000');
+const userStatus = await getUserId()
 
 const Board = () => {
-    let { roomId } = useParams<{roomId: string}>();
-    const [field, setField] = useState(defField);
+    const [field, setField] = useState(createBoard());
     const [selectedCell, setSelectedCell] = useState<{row: number; col: number} | null>(null);
     const [availableMoves, setAvailableMoves] = useState<{row: number; col: number}[]>([]);
     
+    const { roomId } = useParams<{roomId: string}>();
+    const roomPath = roomId ?? 'game-error';
+
     useEffect(() => {
-        socket.emit('joinRoom', roomId);   
+        const side = async () => {
+            await playerStatus.getSide(roomPath, userStatus.userId).then(data => {
+                userStatus.side = data;
+            });
+        }
+        side();
+        console.log(userStatus);
+        socket.emit('joinRoom', roomPath);   
         socket.on('updateInfo', (data) => {
             setField(data.field);
-            playerSide = data.playerSide;
+            userStatus.activeSide = data.playerSide;
+            console.log(userStatus)
+            
         });
         return () => {
             socket.off('updateInfo');
-        };        
+        }; 
     }, []);
-
-    const selectField = (row: number, col: number) => {
+    
+    const onSelect = (row: number, col: number) => {
         const prevFigure = selectedCell ? field[selectedCell.row][selectedCell.col] : null;
         const newFigure = field[row][col];
-        if(prevFigure && !playerSide) {
-            setSelectedCell({row, col});    
-            return;
-        }
 
         if (selectedCell?.row === row && selectedCell?.col === col) {
             setSelectedCell(null);
+            setAvailableMoves([]);
         } 
+        else if (prevFigure?.color != userStatus.side && roomId != 'test-server') {
+            setSelectedCell({row, col});
+        }
         else if(selectedCell && (newFigure?.color === prevFigure?.color)) {
             setSelectedCell({row, col});
         }
-        else if (selectedCell && prevFigure) {
+        
+        else if (selectedCell && prevFigure && (roomId == 'test-server' ||  userStatus.side === userStatus.activeSide)) {
             const checkMovement = checkMove(field, selectedCell, {row, col});
-            
             if (checkMovement) {
-                socket.emit('newMove', {roomId, move: {from: selectedCell, to: {row, col}}});
+                socket.emit('newMove', {
+                    roomPath, 
+                    move: {from: selectedCell, to: {row, col}}, 
+                });
+                setAvailableMoves([]);
             }
         }
-        setAvailableMoves(getAvailableMoves(field, {row, col}));
+        if (newFigure?.color === userStatus.side || roomId == 'test-server') setAvailableMoves(getAvailableMoves(field, {row, col}));
+        else setAvailableMoves([]);
         setSelectedCell({row, col});
     };
     
@@ -73,7 +89,7 @@ const Board = () => {
                             color={(rowIndex+colIndex)%2===0 ? 'white' : 'black'}
                             isSelected={selectedCell?.row === rowIndex && selectedCell?.col === colIndex}
                             isAvailable={availableMoves.some(move => move.row === rowIndex && move.col === colIndex)}
-                            onSelect={selectField}
+                            onSelect={onSelect}
                         />
                         ))
                     }

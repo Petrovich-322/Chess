@@ -1,4 +1,3 @@
-
 interface Figure {
     color: string;
     type: string;
@@ -23,10 +22,11 @@ const NewCell = (props: NewCellProps) => {
         figure,
         color,
         isSelected,
+        isAvailable,
         onSelect,
     } = props;
 
-    const divClassList = `cell ${color}-cell ${isSelected ? 'selected' : ''} ${props.isAvailable ? 'available' : ''}`;
+    const divClassList = `cell ${color}-cell ${isSelected ? 'selected' : ''} ${isAvailable ? 'available' : ''}`;
     const figureClassList = `figure ${figure?.color}-figure ${figure?.type}-figure`;
 
     // if(figure)console.log(`${figure.color}-${figure.type}.png`);

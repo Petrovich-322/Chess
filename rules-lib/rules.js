@@ -48,9 +48,8 @@ export const checkMove = (board, from, to) => {
         const dx = to.col - from.col;
         const dy = to.row - from.row;
         const direction = figure.color === 'w' ? -1 : 1;
-        
         if(dy == direction && dx == 0 && !board[to.row][to.col]) return true;
-        if(dy == 2*direction && dx == 0 && figure.movements == 0 && !board[to.row - direction][to.col]) return true; 
+        if(dy == 2*direction && dx == 0 && figure.movements == 0 && !board[to.row][to.col]) return true; 
         if(dy == direction && Math.abs(dx) == 1 && board[to.row][to.col] && board[to.row][to.col].color != figure.color) return true;
         
         return false;
