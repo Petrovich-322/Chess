@@ -8,8 +8,8 @@ body{
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 50px;
-    height: 50px;
+    width: 75px;
+    height: 75px;
 }
 .cell img {
     width: 50%;

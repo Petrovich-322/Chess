@@ -1,10 +1,10 @@
 import { hostAdress } from "./host";
 
-const getUserId = async () => {
+const getUserId = async (checker: string) => {
     const dataJSON = localStorage.getItem('DenisChess');
 
-    if (dataJSON) {
-        return JSON.parse(dataJSON);
+    if (dataJSON && checker!='newUser') {
+        return JSON.parse(dataJSON).userId;
     }
     
     try {
@@ -15,16 +15,15 @@ const getUserId = async () => {
         }
 
         const id = await response.json();
-        localStorage.setItem('DenisChess', JSON.stringify({'userId': id}));
-        return {
-            'userId': id,
-            'status': true,
-        };
+        localStorage.setItem('DenisChess', JSON.stringify({userId: id}));
+        return id;
     } catch (err) {
         alert(`failed to get your id, please try later, server ans ${err}`)
-        return {'status': false};
+        return 'spectator';
     }
 }
 
 export default getUserId;
+
+
 

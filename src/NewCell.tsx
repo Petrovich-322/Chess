@@ -1,7 +1,4 @@
-interface Figure {
-    color: string;
-    type: string;
-}
+import { Figure } from './types';
 
 interface Index {
     rowIndex: number;
@@ -10,7 +7,7 @@ interface Index {
 
 interface NewCellProps {
     index: Index;
-    figure: Figure;
+    figure: Figure | null;
     color: string;
     isSelected: boolean;
     isAvailable: boolean;

@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'; 
 
 import Home from "./Home";
-import Board from "./Board";  
+import Board from "./Game";  
 
 const App = () => {
     return (

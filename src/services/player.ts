@@ -2,8 +2,9 @@ import { hostAdress } from "./host";
 
 class Player {
     #side: string | null = null;
-    
-    async getSide(roomPath: string, userId: string) {
+
+    async getSide(roomId: string, userId: string) {
+        console.log('get-side-front')
         if(this.#side) return this.#side;
         
         try{
@@ -13,7 +14,7 @@ class Player {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    roomPath: roomPath,
+                    roomId: roomId,
                     userId: userId
                 }),
             });
@@ -30,10 +31,12 @@ class Player {
             return 'spectator';
         }
     }
-
+    reset() {
+        this.#side = null;
+    }
     get side() {
         return this.#side;
     } 
 }
 
-export const playerStatus = new Player;
+export const playerService = new Player;

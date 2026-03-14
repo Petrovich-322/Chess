@@ -33,68 +33,98 @@ const gameData = {
 
 };
 const roomNameGeneator = createRoomName();
-
+const addNewGame = (room) => {
+    gameData[room] = { 
+        field: createBoard(), 
+        activeSide: 'w',
+        firstPlayer: null,
+        secondPlayer: null,
+    };
+}
 app.get('/get-user-id', (req, res) => {
+    console.log('newUser')
     const id = crypto.randomUUID();
     res.json(id);
 });
 app.get('/create-room', (req, res) => {
-    res.json({roomPath: roomNameGeneator.next().value});
+    res.json({roomId: roomNameGeneator.next().value});
 });
 app.post('/get-side', (req, res) => {
-    const room = req.body.roomPath;
+    console.log('get-side-request')
+    
+    const room = req.body.roomId;
     const user = req.body.userId;
-    if(!gameData[room]) {
-        if(!gameData[room]){
-            gameData[room] = { 
-                field: createBoard(), 
-                playerSide: 'w',
-                firstPlayer: null,
-                secondPlayer: null,
-            };
-        }
+
+    if(!room || !user) {
+        console.log(`get-side fail ${room} || ${user}`);
+        res.json({
+            side: 'spectator',
+            status: 'failed to get side',
+        })
     }
-    // console.log(data.roomId);
+    
+    if(!gameData[room]){
+        addNewGame(room);
+    }
+    
     if(!gameData[room].firstPlayer || gameData[room].firstPlayer === user) {
-        console.log(`first: ${gameData[room].firstPlayer} || user: ${user} || second ${gameData[room].secondPlayer}`)
+        console.log(`white player: ${user}`);
         gameData[room].firstPlayer = user;
         res.json({
-            side: 'w'});
+            side: 'w',
+            stauts: 'succes',
+        });
     }
+    
     else if(!gameData[room].secondPlayer || gameData[room].secondPlayer === user) {
+        console.log(`black player: ${user}`);
         gameData[room].secondPlayer = user;
         res.json({
-            side: 'b'});
+            side: 'b',
+            status: 'succes',
+        });
     }
+    
     else res.json({
-        side: 'spectator'});
+        side: 'spectator',
+        status: 'succes',
+    });
 });
 
 io.on('connection', (socket) => {
     console.log('A user connected');
-    socket.on('joinRoom', (roomPath) => {
-        if(!gameData[roomPath]){
-            gameData[roomPath] = { 
-                field: createBoard(), 
-                playerSide: 'w',
-                firstPlayer: null,
-                secondPlayer: null,
-            };
+
+    socket.on('joinRoom', (roomId) => {
+        if(roomId) { 
+            if(!gameData[roomId]){
+                gameData[roomId] = { 
+                    field: createBoard(), 
+                    activeSide: 'w',
+                    firstPlayer: null,
+                    secondPlayer: null,
+                };
+            }
+            socket.join(roomId);
+            socket.emit('updateInfo', gameData[roomId]);
+            console.log(`User joined room: ${roomId}`); 
+        } else {
+            console.log(`no room id ${roomId} || join room`);
         }
-        socket.join(roomPath);
-        socket.emit('updateInfo', gameData[roomPath]);
-        console.log(`User joined room: ${roomPath}`); 
     });
 
-    socket.on('newMove', ({ roomPath, move }) => {
-        const field = gameData[roomPath].field;
-        const data = gameData[roomPath];  
+    socket.on('newMove', ({ roomId, move }) => {
+        if(!roomId) return;
+        if(!gameData[roomId]) {
+            addNewGame(roomId);
+        }
+        const field = gameData[roomId].field;
+        const data = gameData[roomId];  
         if(checkMove(field, move.from, move.to)) {
             field[move.from.row][move.from.col].movements++;
             field[move.to.row][move.to.col] = field[move.from.row][move.from.col];
             field[move.from.row][move.from.col] = null;
-            data.playerSide = data.playerSide === 'w' ? 'b' : 'w';
-            io.to(roomPath).emit('updateInfo', data);
+            data.activeSide = data.activeSide === 'w' ? 'b' : 'w';
+            io.to(roomId).emit('updateInfo', data);
         }
     });
 });
