@@ -2,6 +2,8 @@ import NewCell from "./NewCell";
 
 import type { Figure } from "./types"; 
 
+import './Board.css';
+
 interface BoardProps {
     field: Array<Array<Figure | null>>,
     selectedCell: {row: number, col: number} | null,

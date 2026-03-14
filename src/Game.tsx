@@ -2,17 +2,18 @@ import { io } from 'socket.io-client';
 import { useState, useEffect, use } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { hostAdress } from './services/host';
 import { checkMove } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
 import { playerService } from './services/player';
-import Board from './Board'
 import createBoard from './services/createBoard';   
 import getUserId from './services/userId'; 
 
+import Board from './Board'
+import GameInfo from './GameInfo';
+import UserInfo from './UserInfo';
 
-import './Board.css';
-import { hostAdress } from './services/host';
-
+import './Game.css';
 
 interface userInterface {
     userId: string;
@@ -122,13 +123,15 @@ const Game = () => {
     };
     
     return (
-        <div>
+        <div className="game-container">
+            <UserInfo />
             <Board 
                 field = {field}
                 selectedCell = {selectedCell}
                 availableMoves = {availableMoves}
                 onSelect = {onSelect}
             />
+            <GameInfo />
         </div>
 
     )
