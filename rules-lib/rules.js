@@ -2,123 +2,86 @@ export const checkMove = (board, from, to) => {
     const figure = board[from.row][from.col];
     const targetFigure = board[to.row][to.col];
 
-    if(!figure) return false;
-    if(figure.color === targetFigure?.color) return false;  
-    if(targetFigure?.type === 'king') return false; 
-    const oneCellMove = (dx, dy) => {
-        if((Math.abs(dx) == 1 || dx == 0) && (Math.abs(dy) == 1 || dy == 0)) return true;
-    }
+    if (!figure) return false;
+    if (figure.color === targetFigure?.color) return false;
+    if (targetFigure?.type === 'king') return false;
 
-    const forwardMove = (board, from, to, dx, dy) => {
-        const xdir = dx > 0 ? 1 : -1;
-        const ydir = dy > 0 ? 1 : -1;
+    const dx = to.col-from.col;
+    const dy = to.row-from.row;
 
-        if(dy != 0 && dx != 0) return false;
-
-        if(dy == 0 && Math.abs(dx) > 1) {
-            let x = from.col + xdir;
-            while(x != to.col) {
-                if(board[to.row][x]) return false;
-                x += xdir;
-            }
-        }
-        else if(dx == 0 && Math.abs(dy) > 1) {
-            let y = from.row + ydir;
-            while(y != to.row) {
-                if(board[y][to.col]) return false;
-                y += ydir;
-            }
-        }
-        return true;
-    }
-
-    const diagonalMove = (board, from, to, dx, dy) => {
-        const xdir = dx > 0 ? 1 : -1;
-        const ydir = dy > 0 ? 1 : -1;
+    const isPathClear = () => {
+        const xdir = dx === 0 ? 0 : (dx > 0 ? 1 : -1);
+        const ydir = dy === 0 ? 0 : (dy > 0 ? 1 : -1);
         let x = from.col + xdir;
         let y = from.row + ydir;
-        while(x != to.col) {
-            if(board[y][x]) return false;
-            x += xdir; y += ydir;
+
+        while (x !== to.col || y !== to.row) {
+            if (board[y][x]) return false;
+            x += xdir;
+            y += ydir;
         }
         return true;
-    }
+    };
 
-    const pawnMove = (figure, board, from, to) => {
-        const dx = to.col - from.col;
-        const dy = to.row - from.row;
-        const direction = figure.color === 'w' ? -1 : 1;
-        if(dy == direction && dx == 0 && !board[to.row][to.col]) return true;
-        if(dy == 2*direction && dx == 0 && figure.movements == 0 && !board[to.row][to.col]) return true; 
-        if(dy == direction && Math.abs(dx) == 1 && board[to.row][to.col] && board[to.row][to.col].color != figure.color) return true;
-        
-        return false;
-    }
+    switch (figure.type) {
+        case 'pawn':
+            const dir = figure.color === 'w' ? -1 : 1;
+            if (dy === dir && dx === 0 && !targetFigure) return true;
+            if (dy === 2 * dir && dx === 0 && figure.movements === 0 && !targetFigure && !board[from.row + dir][from.col]) return true;
+            if (dy === dir && Math.abs(dx) === 1 && targetFigure) return true;
+            return false;
 
-    const kingMove = (from, to) => {
-        const dx = to.col - from.col;
-        const dy = to.row - from.row;
-        
-        if(oneCellMove(dx, dy)) return true;
-        return false;
-    }   
+        case 'knight':
+            return (Math.abs(dx) === 2 && Math.abs(dy) === 1) || (Math.abs(dy) === 2 && Math.abs(dx) === 1);
 
-    const queenMove = (board, from, to) => {
-        const dx = to.col - from.col;
-        const dy = to.row - from.row;
+        case 'king':
+            return Math.abs(dx) <= 1 && Math.abs(dy) <= 1;
 
-        if(oneCellMove(dx, dy)) return true;
-        if(forwardMove(board, from, to, dx, dy)) return true;
-        
-        if(Math.abs(dx) == Math.abs(dy)) return diagonalMove(board, from, to, dx, dy);
+        case 'bishop':
+            return Math.abs(dx) === Math.abs(dy) && isPathClear();
 
-        return false;
-    }
+        case 'rook':
+            return (dx === 0 || dy === 0) && isPathClear();
 
-    const knightMove = (from, to) => {
-        const dx = to.col - from.col;
-        const dy = to.row - from.row;
-        if((Math.abs(dx) == 2 && Math.abs(dy) == 1) || (Math.abs(dy) == 2 && Math.abs(dx) == 1)) return true;
-        return false;
-    }
+        case 'queen':
+            return (dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy)) && isPathClear();
 
-    const bishopMove = (board, from, to) => {
-        const dx = to.col - from.col;
-        const dy = to.row - from.row;
-        
-        if(Math.abs(dx) == Math.abs(dy)) return diagonalMove(board, from, to, dx, dy);
-
-        return false;
-    }
-
-    const rookMove = (board, from, to) => {
-        const dx = to.col - from.col;
-        const dy = to.row - from.row;
-
-        return forwardMove(board, from, to, dx, dy);
-    }
-    
-    if(figure.color === board[to.row][to.col]?.color) return false;
-    switch(figure.type) {
-        case 'pawn': return pawnMove(figure, board, from, to);
-        case 'king': return kingMove(from, to);
-        case 'queen': return queenMove(board, from, to);
-        case 'knight': return knightMove(from, to);
-        case 'bishop': return bishopMove(board, from, to);
-        case 'rook': return rookMove(board, from, to);
+        default:
+            return false;
     }
 }
 
-export const getAvailableMoves = (board, position) => {
-    const figure = board[position.row][position.col];
-    if(!figure) return [];
+const availableMoves = (board, position) => {
     const moves = [];
-    for(let row = 0; row < 8; row++) {
-        for(let col = 0; col < 8; col++) {
-            if(checkMove(board, position, {row, col})) {
-                moves.push({row, col});
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            if (checkMove(board, position, { row, col })) {
+                moves.push({ row, col });
             }
         }
     }
     return moves;
 }
+
+const memoizationMoves = (fn) => {
+    let cache = {};
+    
+    const memoization = (board, position) => {
+        const key = JSON.stringify(position);
+        if (key in cache) {
+            console.log('cache');
+            return cache[key];
+        }
+        console.log('new key');
+        const res = fn(board, position);
+        cache[key] = res;
+        return res;
+    }
+    memoization.clear = () => {
+        console.log('cleared');
+        cache = {};
+    }
+    return memoization;
+}
+
+export const getAvailableMoves = memoizationMoves(availableMoves);

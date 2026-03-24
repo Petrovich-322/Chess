@@ -1,6 +1,30 @@
 #user-info-container {
-    width: 90px;
+    border: 2px solid black;
+    font-size: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    width: 110px;
     margin-right: 20px;
     padding: 20px;
-    background-color: rgb(248, 129, 25);
+    background-color: rgb(255, 183, 88);
 }
+
+.side-info-container{
+    padding-right: 10px;
+    padding-left: 10px;
+    background-color: rgb(201, 61, 27);
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+.user-side-title{
+    text-align: center;
+    height: 0px;
+    width: 100%;
+}
+/* .user-side-text{
+} */
