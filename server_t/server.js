@@ -45,6 +45,7 @@ const addNewGame = (room) => {
             time: 600,
         },
         prevMoveTime: Date.now(),
+        lastMove: null,
     };
 }
 
@@ -116,7 +117,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('newMove', ({ side, roomId, move }) => {
+    socket.on('newMove', ({ side, roomId, move, king}) => {
         if(!roomId) return;
         if(!gameData[roomId]) {
             addNewGame(roomId);
@@ -124,7 +125,7 @@ io.on('connection', (socket) => {
         const field = gameData[roomId].field;
         const data = gameData[roomId];  
         const time = Date.now();
-        if(checkMove(field, move.from, move.to)) {
+        if(checkMove(field, move.from, move.to, king)) {
             if(!gameData[roomId].prevMoveTime) {
                 gameData[roomId].prevMoveTime = time;
             
@@ -143,6 +144,7 @@ io.on('connection', (socket) => {
             field[move.to.row][move.to.col] = field[move.from.row][move.from.col];
             field[move.from.row][move.from.col] = null;
             data.activeSide = data.activeSide === 'w' ? 'b' : 'w';
+            data.lastMove = {from: move.from, to: move.to};
             io.to(roomId).emit('updateInfo', data);
         }
     });

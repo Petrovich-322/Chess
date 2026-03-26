@@ -17,10 +17,10 @@ const NewCell = (props: NewCellProps) => {
         isAvailable,
         onSelect,
     } = props;
-
+    
     const divClassList = `cell ${color}-cell ${isSelected ? 'selected' : ''} ${isAvailable ? 'available' : ''}`;
     const figureClassList = `figure ${figure?.color}-figure ${figure?.type}-figure`;
-
+    // if(figure?.type == 'king') console.log(index);
     // if(figure)console.log(`${figure.color}-${figure.type}.png`);
     return (
         <div className={divClassList} onClick={() => onSelect(index.rowIndex, index.colIndex)}>
