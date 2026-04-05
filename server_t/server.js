@@ -29,56 +29,67 @@ const io = new Server(httpServer, {
     }
 });
 
-const gameData = {
+const gameData = {};
 
-};
 const roomNameGeneator = createRoomName();
+
 const addNewGame = (room) => {
     gameData[room] = { 
         field: createBoard(), 
         activeSide: 'w',
-        firstPlayer: null,
-        secondPlayer: null,
+        whitePlayer: {
+            id: null,
+            time: 600,
+        },
+        blackPlayer: {
+            id: null,
+            time: 600,
+        },
+        prevMoveTime: Date.now(),
+        lastMove: null,
     };
 }
+
 app.get('/get-user-id', (req, res) => {
     console.log('newUser')
     const id = crypto.randomUUID();
     res.json(id);
 });
+
 app.get('/create-room', (req, res) => {
     res.json({roomId: roomNameGeneator.next().value});
 });
+
 app.post('/get-side', (req, res) => {
     console.log('get-side-request')
     
-    const room = req.body.roomId;
+    const roomId = req.body.roomId;
     const user = req.body.userId;
 
-    if(!room || !user) {
-        console.log(`get-side fail ${room} || ${user}`);
+    if(!roomId || !user) {
+        console.log(`get-side fail ${roomId} || ${user}`);
         res.json({
             side: 'spectator',
             status: 'failed to get side',
         })
     }
     
-    if(!gameData[room]){
-        addNewGame(room);
+    if(!gameData[roomId]){
+        addNewGame(roomId);
     }
     
-    if(!gameData[room].firstPlayer || gameData[room].firstPlayer === user) {
+    if(!gameData[roomId].whitePlayer.id || gameData[roomId].whitePlayer.id === user) {
         console.log(`white player: ${user}`);
-        gameData[room].firstPlayer = user;
+        gameData[roomId].whitePlayer.id = user;
         res.json({
             side: 'w',
             stauts: 'succes',
         });
     }
     
-    else if(!gameData[room].secondPlayer || gameData[room].secondPlayer === user) {
+    else if(!gameData[roomId].blackPlayer.id || gameData[roomId].blackPlayer.id === user) {
         console.log(`black player: ${user}`);
-        gameData[room].secondPlayer = user;
+        gameData[roomId].blackPlayer.id = user;
         res.json({
             side: 'b',
             status: 'succes',
@@ -97,12 +108,7 @@ io.on('connection', (socket) => {
     socket.on('joinRoom', (roomId) => {
         if(roomId) { 
             if(!gameData[roomId]){
-                gameData[roomId] = { 
-                    field: createBoard(), 
-                    activeSide: 'w',
-                    firstPlayer: null,
-                    secondPlayer: null,
-                };
+                addNewGame(roomId);
             }
             socket.join(roomId);
             socket.emit('updateInfo', gameData[roomId]);
@@ -112,18 +118,35 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('newMove', ({ roomId, move }) => {
+    socket.on('newMove', ({ side, roomId, move, king}) => {
         if(!roomId) return;
         if(!gameData[roomId]) {
             addNewGame(roomId);
         }
         const field = gameData[roomId].field;
         const data = gameData[roomId];  
-        if(checkMove(field, move.from, move.to)) {
+        const time = Date.now();
+        console.log('checking newMove');
+        if(checkMove(field, move.from, move.to, king)) {
+            console.log('newMove succes');
+            if(!gameData[roomId].prevMoveTime) {
+                gameData[roomId].prevMoveTime = time;
+            
+            } else {
+                if(side === 'w') {
+                    gameData[roomId].whitePlayer.time -= (time - gameData[roomId].prevMoveTime)/1000;
+                } else {
+                    gameData[roomId].blackPlayer.time -= (time - gameData[roomId].prevMoveTime)/1000;
+                }
+
+                gameData[roomId].prevMoveTime = time;
+                
+            }
             field[move.from.row][move.from.col].movements++;
             field[move.to.row][move.to.col] = field[move.from.row][move.from.col];
             field[move.from.row][move.from.col] = null;
             data.activeSide = data.activeSide === 'w' ? 'b' : 'w';
+            data.lastMove = {from: move.from, to: move.to};
             io.to(roomId).emit('updateInfo', data);
         }
     });

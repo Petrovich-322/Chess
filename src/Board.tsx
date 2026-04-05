@@ -11,7 +11,6 @@ interface BoardProps {
     onSelect: (row: number, col: number) => void,
 }
 
-
 const Board = (props: BoardProps) => {
     const {
         field,

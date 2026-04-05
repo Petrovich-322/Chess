@@ -1,124 +1,154 @@
-export const checkMove = (board, from, to) => {
+export const checkMove = (board, from, to, king) => {
     const figure = board[from.row][from.col];
     const targetFigure = board[to.row][to.col];
 
-    if(!figure) return false;
-    if(figure.color === targetFigure?.color) return false;  
-    if(targetFigure?.type === 'king') return false; 
-    const oneCellMove = (dx, dy) => {
-        if((Math.abs(dx) == 1 || dx == 0) && (Math.abs(dy) == 1 || dy == 0)) return true;
-    }
+    if(!figure)return false;
+    if(figure.color === targetFigure?.color) return false;
+    if(targetFigure?.type === 'king') return false;
 
-    const forwardMove = (board, from, to, dx, dy) => {
-        const xdir = dx > 0 ? 1 : -1;
-        const ydir = dy > 0 ? 1 : -1;
+    const dx = to.col-from.col;
+    const dy = to.row-from.row;
 
-        if(dy != 0 && dx != 0) return false;
-
-        if(dy == 0 && Math.abs(dx) > 1) {
-            let x = from.col + xdir;
-            while(x != to.col) {
-                if(board[to.row][x]) return false;
-                x += xdir;
-            }
-        }
-        else if(dx == 0 && Math.abs(dy) > 1) {
-            let y = from.row + ydir;
-            while(y != to.row) {
-                if(board[y][to.col]) return false;
-                y += ydir;
-            }
-        }
-        return true;
-    }
-
-    const diagonalMove = (board, from, to, dx, dy) => {
-        const xdir = dx > 0 ? 1 : -1;
-        const ydir = dy > 0 ? 1 : -1;
+    const isPathClear = () => {
+        const xdir = dx === 0 ? 0 : (dx > 0 ? 1 : -1);
+        const ydir = dy === 0 ? 0 : (dy > 0 ? 1 : -1);
         let x = from.col + xdir;
         let y = from.row + ydir;
-        while(x != to.col) {
+
+        while(x !== to.col || y !== to.row) {
             if(board[y][x]) return false;
-            x += xdir; y += ydir;
+            x+=xdir;
+            y+=ydir;
+        }
+        return true; 
+    }
+
+    const simpleChahCheck= (king, checkBoard, moves, type) => {
+        const { row, col } = king;
+        const dir = type!='pawn' ? 1 : (checkBoard[row][col].color==='w' ? -1 : 1); 
+        
+        for(const i of moves) {
+            if(row+i[0]*dir < 0 || row+i[0]*dir > 7 || col+i[1] > 7 || col+i[1] < 0) continue;
+            
+            const destination = checkBoard[row+i[0]*dir][col+i[1]]; 
+            if(!destination || destination.type!=type) continue;
+            
+            if(destination.color != checkBoard[row][col].color) return false;
         }
         return true;
     }
 
-    const pawnMove = (figure, board, from, to) => {
-        const dx = to.col - from.col;
-        const dy = to.row - from.row;
-        const direction = figure.color === 'w' ? -1 : 1;
-        if(dy == direction && dx == 0 && !board[to.row][to.col]) return true;
-        if(dy == 2*direction && dx == 0 && figure.movements == 0 && !board[to.row][to.col]) return true; 
-        if(dy == direction && Math.abs(dx) == 1 && board[to.row][to.col] && board[to.row][to.col].color != figure.color) return true;
-        
-        return false;
+    const lineChahCheck = (king, checkBoard, moves) => {
+        const { row, col } = king;
+        const cycle = (x,y) => {
+            for(let i = 1; i < 8; i++) {
+                if(row+y*i > 7 || row+y*i < 0 || col+x*i > 7 || col+x*i < 0) break;
+                const element = checkBoard[row + y*i][col + x*i];
+                // console.log(element, row+y*i, col+x*i, y*i, x*i);
+                if(element?.color != checkBoard[row][col].color && (element?.type === 'bishop' || element?.type === 'queen')) return false;
+                else if(element) break;
+            }
+            return true;
+        }
+        for(const i of moves) {
+            if(!cycle(i[0],i[1])) return false;
+        }
+        // console.log('itaretion end');
+        return true;
     }
 
-    const kingMove = (from, to) => {
-        const dx = to.col - from.col;
-        const dy = to.row - from.row;
-        
-        if(oneCellMove(dx, dy)) return true;
-        return false;
-    }   
+    const figureShahMoves = (king, checkBoard) => {
+        const kingMoves = [[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[1,1],[0,1]];
+        const knightMoves = [[-2,-1],[-1,-2],[1,-2],[2,-1],[2,1],[2,2],[-1,2],[-2,1]];
+        const pawnMoves = [[1,1],[1,-1]];
+        const bishopMoves = [[1,1],[1,-1],[-1,1],[-1,-1]];
+        const rookMoves = [[1,0],[-1,0],[0,1],[0,-1]];  
 
-    const queenMove = (board, from, to) => {
-        const dx = to.col - from.col;
-        const dy = to.row - from.row;
-
-        if(oneCellMove(dx, dy)) return true;
-        if(forwardMove(board, from, to, dx, dy)) return true;
-        
-        if(Math.abs(dx) == Math.abs(dy)) return diagonalMove(board, from, to, dx, dy);
-
-        return false;
+        if(!simpleChahCheck(king, checkBoard, kingMoves, 'king')) return false;
+        console.log('no king');
+        if(!simpleChahCheck(king, checkBoard, knightMoves, 'knight')) return false;
+        console.log('no knight');
+        if(!simpleChahCheck(king, checkBoard, pawnMoves, 'pawn')) return false;
+        console.log('no pawn');
+        if(!lineChahCheck(king, checkBoard, bishopMoves)) return false;
+        console.log('no bishop/queen');
+        if(!lineChahCheck(king, checkBoard, rookMoves)) return false;
+        console.log('no rook/queen');
+        return true;
     }
 
-    const knightMove = (from, to) => {
-        const dx = to.col - from.col;
-        const dy = to.row - from.row;
-        if((Math.abs(dx) == 2 && Math.abs(dy) == 1) || (Math.abs(dy) == 2 && Math.abs(dx) == 1)) return true;
-        return false;
-    }
 
-    const bishopMove = (board, from, to) => {
-        const dx = to.col - from.col;
-        const dy = to.row - from.row;
+    const isDontShah = () => {
+        const checkBoard = board.map(row => [...row]);
+        checkBoard[to.row][to.col] = checkBoard[from.row][from.col];
+        checkBoard[from.row][from.col] = null;
+        const currentKingPos = figure.type === 'king' ? {row: to.row, col: to.col} : king;
         
-        if(Math.abs(dx) == Math.abs(dy)) return diagonalMove(board, from, to, dx, dy);
-
-        return false;
-    }
-
-    const rookMove = (board, from, to) => {
-        const dx = to.col - from.col;
-        const dy = to.row - from.row;
-
-        return forwardMove(board, from, to, dx, dy);
+        return figureShahMoves(currentKingPos, checkBoard);
     }
     
-    if(figure.color === board[to.row][to.col]?.color) return false;
-    switch(figure.type) {
-        case 'pawn': return pawnMove(figure, board, from, to);
-        case 'king': return kingMove(from, to);
-        case 'queen': return queenMove(board, from, to);
-        case 'knight': return knightMove(from, to);
-        case 'bishop': return bishopMove(board, from, to);
-        case 'rook': return rookMove(board, from, to);
+    if(!isDontShah())return false;
+    
+    switch (figure.type) {
+        case 'pawn':
+            const dir = figure.color === 'w' ? -1 : 1;
+            if (dy === dir && dx === 0 && !targetFigure) return true;
+            if (dy === 2 * dir && dx === 0 && figure.movements === 0 && !targetFigure && !board[from.row + dir][from.col]) return true;
+            if (dy === dir && Math.abs(dx) === 1 && targetFigure) return true;
+            return false;
+
+        case 'knight':
+            return ((Math.abs(dx) === 2 && Math.abs(dy) === 1) || (Math.abs(dy) === 2 && Math.abs(dx) === 1));
+
+        case 'king':
+            return Math.abs(dx) <= 1 && Math.abs(dy) <= 1;
+
+        case 'bishop':
+            return Math.abs(dx) === Math.abs(dy) && isPathClear();
+
+        case 'rook':
+            return (dx === 0 || dy === 0) && isPathClear();
+
+        case 'queen':
+            return (dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy)) && isPathClear();
+
+        default:
+            return false;
     }
 }
 
-export const getAvailableMoves = (board, position) => {
-    const figure = board[position.row][position.col];
-    if(!figure) return [];
+const availableMoves = (board, position, king) => {
     const moves = [];
-    for(let row = 0; row < 8; row++) {
-        for(let col = 0; col < 8; col++) {
-            if(checkMove(board, position, {row, col})) {
-                moves.push({row, col});
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+            if (checkMove(board, position, { row, col }, king)) {
+                moves.push({ row, col });
             }
         }
     }
     return moves;
 }
+
+const memoizationMoves = (fn) => {
+    let cache = {};
+    
+    const memoization = (board, position, king) => {
+        const key = JSON.stringify(position);
+        if (key in cache) {
+            console.log('cache');
+            return cache[key];
+        }
+        console.log('new key');
+        const res = fn(board, position, king);
+        cache[key] = res;
+        return res;
+    }
+    memoization.clear = () => {
+        console.log('cleared');
+        cache = {};
+    }
+    return memoization;
+}
+
+export const getAvailableMoves = memoizationMoves(availableMoves);
+
