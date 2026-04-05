@@ -1,12 +1,11 @@
 import { Figure } from './types';
 
 interface Index {
-    rowIndex: number;
-    colIndex: number;
+
 }
 
 interface NewCellProps {
-    index: Index;
+    index: {rowIndex: number;colIndex: number;};
     figure: Figure | null;
     color: string;
     isSelected: boolean;
