@@ -37,32 +37,21 @@ const Game = () => {
     const [field, setField] = useState(createBoard());
     const [selectedCell, setSelectedCell] = useState<{row: number; col: number} | null>(null);
     const [availableMoves, setAvailableMoves] = useState<{row: number; col: number}[]>([]);
-    const [kingsPostion, setKingsPosition] = useState<
-        {whiteKing: 
-            {row: number, col: number};
-         blackKing: 
-            {row: number, col: number};
-        }
-    >(defKingsPosition);
+    const [kingsPostion, setKingsPosition] = useState<{whiteKing: {row: number, col: number}; blackKing: {row: number, col: number}}>(defKingsPosition);
     const [userStatus, setUserStatus] = useState<{userId: string; side: string;}>(defUser);
     const [activeSide, setActiveSide] = useState<string>();
     const [gameTimer, setGameTimer] = useState<{whiteTimer: number; blackTimer: number}>(defTimer);
     const {roomId} = useParams<{roomId: string}>();
 
-
     const onUpdateInfo = (data: serverData) => {
-        
         setField(data.field);
         setActiveSide(data.activeSide);
         setGameTimer({whiteTimer: data.whitePlayer.time, blackTimer: data.blackPlayer.time});
         getAvailableMoves.clear();
-        console.log('data yes');
         if(data.lastMove){
-            console.log('data move yes');
             const {row, col}= data.lastMove.to;
             const figure = data.field[row][col];
-            console.log(`row: ${row}; col: ${col} ||`, figure);
-            if(figure?.type == 'king') {
+            if(figure?.type === 'king') {
                 setKingsPosition(prev => {
                     if(figure.color === 'w') {
                         return {...prev, whiteKing: {row: row, col: col}};
@@ -74,6 +63,7 @@ const Game = () => {
             console.log('King Pos: ', kingsPostion);
         }
     } 
+
     useEffect(() => {
         const initGame = async () => {
             if (!roomId) return roomId;
@@ -131,7 +121,7 @@ const Game = () => {
         playerTimer = setInterval(() => {
             setGameTimer(prev => {
                 if (!prev) return prev;
-                if(activeSide == 'w'){
+                if(activeSide === 'w'){
                     return {...prev,whiteTimer: prev.whiteTimer - 1};
                 }
                 else return {...prev,blackTimer: prev.blackTimer - 1};
@@ -145,7 +135,7 @@ const Game = () => {
     }, [activeSide])
 
     const onSelect = (row: number, col: number) => {
-        const king = userStatus.side == 'w' ? kingsPostion.whiteKing : kingsPostion.blackKing;
+        const king = userStatus.side === 'w' ? kingsPostion.whiteKing : kingsPostion.blackKing;
         
         if (userStatus?.side === 'spectator') return;
         
@@ -154,7 +144,7 @@ const Game = () => {
             setAvailableMoves([]);
             return;
         }
-        if (selectedCell && (roomId === 'test-server' || userStatus.side === activeSide && userStatus.side == field[selectedCell.row][selectedCell.col]?.color)) {
+        if (selectedCell && (roomId === 'test-server' || userStatus.side === activeSide && userStatus.side === field[selectedCell.row][selectedCell.col]?.color)) {
             const checkMovement = checkMove(field, selectedCell, { row, col }, king);
             if (checkMovement) {
                 socket.emit('newMove', {
@@ -165,12 +155,13 @@ const Game = () => {
                 });
                 setSelectedCell(null);
                 setAvailableMoves([]);
+                console.log('sending newMove');
                 return;
             }
         }
         
         const newFigure = field[row][col];
-        if (newFigure?.color === userStatus?.side || roomId == 'test-server') {
+        if (newFigure?.color === userStatus?.side || roomId === 'test-server') {
             setSelectedCell({ row, col });
             setAvailableMoves(getAvailableMoves(field, { row, col }, king));
             return;
@@ -196,7 +187,6 @@ const Game = () => {
                 blackTimer = {gameTimer.blackTimer}
             />
         </div>
-
     )
 }
 

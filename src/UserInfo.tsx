@@ -8,7 +8,7 @@ const UserInfo = (props: {userSide: string}) => {
         <div id="user-info-container">
             <div className="side-info-container">
                 <p className='user-side-title'>Your side</p>
-                <p className="user-side-text">{`${userSide == 'w' ? 'White' : 'Black'}`}</p>
+                <p className="user-side-text">{`${userSide === 'w' ? 'White' : 'Black'}`}</p>
             </div>
         </div>
     )

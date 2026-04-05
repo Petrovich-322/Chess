@@ -32,6 +32,7 @@ const io = new Server(httpServer, {
 const gameData = {};
 
 const roomNameGeneator = createRoomName();
+
 const addNewGame = (room) => {
     gameData[room] = { 
         field: createBoard(), 
@@ -125,15 +126,16 @@ io.on('connection', (socket) => {
         const field = gameData[roomId].field;
         const data = gameData[roomId];  
         const time = Date.now();
+        console.log('checking newMove');
         if(checkMove(field, move.from, move.to, king)) {
+            console.log('newMove succes');
             if(!gameData[roomId].prevMoveTime) {
                 gameData[roomId].prevMoveTime = time;
             
             } else {
                 if(side === 'w') {
                     gameData[roomId].whitePlayer.time -= (time - gameData[roomId].prevMoveTime)/1000;
-                }
-                else {
+                } else {
                     gameData[roomId].blackPlayer.time -= (time - gameData[roomId].prevMoveTime)/1000;
                 }
 
