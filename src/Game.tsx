@@ -1,5 +1,5 @@
 import { io } from 'socket.io-client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { hostAdress } from './services/host';
@@ -7,9 +7,9 @@ import { checkMove } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
 import { playerService } from './services/player';
 import { serverData } from './interfaces/interface';
+
 import createBoard from './services/createBoard';   
 import getUserId from './services/userId'; 
-
 
 import Board from './Board'
 import GameInfo from './GameInfo';
@@ -31,7 +31,6 @@ const defKingsPosition = {
 }
 
 const socket = io(`${hostAdress}`);
-let isConnectionMessage = true;
 
 const Game = () => {
     const [field, setField] = useState(createBoard());
@@ -44,69 +43,77 @@ const Game = () => {
     const {roomId} = useParams<{roomId: string}>();
 
     const onUpdateInfo = (data: serverData) => {
-        setField(data.field);
         setActiveSide(data.activeSide);
         setGameTimer({whiteTimer: data.whitePlayer.time, blackTimer: data.blackPlayer.time});
         getAvailableMoves.clear();
-        if(data.lastMove){
-            const {row, col}= data.lastMove.to;
-            const figure = data.field[row][col];
-            if(figure?.type === 'king') {
+        
+        const moveTo = data.lastMove.to;
+        const moveFrom = data.lastMove.from;
+        
+        setField((prevField) => {
+            const newField = prevField.map(row => [...row]);
+            const figure = newField[moveFrom.row][moveFrom.col];
+            
+            newField[moveTo.row][moveTo.col] = figure;
+            newField[moveFrom.row][moveFrom.col] = null;
+            figure.movements++;
+
+            if(figure.type === 'king') {
                 setKingsPosition(prev => {
                     if(figure.color === 'w') {
-                        return {...prev, whiteKing: {row: row, col: col}};
+                        return {...prev, whiteKing: {row: moveTo.row, col: moveTo.col}};
                     } else {
-                        return {...prev, blackKing: {row: row, col: col}};
+                        return {...prev, blackKing: {row: moveTo.row, col: moveTo.col}};
                     }
                 });
+                console.log('King Pos: ', kingsPostion);
             }
-            console.log('King Pos: ', kingsPostion);
-        }
+
+            return newField;
+        });
     } 
 
     useEffect(() => {
         const initGame = async () => {
-            if (!roomId) return roomId;
+            if(!roomId) return roomId;
             
             socket.on('updateInfo', (data) => {
                 onUpdateInfo(data);
             });
+            
+            socket.on('initializeGame', (data) => {
+                console.log('initializeGame');
+                setField(data.field);
+                setActiveSide(data.activeSide);
+                setGameTimer({whiteTimer: data.whitePlayer.time, blackTimer: data.blackPlayer.time});   
+            });
 
             const userIdData = await getUserId('');
             const userSideData = await playerService.getSide(roomId, userIdData);
+            
             console.log(userSideData);
             setUserStatus({
                 userId: userIdData ?? defUser.userId,
                 side: userSideData ?? defUser.side
             });
+            
             const join = () => {
-                if(!isConnectionMessage) {
-                    // alert('connection succes');
-                    console.log('connection succes');
-                    isConnectionMessage = true;
-                }
+                console.log('connection succes');
                 socket.emit('joinRoom', roomId);
                 
                 socket.io.once('reconnect_attempt', () => {
-                    if(isConnectionMessage) {
-                        // alert(`Server connection failed, try later`);
                         console.log('Server connection failed, try later');
-                    }
-                    isConnectionMessage = false;
                 });
                 socket.io.on('reconnect', (data) => {
-                    // alert('Connection succes');
                     console.log('connection succes');
-                    isConnectionMessage = true;
                 })
             };
+
             if (socket.connected) {
                 join();
             } else {
                 socket.once('connect', join);
-                // alert('server connection problem');
                 console.log('server connection problem'); 
-                isConnectionMessage = false;
             }  
         }
         initGame();
@@ -132,13 +139,13 @@ const Game = () => {
                 clearInterval(playerTimer);
             }
         }
-    }, [activeSide])
+    }, [activeSide]);
 
     const onSelect = (row: number, col: number) => {
+        if (userStatus.side === 'spectator') return;
+
         const king = userStatus.side === 'w' ? kingsPostion.whiteKing : kingsPostion.blackKing;
-        
-        if (userStatus?.side === 'spectator') return;
-        
+
         if (selectedCell?.row === row && selectedCell?.col === col) {
             setSelectedCell(null);
             setAvailableMoves([]);
@@ -161,7 +168,7 @@ const Game = () => {
         }
         
         const newFigure = field[row][col];
-        if (newFigure?.color === userStatus?.side || roomId === 'test-server') {
+        if (newFigure?.color === userStatus.side || roomId === 'test-server') {
             setSelectedCell({ row, col });
             setAvailableMoves(getAvailableMoves(field, { row, col }, king));
             return;
@@ -187,7 +194,7 @@ const Game = () => {
                 blackTimer = {gameTimer.blackTimer}
             />
         </div>
-    )
+    );
 }
 
 export default Game;

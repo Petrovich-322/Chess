@@ -1,9 +1,5 @@
 import { Figure } from './types';
 
-interface Index {
-
-}
-
 interface NewCellProps {
     index: {rowIndex: number;colIndex: number;};
     figure: Figure | null;

@@ -111,14 +111,15 @@ io.on('connection', (socket) => {
                 addNewGame(roomId);
             }
             socket.join(roomId);
-            socket.emit('updateInfo', gameData[roomId]);
+            socket.emit('initializeGame', gameData[roomId]);
             console.log(`User joined room: ${roomId}`); 
         } else {
             console.log(`no room id ${roomId} || join room`);
         }
     });
 
-    socket.on('newMove', ({ side, roomId, move, king}) => {
+
+    const onNewMove = (side, roomId, move, king) => {
         if(!roomId) return;
         if(!gameData[roomId]) {
             addNewGame(roomId);
@@ -127,6 +128,7 @@ io.on('connection', (socket) => {
         const data = gameData[roomId];  
         const time = Date.now();
         console.log('checking newMove');
+        
         if(checkMove(field, move.from, move.to, king)) {
             console.log('newMove succes');
             if(!gameData[roomId].prevMoveTime) {
@@ -149,6 +151,12 @@ io.on('connection', (socket) => {
             data.lastMove = {from: move.from, to: move.to};
             io.to(roomId).emit('updateInfo', data);
         }
+        else {
+            io.to(roomId).emit('updateInfo', gameData[roomId]);
+        }
+    }
+    socket.on('newMove', ({ side, roomId, move, king }) => {
+        onNewMove(side, roomId, move, king);
     });
 });
 

@@ -61,19 +61,20 @@ export const checkMove = (board, from, to, king) => {
         const kingMoves = [[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[1,1],[0,1]];
         const knightMoves = [[-2,-1],[-1,-2],[1,-2],[2,-1],[2,1],[2,2],[-1,2],[-2,1]];
         const pawnMoves = [[1,1],[1,-1]];
+        
         const bishopMoves = [[1,1],[1,-1],[-1,1],[-1,-1]];
         const rookMoves = [[1,0],[-1,0],[0,1],[0,-1]];  
 
         if(!simpleChahCheck(king, checkBoard, kingMoves, 'king')) return false;
-        console.log('no king');
+        // console.log('no king');
         if(!simpleChahCheck(king, checkBoard, knightMoves, 'knight')) return false;
-        console.log('no knight');
+        // console.log('no knight');
         if(!simpleChahCheck(king, checkBoard, pawnMoves, 'pawn')) return false;
-        console.log('no pawn');
+        // console.log('no pawn');
         if(!lineChahCheck(king, checkBoard, bishopMoves)) return false;
-        console.log('no bishop/queen');
+        // console.log('no bishop/queen');
         if(!lineChahCheck(king, checkBoard, rookMoves)) return false;
-        console.log('no rook/queen');
+        // console.log('no rook/queen');
         return true;
     }
 
@@ -87,7 +88,7 @@ export const checkMove = (board, from, to, king) => {
         return figureShahMoves(currentKingPos, checkBoard);
     }
     
-    if(!isDontShah())return false;
+    if(!isDontShah()) return false;
     
     switch (figure.type) {
         case 'pawn':
