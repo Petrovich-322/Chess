@@ -3,6 +3,8 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { checkMove } from 'rules-lib';
+import { figureShahMoves } from 'rules-lib';
+import { getAvailableMoves } from 'rules-lib';
 
 import createBoard from '../src/services/createBoard.js';
 import createRoomName from "./room-generator.js";
@@ -45,8 +47,13 @@ const addNewGame = (room) => {
             id: null,
             time: 600,
         },
+        moveStory: [],
         prevMoveTime: Date.now(),
-        lastMove: null,
+        // lastMove: null,
+        kingsPosition: {
+            whiteKing: {row: 7, col: 4},
+            blackKing: {row: 0, col: 4}
+        }
     };
 }
 
@@ -119,17 +126,18 @@ io.on('connection', (socket) => {
     });
 
 
-    const onNewMove = (side, roomId, move, king) => {
+    const onNewMove = (side, roomId, move) => {
         if(!roomId) return;
         if(!gameData[roomId]) {
             addNewGame(roomId);
         }
         const field = gameData[roomId].field;
         const data = gameData[roomId];  
+        const kingsPosition = data.kingsPosition;
         const time = Date.now();
         console.log('checking newMove');
         
-        if(checkMove(field, move.from, move.to, king)) {
+        if(checkMove(field, move.from, move.to, side === 'w' ? kingsPosition.whiteKing : kingsPosition.blackKing)) {
             console.log('newMove succes');
             if(!gameData[roomId].prevMoveTime) {
                 gameData[roomId].prevMoveTime = time;
@@ -140,16 +148,40 @@ io.on('connection', (socket) => {
                 } else {
                     gameData[roomId].blackPlayer.time -= (time - gameData[roomId].prevMoveTime)/1000;
                 }
-
                 gameData[roomId].prevMoveTime = time;
-                
             }
+            
+            if(field[move.from.row][move.from.col].type === 'king'){
+                if(side === 'w') {
+                    kingsPosition.whiteKing = {row: move.to.row, col: move.to.col}
+                } else {
+                    kingsPosition.blackKing = {row: move.to.row, col: move.to.col}
+                }
+            }
+            
             field[move.from.row][move.from.col].movements++;
-            field[move.to.row][move.to.col] = field[move.from.row][move.from.col];
+            field[move.to.row][move.to.col] = {...field[move.from.row][move.from.col]};
             field[move.from.row][move.from.col] = null;
             data.activeSide = data.activeSide === 'w' ? 'b' : 'w';
-            data.lastMove = {from: move.from, to: move.to};
+            // data.lastMove = {from: move.from, to: move.to};
+            data.moveStory.push({from: move.from, to: move.to});
             io.to(roomId).emit('updateInfo', data);
+
+            const king = side === 'w' ? kingsPosition.blackKing : kingsPosition.whiteKing
+            if(!figureShahMoves(king, field)){
+                console.log('MAT CHECK')
+                for(let row=0;row<8;row++){
+                    for(let col=0;col<8;col++){
+                        if(field[row][col]?.color === (side === 'w' ? 'b' : 'w')) {
+                            // console.log(row, col, getAvailableMoves(field, { row, col }, king))
+                            if(getAvailableMoves(field, { row, col }, king).length != 0) {
+                                return;
+                            }
+                        }
+                    }
+                }
+                io.to(roomId).emit('gameEnd', {winner: side, activeSide: 'spectator'});
+            }
         }
         else {
             io.to(roomId).emit('updateInfo', gameData[roomId]);

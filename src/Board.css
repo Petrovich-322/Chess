@@ -7,8 +7,8 @@ body{
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 75px;
-    height: 75px;
+    width: 60px;
+    height: 60px;
 }
 .cell img {
     width: 50%;
@@ -20,8 +20,8 @@ body{
 .cell.available::after{
     content: '';
     position: absolute;
-    width: 20px;
-    height: 20px;
+    width: 15px;
+    height: 15px;
     background-color: rgba(83, 83, 83, 0.5);
     border-radius: 50%;
 }

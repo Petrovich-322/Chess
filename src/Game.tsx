@@ -1,19 +1,19 @@
 import { io } from 'socket.io-client';
-import { useState, useEffect, use, useRef } from 'react';
+import { useState, useEffect, act } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { hostAdress } from './services/host';
 import { checkMove } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
+import { figureShahMoves } from 'rules-lib';
 import { playerService } from './services/player';
 import { serverData } from './interfaces/interface';
-
 import createBoard from './services/createBoard';   
 import getUserId from './services/userId'; 
 
 import Board from './Board'
+import PlayerInfo from './PlayerInfo';
 import GameInfo from './GameInfo';
-import UserInfo from './UserInfo';
 
 import './Game.css';
 
@@ -40,15 +40,24 @@ const Game = () => {
     const [userStatus, setUserStatus] = useState<{userId: string; side: string;}>(defUser);
     const [activeSide, setActiveSide] = useState<string>();
     const [gameTimer, setGameTimer] = useState<{whiteTimer: number; blackTimer: number}>(defTimer);
-    const {roomId} = useParams<{roomId: string}>();
+    const [gameEnd, setGameEnd] = useState<boolean>(false);
+    const [moveStory, setMoveStory] = useState<Array<{from: {row: number, col: number}, to: {row: number, col: number}}>>([]);
+    const { roomId } = useParams<{roomId: string}>();
 
     const onUpdateInfo = (data: serverData) => {
         setActiveSide(data.activeSide);
         setGameTimer({whiteTimer: data.whitePlayer.time, blackTimer: data.blackPlayer.time});
-        getAvailableMoves.clear();
+        setKingsPosition(data.kingsPosition);
         
-        const moveTo = data.lastMove.to;
-        const moveFrom = data.lastMove.from;
+        const lastMove = data.moveStory[data.moveStory.length-1];
+        const moveTo = lastMove.to;
+        const moveFrom = lastMove.from;
+
+        setMoveStory((prev) => {
+            const story = prev;
+            story.push(lastMove);
+            return story;
+        });
         
         setField((prevField) => {
             const newField = prevField.map(row => [...row]);
@@ -58,19 +67,10 @@ const Game = () => {
             newField[moveFrom.row][moveFrom.col] = null;
             figure.movements++;
 
-            if(figure.type === 'king') {
-                setKingsPosition(prev => {
-                    if(figure.color === 'w') {
-                        return {...prev, whiteKing: {row: moveTo.row, col: moveTo.col}};
-                    } else {
-                        return {...prev, blackKing: {row: moveTo.row, col: moveTo.col}};
-                    }
-                });
-                console.log('King Pos: ', kingsPostion);
-            }
-
             return newField;
         });
+
+        getAvailableMoves.clear();
     } 
 
     useEffect(() => {
@@ -87,6 +87,12 @@ const Game = () => {
                 setActiveSide(data.activeSide);
                 setGameTimer({whiteTimer: data.whitePlayer.time, blackTimer: data.blackPlayer.time});   
             });
+
+            socket.on('gameEnd', (data) => {
+                console.log(`Winner is ${data.winner == 'w' ? 'White' : 'Black'}`);
+                setActiveSide(data.activeSide);
+                setGameEnd(true);
+            })
 
             const userIdData = await getUserId('');
             const userSideData = await playerService.getSide(roomId, userIdData);
@@ -124,10 +130,18 @@ const Game = () => {
     
     useEffect(() => {
         let playerTimer: any;
-        if(!activeSide) return;
+        if (!activeSide) return;
+        if (gameEnd) {
+            clearInterval(playerTimer);
+            return;
+        }
         playerTimer = setInterval(() => {
             setGameTimer(prev => {
                 if (!prev) return prev;
+                if(prev.whiteTimer === 0 || prev.blackTimer === 0) {
+                    setGameEnd(true);
+                }
+
                 if(activeSide === 'w'){
                     return {...prev,whiteTimer: prev.whiteTimer - 1};
                 }
@@ -139,10 +153,17 @@ const Game = () => {
                 clearInterval(playerTimer);
             }
         }
-    }, [activeSide]);
+    }, [activeSide, gameEnd]);
+
+    useEffect(() => {
+        if(activeSide != userStatus.side) return;
+
+        const king = userStatus.side == 'w' ? kingsPostion.whiteKing : kingsPostion.blackKing;
+        if(!figureShahMoves(king, field)) console.log('SHAH!!!');
+    }, [field])
 
     const onSelect = (row: number, col: number) => {
-        if (userStatus.side === 'spectator') return;
+        if (userStatus.side === 'spectator' || gameEnd) return;
 
         const king = userStatus.side === 'w' ? kingsPostion.whiteKing : kingsPostion.blackKing;
 
@@ -158,7 +179,6 @@ const Game = () => {
                     side: userStatus.side,
                     roomId: roomId,
                     move: { from: selectedCell, to: { row, col } },
-                    king: king,
                 });
                 setSelectedCell(null);
                 setAvailableMoves([]);
@@ -179,19 +199,28 @@ const Game = () => {
     };
     
     return (
-        <div className="game-container">
-            <UserInfo 
-                userSide = {userStatus.side}
-            />
-            <Board 
-                field = {field}
-                selectedCell = {selectedCell}
-                availableMoves = {availableMoves}
-                onSelect = {onSelect}
-            />
+        <div className="main-container">
+            <div className="space-container">
+
+            </div>
+            <div className="game-container">
+                <PlayerInfo
+                    timer = {gameTimer.blackTimer}
+                    player = 'Black'
+                />
+                <Board 
+                    field = {field}
+                    selectedCell = {selectedCell}
+                    availableMoves = {availableMoves}
+                    onSelect = {onSelect}
+                />
+                <PlayerInfo
+                    timer = {gameTimer.whiteTimer}
+                    player = 'White'
+                />
+            </div>
             <GameInfo 
-                whiteTimer = {gameTimer.whiteTimer}
-                blackTimer = {gameTimer.blackTimer}
+                moveStory = {moveStory}
             />
         </div>
     );
