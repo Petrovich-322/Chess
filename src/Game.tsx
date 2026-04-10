@@ -42,7 +42,7 @@ const Game = () => {
     const [gameTimer, setGameTimer] = useState<{whiteTimer: number; blackTimer: number}>(defTimer);
     const [gameEnd, setGameEnd] = useState<boolean>(false);
     const [moveStory, setMoveStory] = useState<Array<{from: {row: number, col: number}, to: {row: number, col: number}}>>([]);
-    const { roomId } = useParams<{roomId: string}>();
+    const {roomId} = useParams<{roomId: string}>();
 
     const onUpdateInfo = (data: serverData) => {
         setActiveSide(data.activeSide);
@@ -53,11 +53,7 @@ const Game = () => {
         const moveTo = lastMove.to;
         const moveFrom = lastMove.from;
 
-        setMoveStory((prev) => {
-            const story = prev;
-            story.push(lastMove);
-            return story;
-        });
+        setMoveStory((prev) => [...prev, lastMove]);
         
         setField((prevField) => {
             const newField = prevField.map(row => [...row]);
@@ -82,10 +78,12 @@ const Game = () => {
             });
             
             socket.on('initializeGame', (data) => {
+                console.log(data);
                 console.log('initializeGame');
                 setField(data.field);
                 setActiveSide(data.activeSide);
                 setGameTimer({whiteTimer: data.whitePlayer.time, blackTimer: data.blackPlayer.time});   
+                setMoveStory(data.moveStory);
             });
 
             socket.on('gameEnd', (data) => {
@@ -127,33 +125,6 @@ const Game = () => {
             socket.off('updateInfo');
         }; 
     }, []);
-    
-    useEffect(() => {
-        let playerTimer: any;
-        if (!activeSide) return;
-        if (gameEnd) {
-            clearInterval(playerTimer);
-            return;
-        }
-        playerTimer = setInterval(() => {
-            setGameTimer(prev => {
-                if (!prev) return prev;
-                if(prev.whiteTimer === 0 || prev.blackTimer === 0) {
-                    setGameEnd(true);
-                }
-
-                if(activeSide === 'w'){
-                    return {...prev,whiteTimer: prev.whiteTimer - 1};
-                }
-                else return {...prev,blackTimer: prev.blackTimer - 1};
-            });
-        }, 1000);
-        return () => {
-            if (playerTimer) {
-                clearInterval(playerTimer);
-            }
-        }
-    }, [activeSide, gameEnd]);
 
     useEffect(() => {
         if(activeSide != userStatus.side) return;
@@ -206,7 +177,10 @@ const Game = () => {
             <div className="game-container">
                 <PlayerInfo
                     timer = {gameTimer.blackTimer}
-                    player = 'Black'
+                    player = 'b'
+                    activeSide = {activeSide}
+                    gameEnd = {gameEnd}
+                    setGameEnd = {setGameEnd}
                 />
                 <Board 
                     field = {field}
@@ -216,7 +190,10 @@ const Game = () => {
                 />
                 <PlayerInfo
                     timer = {gameTimer.whiteTimer}
-                    player = 'White'
+                    player = 'w'
+                    activeSide = {activeSide}
+                    gameEnd = {gameEnd}
+                    setGameEnd = {setGameEnd}
                 />
             </div>
             <GameInfo 

@@ -48,8 +48,10 @@ const addNewGame = (room) => {
             time: 600,
         },
         moveStory: [],
-        prevMoveTime: Date.now(),
-        // lastMove: null,
+        lastMove: {
+            player: 'w',
+            time: Date.now()
+        },
         kingsPosition: {
             whiteKing: {row: 7, col: 4},
             blackKing: {row: 0, col: 4}
@@ -163,7 +165,7 @@ io.on('connection', (socket) => {
             field[move.to.row][move.to.col] = {...field[move.from.row][move.from.col]};
             field[move.from.row][move.from.col] = null;
             data.activeSide = data.activeSide === 'w' ? 'b' : 'w';
-            // data.lastMove = {from: move.from, to: move.to};
+            data.lastMove = {player: side, time: time};
             data.moveStory.push({from: move.from, to: move.to});
             io.to(roomId).emit('updateInfo', data);
 

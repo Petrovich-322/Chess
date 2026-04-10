@@ -38,7 +38,7 @@ class biDirectionalPriorityQueue {
         let removedNode, array;
 
         switch(type) {
-            case 'oldest':
+             case 'oldest':
                 removedNode = this.timeElements.shift();
                 array = this.priorityElements;
                 break;
