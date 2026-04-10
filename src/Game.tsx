@@ -1,5 +1,5 @@
 import { io } from 'socket.io-client';
-import { useState, useEffect, act } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { hostAdress } from './services/host';
@@ -7,7 +7,10 @@ import { checkMove } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
 import { figureShahMoves } from 'rules-lib';
 import { playerService } from './services/player';
-import { serverData } from './interfaces/interface';
+
+import { ServerData } from './interfaces/interface';
+import { MoveStory } from './interfaces/interface';
+
 import createBoard from './services/createBoard';   
 import getUserId from './services/userId'; 
 
@@ -41,17 +44,17 @@ const Game = () => {
     const [activeSide, setActiveSide] = useState<string>();
     const [gameTimer, setGameTimer] = useState<{whiteTimer: number; blackTimer: number}>(defTimer);
     const [gameEnd, setGameEnd] = useState<boolean>(false);
-    const [moveStory, setMoveStory] = useState<Array<{from: {row: number, col: number}, to: {row: number, col: number}}>>([]);
+    const [moveStory, setMoveStory] = useState<Array<MoveStory>>([]);
     const {roomId} = useParams<{roomId: string}>();
 
-    const onUpdateInfo = (data: serverData) => {
+    const onUpdateInfo = (data: ServerData) => {
         setActiveSide(data.activeSide);
         setGameTimer({whiteTimer: data.whitePlayer.time, blackTimer: data.blackPlayer.time});
         setKingsPosition(data.kingsPosition);
         
         const lastMove = data.moveStory[data.moveStory.length-1];
-        const moveTo = lastMove.to;
-        const moveFrom = lastMove.from;
+        const moveTo = lastMove.move.to;
+        const moveFrom = lastMove.move.from;
 
         setMoveStory((prev) => [...prev, lastMove]);
         

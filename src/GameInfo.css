@@ -3,13 +3,27 @@
     flex-direction: column;
     align-items: center;
     margin: 10px;
-    width: 250px;
+    width: 200px;
     border: solid 1px;
     background-color: rgb(255, 183, 88);
 }
-.move-list{
-    margin-top: 15px;
+.game-info-move{
+    display: flex;
+    margin-top: 5px;
+    background-color: rgb(201, 61, 27);
 }
-.move-title{
+.move-list{
+    margin-top: 10px;
+}
+.move-story-elements{
     margin: 10px;
+}
+.move-counter{
+    width: 15px;
+}
+
+.game-info-figure-image{
+    margin: 10px;
+    width: 15px;
+    height: 20px;
 }

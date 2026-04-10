@@ -1,25 +1,32 @@
 import './GameInfo.css';
 
-interface gameInfoInterface {
-    moveStory: Array<{from: {row: number, col: number}, to: {row: number, col: number}}>,
-}
-const GameInfo = (props: gameInfoInterface) => {
+import { MoveStory } from './interfaces/interface';
+
+const GameInfo = (props: {moveStory: Array<MoveStory>}) => {
     const {
         moveStory,
     } = props;
-    console.log(moveStory);
     const transition = new Map([
         [0,'a'],[1,'b'],[2,'c'],[3,'d'],[4,'e'],[5,'f'],[6,'g'],[7,'h']
     ]);
     return (
         <div className="game-info-container">
             <div className="move-list">
-                {moveStory.map((move, index) => (
-                    <div className="game-info-move" key={`move-${index}`}> 
-                        <p className="move-title">{transition.get(move.from.row)}{move.from.col}{' => '}{transition.get(move.to.row)}{move.to.col}</p>
-                    </div>
-                ))
-                }
+                {moveStory.map((element, index) => {
+                    const { from, to, } = element.move;
+                    const { firstFigure, secondFigure } = element;
+                    console.log('Second figure', secondFigure);
+                    const start = `/assets/${firstFigure.color}-${firstFigure.type}.png`;
+                    const end = `/assets/${secondFigure?.color}-${secondFigure?.type}.png`;
+                    return (
+                        <div className="game-info-move" key={`move-${index}`}>
+                            <p className="move-story-elements move-counter">{`${index+1}: `}</p> 
+                            <img src={start} className="game-info-figure-image move-story-elements" alt={`${firstFigure.type}`} />
+                            <p className="move-story-elements">{transition.get(from.row)}{from.col}{' => '}{transition.get(to.row)}{to.col}</p>
+                            {secondFigure && <img src={end} className="game-info-figure-image" alt={`${secondFigure.type}`} />}
+                        </div>
+                    )
+                })}
             </div>
         </div>
     )

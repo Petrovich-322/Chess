@@ -154,6 +154,7 @@ io.on('connection', (socket) => {
         
         if(checkMove(field, move.from, move.to, side === 'w' ? kingsPosition.whiteKing : kingsPosition.blackKing)) {
             console.log('newMove succes');
+            
             if(side === 'w') {
                 gameData[roomId].whitePlayer.time -= (time - gameData[roomId].lastMove.time)/1000;
             } else {
@@ -168,13 +169,19 @@ io.on('connection', (socket) => {
                     kingsPosition.blackKing = {row: move.to.row, col: move.to.col}
                 }
             }
-            
+
+            const moveInfo = {
+                move: {from: move.from, to: move.to},
+                firstFigure: field[move.from.row][move.from.col],
+                secondFigure: field[move.to.row][move.to.col],
+            }
+
             field[move.from.row][move.from.col].movements++;
             field[move.to.row][move.to.col] = {...field[move.from.row][move.from.col]};
             field[move.from.row][move.from.col] = null;
             data.activeSide = data.activeSide === 'w' ? 'b' : 'w';
             data.lastMove = {player: side, time: time};
-            data.moveStory.push({from: move.from, to: move.to});
+            data.moveStory.push(moveInfo);
             io.to(roomId).emit('updateInfo', data);
 
             const king = side === 'w' ? kingsPosition.blackKing : kingsPosition.whiteKing
@@ -183,7 +190,6 @@ io.on('connection', (socket) => {
                 for(let row=0;row<8;row++){
                     for(let col=0;col<8;col++){
                         if(field[row][col]?.color === (side === 'w' ? 'b' : 'w')) {
-                            // console.log(row, col, getAvailableMoves(field, { row, col }, king))
                             if(getAvailableMoves(field, { row, col }, king).length != 0) {
                                 return;
                             }
