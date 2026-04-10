@@ -22,7 +22,7 @@ const GameInfo = (props: {moveStory: Array<MoveStory>}) => {
                         <div className="game-info-move" key={`move-${index}`}>
                             <p className="move-story-elements move-counter">{`${index+1}: `}</p> 
                             <img src={start} className="game-info-figure-image move-story-elements" alt={`${firstFigure.type}`} />
-                            <p className="move-story-elements">{transition.get(from.row)}{from.col}{' => '}{transition.get(to.row)}{to.col}</p>
+                            <p className="move-story-elements">{transition.get(from.col)}{8-from.row}{' => '}{transition.get(to.col)}{8-to.row}</p>
                             {secondFigure && <img src={end} className="game-info-figure-image" alt={`${secondFigure.type}`} />}
                         </div>
                     )

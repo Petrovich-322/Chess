@@ -109,7 +109,7 @@ const Game = () => {
                 socket.emit('joinRoom', roomId);
                 
                 socket.io.once('reconnect_attempt', () => {
-                        console.log('Server connection failed, try later');
+                    console.log('Server connection failed, try later');
                 });
                 socket.io.on('reconnect', (data) => {
                     console.log('connection succes');
@@ -181,6 +181,7 @@ const Game = () => {
                 <PlayerInfo
                     timer = {gameTimer.blackTimer}
                     player = 'b'
+                    moveStory = {moveStory}
                     activeSide = {activeSide}
                     gameEnd = {gameEnd}
                     setGameEnd = {setGameEnd}
@@ -194,6 +195,7 @@ const Game = () => {
                 <PlayerInfo
                     timer = {gameTimer.whiteTimer}
                     player = 'w'
+                    moveStory = {moveStory}
                     activeSide = {activeSide}
                     gameEnd = {gameEnd}
                     setGameEnd = {setGameEnd}

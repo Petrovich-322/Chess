@@ -10,10 +10,11 @@
 .game-info-move{
     display: flex;
     margin-top: 5px;
-    background-color: rgb(201, 61, 27);
+    background-color: rgb(201, 108, 27);
 }
 .move-list{
-    margin-top: 10px;
+    width: 92%;
+    margin-top: 5px;
 }
 .move-story-elements{
     margin: 10px;

@@ -8,10 +8,19 @@
     background-color: rgb(255, 183, 88);
 }
 .player-info-title{
-    margin: 2px;
+    margin: 0px;
     margin-left: 15px;
 }
 .player-info-timer{
     margin: 2px;
     margin-left: 15px;
+}
+.first-info-label-container{
+    display: flex;
+    align-items: center;
+}
+.taken-figure-img{
+    margin-left: 10px;
+    width: 15px;
+    height: 20px;
 }
