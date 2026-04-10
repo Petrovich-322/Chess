@@ -49,7 +49,7 @@ const addNewGame = (room) => {
         },
         moveStory: [],
         lastMove: {
-            player: 'w',
+            player: 'b',
             time: Date.now()
         },
         kingsPosition: {
@@ -120,7 +120,20 @@ io.on('connection', (socket) => {
                 addNewGame(roomId);
             }
             socket.join(roomId);
-            socket.emit('initializeGame', gameData[roomId]);
+
+            const roomData = gameData[roomId];
+            const timeDif = (Date.now() - roomData.lastMove.time)/1000;
+            const data = {...roomData,
+                whitePlayer: {
+                    ...roomData.whitePlayer,
+                    time: roomData.activeSide === 'w' ? roomData.whitePlayer.time - timeDif : roomData.whitePlayer.time
+                },
+                blackPlayer: {
+                    ...roomData.blackPlayer,
+                    time: roomData.activeSide === 'b' ? roomData.blackPlayer.time - timeDif : roomData.blackPlayer.time
+                }
+            }
+            socket.emit('initializeGame', data);
             console.log(`User joined room: ${roomId}`); 
         } else {
             console.log(`no room id ${roomId} || join room`);
@@ -141,17 +154,12 @@ io.on('connection', (socket) => {
         
         if(checkMove(field, move.from, move.to, side === 'w' ? kingsPosition.whiteKing : kingsPosition.blackKing)) {
             console.log('newMove succes');
-            if(!gameData[roomId].prevMoveTime) {
-                gameData[roomId].prevMoveTime = time;
-            
+            if(side === 'w') {
+                gameData[roomId].whitePlayer.time -= (time - gameData[roomId].lastMove.time)/1000;
             } else {
-                if(side === 'w') {
-                    gameData[roomId].whitePlayer.time -= (time - gameData[roomId].prevMoveTime)/1000;
-                } else {
-                    gameData[roomId].blackPlayer.time -= (time - gameData[roomId].prevMoveTime)/1000;
-                }
-                gameData[roomId].prevMoveTime = time;
+                gameData[roomId].blackPlayer.time -= (time - gameData[roomId].lastMove.time)/1000;
             }
+            gameData[roomId].lastMove.time = time;
             
             if(field[move.from.row][move.from.col].type === 'king'){
                 if(side === 'w') {
