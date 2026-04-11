@@ -1,11 +1,11 @@
 import { io } from 'socket.io-client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { hostAdress } from './services/host';
 import { checkMove } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
-import { figureShahMoves } from 'rules-lib';
+import { chachCheck } from 'rules-lib';
 import { playerService } from './services/player';
 
 import { ServerData } from './interfaces/interface';
@@ -37,6 +37,8 @@ const socket = io(`${hostAdress}`);
 
 const Game = () => {
     const [field, setField] = useState(createBoard());
+    const [tempField, setTempField] = useState(createBoard());
+    const [showMoveStory, setShowMoveStory] = useState<boolean>(false);
     const [selectedCell, setSelectedCell] = useState<{row: number; col: number} | null>(null);
     const [availableMoves, setAvailableMoves] = useState<{row: number; col: number}[]>([]);
     const [kingsPostion, setKingsPosition] = useState<{whiteKing: {row: number, col: number}; blackKing: {row: number, col: number}}>(defKingsPosition);
@@ -45,7 +47,11 @@ const Game = () => {
     const [gameTimer, setGameTimer] = useState<{whiteTimer: number; blackTimer: number}>(defTimer);
     const [gameEnd, setGameEnd] = useState<boolean>(false);
     const [moveStory, setMoveStory] = useState<Array<MoveStory>>([]);
+    
+    const fieldsCache = useRef<Record<number, any[][]>>({});
+    
     const {roomId} = useParams<{roomId: string}>();
+
 
     const onUpdateInfo = (data: ServerData) => {
         setActiveSide(data.activeSide);
@@ -57,7 +63,8 @@ const Game = () => {
         const moveFrom = lastMove.move.from;
 
         setMoveStory((prev) => [...prev, lastMove]);
-        
+        setShowMoveStory(false);
+
         setField((prevField) => {
             const newField = prevField.map(row => [...row]);
             const figure = newField[moveFrom.row][moveFrom.col];
@@ -76,17 +83,18 @@ const Game = () => {
         const initGame = async () => {
             if(!roomId) return roomId;
             
-            socket.on('updateInfo', (data) => {
+            socket.on('updateInfo', (data: ServerData) => {
                 onUpdateInfo(data);
             });
             
-            socket.on('initializeGame', (data) => {
-                console.log(data);
+            socket.on('initializeGame', (data: ServerData) => {
+                // console.log(data);
                 console.log('initializeGame');
                 setField(data.field);
                 setActiveSide(data.activeSide);
                 setGameTimer({whiteTimer: data.whitePlayer.time, blackTimer: data.blackPlayer.time});   
                 setMoveStory(data.moveStory);
+                setGameEnd(data.gameStatus.gameEnd);
             });
 
             socket.on('gameEnd', (data) => {
@@ -133,10 +141,16 @@ const Game = () => {
         if(activeSide != userStatus.side) return;
 
         const king = userStatus.side == 'w' ? kingsPostion.whiteKing : kingsPostion.blackKing;
-        if(!figureShahMoves(king, field)) console.log('SHAH!!!');
-    }, [field])
+        if(chachCheck(king, field)) console.log('SHAH!!!');
+    }, [field]);
 
     const onSelect = (row: number, col: number) => {
+        if(showMoveStory){
+            setAvailableMoves([]);
+            setSelectedCell(null);
+            setShowMoveStory(false);    
+            return;
+        }
         if (userStatus.side === 'spectator' || gameEnd) return;
 
         const king = userStatus.side === 'w' ? kingsPostion.whiteKing : kingsPostion.blackKing;
@@ -170,7 +184,27 @@ const Game = () => {
 
         setSelectedCell({ row, col });
         setAvailableMoves([]);
-    };
+    }
+
+    const onMoveClick = (index: number) => {
+        if(fieldsCache.current[index]) {
+            setTempField(fieldsCache.current[index]);
+            setShowMoveStory(true);
+            console.log('cache');
+            return;
+        }
+        const historyField = createBoard();
+        
+        for(let i=0; i<=index; i++){
+            console.log('newField', i);
+            const move = moveStory[i].move;
+            historyField[move.to.row][move.to.col] = {...historyField[move.from.row][move.from.col]};
+            historyField[move.from.row][move.from.col] = null;
+        }
+        fieldsCache.current[index] = historyField
+        setTempField(historyField);
+        setShowMoveStory(true);
+    }
     
     return (
         <div className="main-container">
@@ -187,7 +221,7 @@ const Game = () => {
                     setGameEnd = {setGameEnd}
                 />
                 <Board 
-                    field = {field}
+                    field = {showMoveStory === false ? field : tempField}
                     selectedCell = {selectedCell}
                     availableMoves = {availableMoves}
                     onSelect = {onSelect}
@@ -202,6 +236,7 @@ const Game = () => {
                 />
             </div>
             <GameInfo 
+                onMoveClick = {onMoveClick}
                 moveStory = {moveStory}
             />
         </div>

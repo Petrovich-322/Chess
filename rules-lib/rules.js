@@ -33,7 +33,7 @@ const lineChahCheck = (king, checkBoard, moves, type) => {
     return true;
 }
 
-export const figureShahMoves = (king, checkBoard) => {
+export const chachCheck = (king, checkBoard) => {
     const kingMoves = [[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[1,1],[0,1]];
     const knightMoves = [[-2,-1],[-1,-2],[1,-2],[2,-1],[2,1],[2,2],[-1,2],[-2,1]];
     const pawnMoves = [[1,1],[1,-1]];
@@ -41,20 +41,20 @@ export const figureShahMoves = (king, checkBoard) => {
     const bishopMoves = [[1,1],[1,-1],[-1,1],[-1,-1]];
     const rookMoves = [[1,0],[-1,0],[0,1],[0,-1]];  
 
-    if(!simpleChahCheck(king, checkBoard, kingMoves, 'king')) return false;
+    if(!simpleChahCheck(king, checkBoard, kingMoves, 'king')) return true;
     // console.log('no king');
-    if(!simpleChahCheck(king, checkBoard, knightMoves, 'knight')) return false;
+    if(!simpleChahCheck(king, checkBoard, knightMoves, 'knight')) return true;
     // console.log('no knight');
-    if(!simpleChahCheck(king, checkBoard, pawnMoves, 'pawn')) return false;
+    if(!simpleChahCheck(king, checkBoard, pawnMoves, 'pawn')) return true;
     // console.log('no pawn');
-    if(!lineChahCheck(king, checkBoard, bishopMoves, 'diagonal')) return false;
+    if(!lineChahCheck(king, checkBoard, bishopMoves, 'diagonal')) return true;
     // console.log('no bishop/queen');
-    if(!lineChahCheck(king, checkBoard, rookMoves, 'linear')) return false;
+    if(!lineChahCheck(king, checkBoard, rookMoves, 'linear')) return true;
     // console.log('no rook/queen');
-    return true;
+    return false;
 }
 
-const isDontShah = (board, from, to, king) => {
+const isShah = (board, from, to, king) => {
     const figure = board[from.row][from.col];
     const checkBoard = board.map(row => [...row]);
     
@@ -62,7 +62,7 @@ const isDontShah = (board, from, to, king) => {
     checkBoard[from.row][from.col] = null;
     const currentKingPos = figure.type === 'king' ? {row: to.row, col: to.col} : king;
     
-    return figureShahMoves(currentKingPos, checkBoard);
+    return chachCheck(currentKingPos, checkBoard);
 }
 
 export const checkMove = (board, from, to, king) => {
@@ -90,7 +90,7 @@ export const checkMove = (board, from, to, king) => {
         return true; 
     }
 
-    if(!isDontShah(board, from, to, king)) return false;
+    if(isShah(board, from, to, king)) return false;
     
     switch (figure.type) {
         case 'pawn':
@@ -146,6 +146,20 @@ const memoizationMoves = (fn) => {
         cache = {};
     }
     return memoization;
+}
+
+export const mateCheck = (opponentColor, field, king) => {
+    for(let row = 0; row < 8; row++){
+        for(let col = 0 ; col < 8; col++){
+            // console.log(field[row][col], getAvailableMoves(field, { row, col }, king));
+            const piece = field[row][col] 
+            if(piece?.color === opponentColor) {
+                const moves = getAvailableMoves(field, { row, col }, king);
+                if(moves.length > 0) return false;
+            }
+        }
+    }
+    return true;
 }
 
 export const getAvailableMoves = memoizationMoves(availableMoves);

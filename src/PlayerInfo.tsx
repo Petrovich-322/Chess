@@ -31,7 +31,12 @@ const PlayerInfo = (props: PlayerInfoProps) => {
 
     useEffect(() => {
         let timerInterval: any;
-        if(gameEnd || !activeSide || activeSide != player) {
+        if(gameEnd){
+            clearInterval(timerInterval);
+            setPlayerTimer(0);
+            return;
+        }
+        if(!activeSide || activeSide != player) {
             clearInterval(timerInterval);
             return;
         }

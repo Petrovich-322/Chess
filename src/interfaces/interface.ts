@@ -1,4 +1,3 @@
-
 export interface Figure {
     color: string;
     type: string;
@@ -18,4 +17,5 @@ export interface ServerData {
     moveStory: Array<MoveStory>,
     prevMoveTime: number;
     kingsPosition: {whiteKing: {row: number, col: number}, blackKing: {row: number, col: number}};
+    gameStatus: {gameEnd: boolean, winner: string | null}
 }

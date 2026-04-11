@@ -3,7 +3,8 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { checkMove } from 'rules-lib';
-import { figureShahMoves } from 'rules-lib';
+import { chachCheck } from 'rules-lib';
+import { mateCheck } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
 
 import createBoard from '../src/services/createBoard.js';
@@ -41,11 +42,11 @@ const addNewGame = (room) => {
         activeSide: 'w',
         whitePlayer: {
             id: null,
-            time: 600,
+            time: 100,
         },
         blackPlayer: {
             id: null,
-            time: 600,
+            time: 100,
         },
         moveStory: [],
         lastMove: {
@@ -55,6 +56,10 @@ const addNewGame = (room) => {
         kingsPosition: {
             whiteKing: {row: 7, col: 4},
             blackKing: {row: 0, col: 4}
+        },
+        gameStatus: {
+            gameEnd: false,
+            winner: null
         }
     };
 }
@@ -123,14 +128,20 @@ io.on('connection', (socket) => {
 
             const roomData = gameData[roomId];
             const timeDif = (Date.now() - roomData.lastMove.time)/1000;
+            
+            const whitePlayerTime = roomData.activeSide === 'w' ? 
+                (roomData.gameStatus.gameEnd === false ? roomData.whitePlayer.time - timeDif : 0) : roomData.whitePlayer.time;
+            const blackPlayerTime = roomData.activeSide === 'b' ? 
+                (roomData.gameStatus.gameEnd === false ? roomData.blackPlayer.time - timeDif : 0) : roomData.blackPlayer.time;
+            
             const data = {...roomData,
                 whitePlayer: {
                     ...roomData.whitePlayer,
-                    time: roomData.activeSide === 'w' ? roomData.whitePlayer.time - timeDif : roomData.whitePlayer.time
+                    time: whitePlayerTime
                 },
                 blackPlayer: {
                     ...roomData.blackPlayer,
-                    time: roomData.activeSide === 'b' ? roomData.blackPlayer.time - timeDif : roomData.blackPlayer.time
+                    time: blackPlayerTime
                 }
             }
             socket.emit('initializeGame', data);
@@ -185,18 +196,14 @@ io.on('connection', (socket) => {
             io.to(roomId).emit('updateInfo', data);
 
             const king = side === 'w' ? kingsPosition.blackKing : kingsPosition.whiteKing
-            if(!figureShahMoves(king, field)){
+            if(chachCheck(king, field)){
                 console.log('MAT CHECK')
-                for(let row=0;row<8;row++){
-                    for(let col=0;col<8;col++){
-                        if(field[row][col]?.color === (side === 'w' ? 'b' : 'w')) {
-                            if(getAvailableMoves(field, { row, col }, king).length != 0) {
-                                return;
-                            }
-                        }
-                    }
+                getAvailableMoves.clear();
+                const isMate = mateCheck(data.activeSide, field, king);
+                console.log(isMate);
+                if(isMate) {
+                    io.to(roomId).emit('gameEnd', {winner: side, activeSide: 'spectator'});
                 }
-                io.to(roomId).emit('gameEnd', {winner: side, activeSide: 'spectator'});
             }
         }
         else {

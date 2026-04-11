@@ -2,8 +2,9 @@ import './GameInfo.css';
 
 import { MoveStory } from './interfaces/interface';
 
-const GameInfo = (props: {moveStory: Array<MoveStory>}) => {
+const GameInfo = (props: {moveStory: Array<MoveStory>, onMoveClick: (index: number) => void}) => {
     const {
+        onMoveClick,
         moveStory,
     } = props;
     const transition = new Map([
@@ -15,11 +16,10 @@ const GameInfo = (props: {moveStory: Array<MoveStory>}) => {
                 {moveStory.map((element, index) => {
                     const { from, to, } = element.move;
                     const { firstFigure, secondFigure } = element;
-                    console.log('Second figure', secondFigure);
                     const start = `/assets/${firstFigure.color}-${firstFigure.type}.png`;
                     const end = `/assets/${secondFigure?.color}-${secondFigure?.type}.png`;
                     return (
-                        <div className="game-info-move" key={`move-${index}`}>
+                        <div className="move-info-container" onClick={() => onMoveClick(index)} key={`move-${index}`}>
                             <p className="move-story-elements move-counter">{`${index+1}: `}</p> 
                             <img src={start} className="game-info-figure-image move-story-elements" alt={`${firstFigure.type}`} />
                             <p className="move-story-elements">{transition.get(from.col)}{8-from.row}{' => '}{transition.get(to.col)}{8-to.row}</p>
