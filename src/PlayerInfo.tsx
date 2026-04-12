@@ -10,6 +10,8 @@ interface PlayerInfoProps {
     moveStory: Array<MoveStory>, 
     activeSide: string | undefined,
     gameEnd: Boolean,
+    socket: any,
+    roomId: string | undefined,
     setGameEnd: Dispatch<SetStateAction<boolean>>
 }
 
@@ -20,7 +22,9 @@ const PlayerInfo = (props: PlayerInfoProps) => {
         moveStory,
         activeSide,
         gameEnd,
-        setGameEnd
+        socket,
+        roomId,
+        setGameEnd,
     } = props;
 
     const [playerTimer, setPlayerTimer] = useState(timer)
@@ -31,12 +35,8 @@ const PlayerInfo = (props: PlayerInfoProps) => {
 
     useEffect(() => {
         let timerInterval: any;
-        if(gameEnd){
-            clearInterval(timerInterval);
-            setPlayerTimer(0);
-            return;
-        }
-        if(!activeSide || activeSide != player) {
+
+        if(!activeSide || activeSide != player || gameEnd) {
             clearInterval(timerInterval);
             return;
         }
@@ -51,8 +51,12 @@ const PlayerInfo = (props: PlayerInfoProps) => {
     }, [activeSide, gameEnd]);
 
     useEffect(() => {
-        if(playerTimer <= 0 && !gameEnd) setGameEnd(true); 
-    }, [playerTimer])
+        if(playerTimer <= 0 && !gameEnd) {
+            setGameEnd(true);
+            setPlayerTimer(0);
+            socket.emit('timerGameEnd', {roomId: roomId, winner: player == 'w' ? 'b' : 'w'});
+        } 
+    }, [playerTimer]);
     
     const takenFigures = [];
     for(const moveElement of moveStory) {

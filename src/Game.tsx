@@ -218,6 +218,8 @@ const Game = () => {
                     moveStory = {moveStory}
                     activeSide = {activeSide}
                     gameEnd = {gameEnd}
+                    socket = {socket}
+                    roomId = {roomId}
                     setGameEnd = {setGameEnd}
                 />
                 <Board 
@@ -232,6 +234,8 @@ const Game = () => {
                     moveStory = {moveStory}
                     activeSide = {activeSide}
                     gameEnd = {gameEnd}
+                    socket = {socket}
+                    roomId = {roomId} 
                     setGameEnd = {setGameEnd}
                 />
             </div>

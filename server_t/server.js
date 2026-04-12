@@ -11,42 +11,24 @@ import createBoard from '../src/services/createBoard.js';
 import createRoomName from "./room-generator.js";
 
 const PORT = 3000;
-
-const app = express();
-app.use(express.json());
-app.use(cors({
+const corsInfo = {
     origin: [
         "http://localhost:5173",
         "https://nondisputatiously-tetched-kimber.ngrok-free.dev"
     ],
     methods: ["GET", "POST"]
-}));    
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-    cors: {
-        origin: [
-            "http://localhost:5173",
-            "https://nondisputatiously-tetched-kimber.ngrok-free.dev"
-        ],
-        methods: ["GET", "POST"]
-    }
-});
-
+}
 const gameData = {};
-
-const roomNameGeneator = createRoomName();
-
-const addNewGame = (room) => {
-    gameData[room] = { 
+const addNewGame = (roomId) => {
+    gameData[roomId] = { 
         field: createBoard(), 
         activeSide: 'w',
         whitePlayer: {
             id: null,
-            time: 100,
-        },
-        blackPlayer: {
+            time: 5,
+        },blackPlayer: {
             id: null,
-            time: 100,
+            time: 5,
         },
         moveStory: [],
         lastMove: {
@@ -58,11 +40,19 @@ const addNewGame = (room) => {
             blackKing: {row: 0, col: 4}
         },
         gameStatus: {
-            gameEnd: false,
+            gameEnd: false, 
             winner: null
         }
     };
 }
+
+const app = express();
+app.use(express.json());
+app.use(cors(corsInfo));    
+const httpServer = createServer(app);
+const io = new Server(httpServer, {cors: corsInfo});
+
+const roomNameGeneator = createRoomName();
 
 app.get('/get-user-id', (req, res) => {
     console.log('newUser')
@@ -75,8 +65,6 @@ app.get('/create-room', (req, res) => {
 });
 
 app.post('/get-side', (req, res) => {
-    console.log('get-side-request')
-    
     const roomId = req.body.roomId;
     const user = req.body.userId;
 
@@ -88,22 +76,21 @@ app.post('/get-side', (req, res) => {
         })
     }
     
-    if(!gameData[roomId]){
-        addNewGame(roomId);
-    }
-    
-    if(!gameData[roomId].whitePlayer.id || gameData[roomId].whitePlayer.id === user) {
+    if(!gameData[roomId]) addNewGame(roomId);
+    const game = gameData[roomId];
+
+    if(!game.whitePlayer.id || game.whitePlayer.id === user) {
         console.log(`white player: ${user}`);
-        gameData[roomId].whitePlayer.id = user;
+        if(!game.whitePlayer.id) game.whitePlayer.id = user;
         res.json({
             side: 'w',
             stauts: 'succes',
         });
     }
     
-    else if(!gameData[roomId].blackPlayer.id || gameData[roomId].blackPlayer.id === user) {
+    else if(!game.blackPlayer.id || game.blackPlayer.id === user) {
         console.log(`black player: ${user}`);
-        gameData[roomId].blackPlayer.id = user;
+        if(!game.blackPlayer.id) game.blackPlayer.id = user;
         res.json({
             side: 'b',
             status: 'succes',
@@ -116,70 +103,75 @@ app.post('/get-side', (req, res) => {
     });
 });
 
+const callGameEnd = (roomId, side) => {
+    io.to(roomId).emit('gameEnd', {winner: side, activeSide: 'spectator'});
+    const game = gameData[roomId];
+    game.gameStatus.gameEnd = true;
+    game.gameStatus.winner = side;
+    console.log('gameEnd, winner', side);
+}
+
 io.on('connection', (socket) => {
     console.log('A user connected');
 
     socket.on('joinRoom', (roomId) => {
-        if(roomId) { 
-            if(!gameData[roomId]){
-                addNewGame(roomId);
-            }
-            socket.join(roomId);
-
-            const roomData = gameData[roomId];
-            const timeDif = (Date.now() - roomData.lastMove.time)/1000;
-            
-            const whitePlayerTime = roomData.activeSide === 'w' ? 
-                (roomData.gameStatus.gameEnd === false ? roomData.whitePlayer.time - timeDif : 0) : roomData.whitePlayer.time;
-            const blackPlayerTime = roomData.activeSide === 'b' ? 
-                (roomData.gameStatus.gameEnd === false ? roomData.blackPlayer.time - timeDif : 0) : roomData.blackPlayer.time;
-            
-            const data = {...roomData,
-                whitePlayer: {
-                    ...roomData.whitePlayer,
-                    time: whitePlayerTime
-                },
-                blackPlayer: {
-                    ...roomData.blackPlayer,
-                    time: blackPlayerTime
-                }
-            }
-            socket.emit('initializeGame', data);
-            console.log(`User joined room: ${roomId}`); 
-        } else {
-            console.log(`no room id ${roomId} || join room`);
+        if(!roomId) { 
+            console.log(`join room -> no room id ${roomId}`);
+            return;
         }
+        if(!gameData[roomId]) addNewGame(roomId);
+        
+        socket.join(roomId);
+
+        const game = gameData[roomId];
+        const timeDif = (Date.now() - game.lastMove.time)/1000;
+        
+        const whitePlayerTime = game.activeSide === 'w' ? 
+            (game.gameStatus.gameEnd === false ? game.whitePlayer.time - timeDif : 0) : game.whitePlayer.time;
+        const blackPlayerTime = game.activeSide === 'b' ? 
+            (game.gameStatus.gameEnd === false ? game.blackPlayer.time - timeDif : 0) : game.blackPlayer.time;
+        
+        const actualGameData = {...game,
+            whitePlayer: {
+                ...game.whitePlayer,
+                time: whitePlayerTime
+            },
+            blackPlayer: {
+                ...game.blackPlayer,
+                time: blackPlayerTime
+            }
+        }
+        socket.emit('initializeGame', actualGameData);
+        console.log(`User joined room: ${roomId}`); 
     });
 
-
     const onNewMove = (side, roomId, move) => {
-        if(!roomId) return;
-        if(!gameData[roomId]) {
-            addNewGame(roomId);
+        console.log('---New move---');
+        if(!roomId) {
+            console.log(`onNewMove -> no room id ${roomId}`);
+            return;
         }
-        const field = gameData[roomId].field;
-        const data = gameData[roomId];  
-        const kingsPosition = data.kingsPosition;
-        const time = Date.now();
-        console.log('checking newMove');
+        if(!gameData[roomId]) addNewGame(roomId);
         
+        const game = gameData[roomId];  
+        const field = game.field;
+        const kingsPosition = game.kingsPosition;
+        const time = Date.now();
+
         if(checkMove(field, move.from, move.to, side === 'w' ? kingsPosition.whiteKing : kingsPosition.blackKing)) {
-            console.log('newMove succes');
-            
+            console.log('   Check move possibility');
             if(side === 'w') {
-                gameData[roomId].whitePlayer.time -= (time - gameData[roomId].lastMove.time)/1000;
-            } else {
-                gameData[roomId].blackPlayer.time -= (time - gameData[roomId].lastMove.time)/1000;
-            }
-            gameData[roomId].lastMove.time = time;
-            
-            if(field[move.from.row][move.from.col].type === 'king'){
-                if(side === 'w') {
+                game.whitePlayer.time -= (time - game.lastMove.time)/1000;
+                if(field[move.from.row][move.from.col].type === 'king') {
                     kingsPosition.whiteKing = {row: move.to.row, col: move.to.col}
-                } else {
+                }
+            } else if(side === 'b') {
+                game.blackPlayer.time -= (time - game.lastMove.time)/1000;
+                if(field[move.from.row][move.from.col].type === 'king') {
                     kingsPosition.blackKing = {row: move.to.row, col: move.to.col}
                 }
             }
+            game.lastMove.time = time;
 
             const moveInfo = {
                 move: {from: move.from, to: move.to},
@@ -190,29 +182,35 @@ io.on('connection', (socket) => {
             field[move.from.row][move.from.col].movements++;
             field[move.to.row][move.to.col] = {...field[move.from.row][move.from.col]};
             field[move.from.row][move.from.col] = null;
-            data.activeSide = data.activeSide === 'w' ? 'b' : 'w';
-            data.lastMove = {player: side, time: time};
-            data.moveStory.push(moveInfo);
-            io.to(roomId).emit('updateInfo', data);
+            
+            game.activeSide = game.activeSide === 'w' ? 'b' : 'w';
+            game.lastMove = {player: side, time: time};
+            game.moveStory.push(moveInfo);
+            io.to(roomId).emit('updateInfo', game);
 
             const king = side === 'w' ? kingsPosition.blackKing : kingsPosition.whiteKing
             if(chachCheck(king, field)){
-                console.log('MAT CHECK')
                 getAvailableMoves.clear();
-                const isMate = mateCheck(data.activeSide, field, king);
+                const isMate = mateCheck(game.activeSide, field, king);
                 console.log(isMate);
-                if(isMate) {
-                    io.to(roomId).emit('gameEnd', {winner: side, activeSide: 'spectator'});
-                }
+                if(isMate) callGameEnd(roomId, side);
             }
         }
         else {
-            io.to(roomId).emit('updateInfo', gameData[roomId]);
+            io.to(roomId).emit('updateInfo', game);
         }
     }
-    socket.on('newMove', ({ side, roomId, move, king }) => {
-        onNewMove(side, roomId, move, king);
+    
+    socket.on('newMove', ({ side, roomId, move }) => {
+        // console.log(side, roomId, move);
+        if(!roomId || !side || !move) return;
+        onNewMove(side, roomId, move);
     });
+    
+    socket.on('timerGameEnd', ({ roomId, winner }) => {
+        if(!roomId || !winner) return; 
+        callGameEnd(roomId, winner);
+    })
 });
 
 
