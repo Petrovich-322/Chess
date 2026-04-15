@@ -1,6 +1,6 @@
-import NewCell from "./NewCell";
+import NewCell from "./Cell/NewCell";
 
-import type { Figure } from "./interfaces/interface"; 
+import type { Figure } from "../Interfaces/interface"; 
 
 import './Board.css';
 

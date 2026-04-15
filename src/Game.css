@@ -1,5 +1,19 @@
+:root{
+    --main-color: rgb(255, 255, 255);
+    --side-gui-color: rgb(255, 206, 142);
+    --side-gui-elements-color: rgb(186, 83, 28);
+    --black-cell-color: rgb(186, 83, 28);
+    --white-cell-color: rgb(255, 206, 142);
+}
+
+body{
+    background-color: var(--main-color);
+}
+
+
 .main-container {
     display: flex;
+    /* background-color: var(--main-color); */
 }
 
 .space-container{

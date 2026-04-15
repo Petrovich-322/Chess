@@ -1,0 +1,122 @@
+.create-game-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 500px;
+    height: 400px;
+    background-color: rgb(255, 255, 255);
+    border-radius: 10px;
+    z-index: 2;
+    align-self: center;
+    justify-self: center;
+    grid-area: stack;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
+}
+.setting-game-title{
+    font-size: 30px;
+    font-weight: lighter;
+    font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    margin: 10px;
+    margin-top: 20px;
+}
+
+.time-picker-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.time-select-section{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 35%;
+    padding-top: 15px;
+    padding-bottom: 10px;
+    border-radius: 10px;
+}
+.number-select-section{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.time-input-field{
+    cursor: pointer;
+    text-align: center;
+    font-size: 35px;
+    font-weight: bold;
+    width: 65px;
+    height: 100px; 
+    border-radius: 10px;   
+    border: solid 1px rgb(187, 187, 187);
+}
+.time-input-title{
+    margin-top: 5px;
+}
+.colon{ 
+    margin: 5px;
+    font-size: 35px;
+    color: rgb(187, 187, 187);
+    margin-bottom: 25px;
+}
+
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+.presets-container{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 15px;
+    margin-top: 10px;
+    border-radius: 10px;
+    width: 350px;
+}
+.timer-preset-btn{
+    width: 90px;
+    margin: 3px;
+    height: 35px;
+    cursor: pointer;
+    border: 0;
+    border-radius: 5px;
+    font-weight: bold;
+
+    &:hover{
+        background-color: rgb(221, 221, 221);
+    }
+}
+
+.creating-game-menu-navigate-container{
+    display: flex;
+    justify-content: center;
+}
+.create-game-btn{
+    border: 0;
+    border-radius: 10px;
+    font-weight: bold;
+    width: 125px;
+    height: 40px;
+    font-size: 15px; 
+    margin: 5px;
+    cursor: pointer;
+    
+    &.confirm-btn{
+        color: white;
+        background-color: rgb(88, 88, 255);
+        font-weight: lighter;
+
+
+        &:hover{
+            background-color: rgb(46, 46, 255);
+        }
+    }
+    &.return-btn{
+        font-weight: lighter;
+        color: black;
+
+        &:hover{
+            background-color: rgb(221, 221, 221);
+        }
+    }
+}

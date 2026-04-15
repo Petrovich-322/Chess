@@ -1,6 +1,6 @@
 import { useEffect, useState, Dispatch, SetStateAction } from 'react';
 
-import { MoveStory } from './interfaces/interface';
+import { MoveStory } from '../Interfaces/interface';
 
 import './PlayerInfo.css'
 

@@ -15,7 +15,7 @@ body{
     height: 75%;
 }
 .cell.selected{
-    background-color: bisque;
+    background-color: color-mix(in srgb, var(--white-cell-color) 70%, var(--black-cell-color));
 }
 .cell.available::after{
     content: '';
@@ -27,10 +27,10 @@ body{
 }
 
 .white-cell{
-    background-color: rgb(255, 183, 88);
+    background-color: var(--white-cell-color);
 }
 .black-cell{
-    background-color: rgb(201, 61, 27);
+    background-color: var(--black-cell-color);
 }
 
 .board{

@@ -1,28 +1,42 @@
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 
-import { playerService } from './services/player';
-import { hostAdress } from './services/host';
-import getUserId from './services/userId';
+import { playerService } from './Services/player';
+import { hostAdress } from './Services/host';
+import getUserId from './Services/userId';
+
+import CreatingGameMenu from './CreatingGameMenu/CreatingGameMenu'
 
 import "./Home.css";
 
 await getUserId('');
 
 const Home = () => {        
+    const [onCreateGame, setOnCreateGame] = useState<boolean>(false)
+    
     const navigate = useNavigate();
     
-    const createRoom = async () => {
+    const onCreateGameHandler = async (time: number) => {
         playerService.reset();
+        const data = {
+            time: time
+        }
+        
         try {
-            const response = await fetch(`${hostAdress}/create-room`);
+            const response = await fetch(`${hostAdress}/create-room`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
             
             if(!response.ok) {
                 throw new Error (`failed to create-room ${response.status}`);
             }
 
-            await response.json().then(data => {
-                navigate(`/game/${data.roomId}`);
-            });
+            const result = await response.json();
+            navigate(`/game/${result.roomId}`);
         } catch (err) {
             alert(`server is not responding properly ${err}`);
         }
@@ -33,9 +47,16 @@ const Home = () => {
     }
     
     return (
-        <div id="start-btn-container">
-            <button id="start-btn" className="btn" onClick={createRoom}>Create New Room</button>
-            <button id="new-user-btn" className="btn" onClick={newUser}>createNewUser</button>
+        <div className="main-menu-container">
+            <div id="start-btn-container">
+                <button className="btn start-btn" onClick={() => setOnCreateGame(true)}>Створити гру</button>
+                <button className="btn new-user-btn" onClick={newUser}>Створити користувача(костиль)</button>
+            </div>
+            {onCreateGame && <CreatingGameMenu
+                setOnCreateGame={setOnCreateGame}
+                onCreateGameHandler={onCreateGameHandler}
+            />
+            }
         </div>
     )
 }

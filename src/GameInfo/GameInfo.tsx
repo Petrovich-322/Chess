@@ -1,6 +1,6 @@
 import './GameInfo.css';
 
-import { MoveStory } from './interfaces/interface';
+import { MoveStory } from '../Interfaces/interface';
 
 const GameInfo = (props: {moveStory: Array<MoveStory>, onMoveClick: (index: number) => void}) => {
     const {

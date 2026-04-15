@@ -2,21 +2,21 @@ import { io } from 'socket.io-client';
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { hostAdress } from './services/host';
+import { hostAdress } from './Services/host';
 import { checkMove } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
 import { chachCheck } from 'rules-lib';
-import { playerService } from './services/player';
+import { playerService } from './Services/player';
 
-import { ServerData } from './interfaces/interface';
-import { MoveStory } from './interfaces/interface';
+import { ServerData } from './Interfaces/interface';
+import { MoveStory } from './Interfaces/interface';
 
-import createBoard from './services/createBoard';   
-import getUserId from './services/userId'; 
+import createBoard from './Services/createBoard';   
+import getUserId from './Services/userId'; 
 
-import Board from './Board'
-import PlayerInfo from './PlayerInfo';
-import GameInfo from './GameInfo';
+import Board from './Board/Board'
+import PlayerInfo from './PlayerInfo/PlayerInfo';
+import GameInfo from './GameInfo/GameInfo';
 
 import './Game.css';
 
@@ -88,7 +88,6 @@ const Game = () => {
             });
             
             socket.on('initializeGame', (data: ServerData) => {
-                // console.log(data);
                 console.log('initializeGame');
                 setField(data.field);
                 setActiveSide(data.activeSide);

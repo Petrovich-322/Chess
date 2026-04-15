@@ -7,7 +7,7 @@ import { chachCheck } from 'rules-lib';
 import { mateCheck } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
 
-import createBoard from '../src/services/createBoard.js';
+import createBoard from '../src/Services/createBoard.js';
 import createRoomName from "./room-generator.js";
 
 const PORT = 3000;
@@ -19,31 +19,37 @@ const corsInfo = {
     methods: ["GET", "POST"]
 }
 const gameData = {};
-const addNewGame = (roomId) => {
-    gameData[roomId] = { 
-        field: createBoard(), 
-        activeSide: 'w',
-        whitePlayer: {
-            id: null,
-            time: 5,
-        },blackPlayer: {
-            id: null,
-            time: 5,
-        },
-        moveStory: [],
-        lastMove: {
+
+class Game {
+    constructor({ 
+        timeLimit = 600, 
+        whiteId = null, 
+        blackId = null 
+    } = {}) {
+        this.field = createBoard();
+        this.activeSide = 'w';
+        this.whitePlayer = {
+            id: whiteId,
+            time: timeLimit,
+        };
+        this.blackPlayer = {
+            id: blackId,
+            time: timeLimit,
+        };
+        this.moveStory = [];
+        this.lastMove = {
             player: 'b',
             time: Date.now()
-        },
-        kingsPosition: {
+        };
+        this.kingsPosition = {
             whiteKing: {row: 7, col: 4},
             blackKing: {row: 0, col: 4}
-        },
-        gameStatus: {
+        };
+        this.gameStatus = {
             gameEnd: false, 
             winner: null
-        }
-    };
+        };
+    }
 }
 
 const app = express();
@@ -60,8 +66,12 @@ app.get('/get-user-id', (req, res) => {
     res.json(id);
 });
 
-app.get('/create-room', (req, res) => {
-    res.json({roomId: roomNameGeneator.next().value});
+app.post('/create-room', (req, res) => {
+    console.log('---Create room request---');
+    const time = req.body.time ? req.body.time : 600; 
+    const roomId = roomNameGeneator.next().value
+    gameData[roomId] = new Game({timeLimit: time});
+    res.json({roomId: roomId});
 });
 
 app.post('/get-side', (req, res) => {
@@ -76,7 +86,9 @@ app.post('/get-side', (req, res) => {
         })
     }
     
-    if(!gameData[roomId]) addNewGame(roomId);
+    if(!gameData[roomId]) {
+        gameData[roomId] = new Game();
+    }
     const game = gameData[roomId];
 
     if(!game.whitePlayer.id || game.whitePlayer.id === user) {
@@ -119,7 +131,9 @@ io.on('connection', (socket) => {
             console.log(`join room -> no room id ${roomId}`);
             return;
         }
-        if(!gameData[roomId]) addNewGame(roomId);
+        if(!gameData[roomId]) {
+            gameData[roomId] = new Game();
+        }
         
         socket.join(roomId);
 
@@ -151,7 +165,9 @@ io.on('connection', (socket) => {
             console.log(`onNewMove -> no room id ${roomId}`);
             return;
         }
-        if(!gameData[roomId]) addNewGame(roomId);
+        if(!gameData[roomId]) {
+            gameData[roomId] = new Game();
+        }
         
         const game = gameData[roomId];  
         const field = game.field;
