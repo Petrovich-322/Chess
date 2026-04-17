@@ -1,5 +1,5 @@
 export interface Figure {
-    color: string,
+    color: 'white' | 'black',
     type: string
 };
 

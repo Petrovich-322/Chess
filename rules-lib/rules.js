@@ -1,6 +1,6 @@
 const simpleChahCheck= (king, checkBoard, moves, type) => {
     const { row, col } = king;
-    const dir = type!='pawn' ? 1 : (checkBoard[row][col].color==='w' ? -1 : 1); 
+    const dir = type!='pawn' ? 1 : (checkBoard[row][col].color==='white' ? -1 : 1); 
     
     for(const i of moves) {
         if(row+i[0]*dir < 0 || row+i[0]*dir > 7 || col+i[1] > 7 || col+i[1] < 0) continue;
@@ -94,7 +94,7 @@ export const checkMove = (board, from, to, king) => {
     
     switch (figure.type) {
         case 'pawn':
-            const dir = figure.color === 'w' ? -1 : 1;
+            const dir = figure.color === 'white' ? -1 : 1;
             if (dy === dir && dx === 0 && !targetFigure) return true;
             if (dy === 2 * dir && dx === 0 && figure.movements === 0 && !targetFigure && !board[from.row + dir][from.col]) return true;
             if (dy === dir && Math.abs(dx) === 1 && targetFigure) return true;

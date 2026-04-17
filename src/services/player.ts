@@ -1,11 +1,11 @@
 import { hostAdress } from "./host";
 
 class Player {
-    #side: string | null = null;
+    #side: 'white' | 'black' | 'spectator' = 'spectator';
 
     async getSide(roomId: string, userId: string) {
         console.log('get-side-front')
-        if(this.#side) return this.#side;
+        if(this.#side != 'spectator') return this.#side;
         
         try{
             const response = await fetch (`${hostAdress}/get-side`, {
@@ -23,8 +23,10 @@ class Player {
                 throw new Error (`Server response ${response.status}`)
             }
 
+            // console.log('playerService-await');
             const data = await response.json();
             this.#side = data.side;
+            // console.log(`playerService: ${data.side} || #{this.#side}`);
             return this.#side;
         } catch (err) {
             alert(`failed to get your side, you are aded to spectartor ${err}`)
@@ -32,7 +34,7 @@ class Player {
         }
     }
     reset() {
-        this.#side = null;
+        this.#side = 'spectator';
     }
     get side() {
         return this.#side;

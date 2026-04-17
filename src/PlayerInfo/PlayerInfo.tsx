@@ -54,7 +54,7 @@ const PlayerInfo = (props: PlayerInfoProps) => {
         if(playerTimer <= 0 && !gameEnd) {
             setGameEnd(true);
             setPlayerTimer(0);
-            socket.emit('timerGameEnd', {roomId: roomId, winner: player == 'w' ? 'b' : 'w'});
+            socket.emit('timerGameEnd', {roomId: roomId, winner: player == 'white' ? 'black' : 'white'});
         } 
     }, [playerTimer]);
     
@@ -67,7 +67,7 @@ const PlayerInfo = (props: PlayerInfoProps) => {
     return (
         <div className="player-info-container">
             <div className="first-info-label-container"> 
-                <p className="player-info-title">{player == 'w' ? 'White' : 'Black'}</p>
+                <p className="player-info-title">{player}</p>
                 {takenFigures.map((figure) => {
                     const path = `/assets/${figure.color}-${figure.type}.png`
                     return <img src={path} className="taken-figure-img"/>

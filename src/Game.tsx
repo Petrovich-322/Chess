@@ -22,26 +22,26 @@ import './Game.css';
 
 interface KingsPosition {
     whiteKing: {row: number, col: number}, 
-    blackKing: {row: number, col: number}
+    blackKing: {row: number, col: number},
 }
 interface UserStatus {
     userId: string, 
-    side: string
+    side: 'white' | 'black' | 'spectator'
 }
 interface GameTimer {
     whiteTimer: number,
     blackTimer: number
 }
 
-const defUser = {
+const defUser: UserStatus = {
     userId: '---',
     side: 'spectator',
 }
-const defTimer = {
+const defTimer: GameTimer = {
     whiteTimer: 600,
     blackTimer: 600,
 }
-const defKingsPos = {
+const defKingsPos: KingsPosition = {
     whiteKing: {row: 7, col: 4},
     blackKing: {row: 0, col: 4}
 }
@@ -65,7 +65,7 @@ const Game = () => {
     
     const {roomId} = useParams<{roomId: string}>();
 
-    const userKing = userStatus.side === 'w' ? kingsPostion.whiteKing : kingsPostion.blackKing;
+    const userKing = userStatus.side === 'spectator' ? null : kingsPostion[`${userStatus.side}King`];
     
     const onUpdateInfo = (data: ServerData) => {
         setActiveSide(data.activeSide);
@@ -120,7 +120,7 @@ const Game = () => {
             });
 
             socket.on('gameEnd', (data) => {
-                console.log(`Winner is ${data.winner == 'w' ? 'White' : 'Black'}`);
+                console.log(`Winner is ${data.winner}`);
                 setActiveSide(data.activeSide);
                 setGameEnd(true);
             })
@@ -162,7 +162,7 @@ const Game = () => {
     useEffect(() => {
         if(activeSide != userStatus.side) return;
 
-        if(chachCheck(userKing, field)) console.log('SHAH!!!');
+        if(userKing && chachCheck(userKing, field)) console.log('SHAH!!!');
     }, [field]);
 
     const onSelect = (row: number, col: number) => {
@@ -233,7 +233,7 @@ const Game = () => {
         }
         const historyField = createBoard();
         
-        for(let i=0; i<=index; i++){
+        for(let i=0; i<=index; i++) {
             console.log('newField', i);
             const move = moveStory[i].move;
             historyField[move.to.row][move.to.col] = {...historyField[move.from.row][move.from.col]};
@@ -253,7 +253,7 @@ const Game = () => {
             <div className="game-container">
                 <PlayerInfo
                     timer = {gameTimer.blackTimer}
-                    player = 'b'
+                    player = 'black'
                     moveStory = {moveStory}
                     activeSide = {activeSide}
                     gameEnd = {gameEnd}
@@ -269,7 +269,7 @@ const Game = () => {
                 />
                 <PlayerInfo
                     timer = {gameTimer.whiteTimer}
-                    player = 'w'
+                    player = 'white'
                     moveStory = {moveStory}
                     activeSide = {activeSide}
                     gameEnd = {gameEnd}

@@ -27,7 +27,7 @@ class Game {
         blackId = null 
     } = {}) {
         this.field = createBoard();
-        this.activeSide = 'w';
+        this.activeSide = 'white';
         this.whitePlayer = {
             id: whiteId,
             time: timeLimit,
@@ -38,7 +38,7 @@ class Game {
         };
         this.moveStory = [];
         this.lastMove = {
-            player: 'b',
+            player: 'black',
             time: Date.now()
         };
         this.kingsPosition = {
@@ -78,6 +78,7 @@ app.post('/get-side', (req, res) => {
     const roomId = req.body.roomId;
     const user = req.body.userId;
 
+    console.log('---Get-side---')
     if(!roomId || !user) {
         console.log(`get-side fail ${roomId} || ${user}`);
         res.json({
@@ -95,21 +96,22 @@ app.post('/get-side', (req, res) => {
         console.log(`white player: ${user}`);
         if(!game.whitePlayer.id) game.whitePlayer.id = user;
         res.json({
-            side: 'w',
+            side: 'white',
             stauts: 'succes',
         });
+        return;
     }
-    
-    else if(!game.blackPlayer.id || game.blackPlayer.id === user) {
+    if(!game.blackPlayer.id || game.blackPlayer.id === user) {
         console.log(`black player: ${user}`);
         if(!game.blackPlayer.id) game.blackPlayer.id = user;
         res.json({
-            side: 'b',
+            side: 'black',
             status: 'succes',
         });
+        return;
     }
     
-    else res.json({
+    res.json({
         side: 'spectator',
         status: 'succes',
     });
@@ -140,20 +142,14 @@ io.on('connection', (socket) => {
 
         const game = gameData[roomId];
         const timeDif = (Date.now() - game.lastMove.time)/1000;
+        const playerColor = `${game.activeSide}`;
         
-        const whitePlayerTime = game.activeSide === 'w' ? 
-            (game.gameStatus.gameEnd === false ? game.whitePlayer.time - timeDif : 0) : game.whitePlayer.time;
-        const blackPlayerTime = game.activeSide === 'b' ? 
-            (game.gameStatus.gameEnd === false ? game.blackPlayer.time - timeDif : 0) : game.blackPlayer.time;
-        
-        const actualGameData = {...game,
-            whitePlayer: {
-                ...game.whitePlayer,
-                time: whitePlayerTime
-            },
-            blackPlayer: {
-                ...game.blackPlayer,
-                time: blackPlayerTime
+        const actualPlayerTime = !game.gameStatus.gameEnd ? game[`${playerColor}Player`].time - timeDif : 0;
+        const actualGameData = {
+            ...game,
+            [`${playerColor}Player`]: {
+                ...game[`${playerColor}Player`],
+                time: actualPlayerTime
             }
         }
         
@@ -174,25 +170,27 @@ io.on('connection', (socket) => {
             gameData[roomId] = new Game();
         }
         
-        const game = gameData[roomId];  
+        const game = gameData[roomId];
         const field = game.field;
         const kingsPosition = game.kingsPosition;
-        const userKing = side === 'w' ? kingsPosition.whiteKing : kingsPosition.blackKing;
-        const opponentKing = side === 'w' ? kingsPosition.blackKing : kingsPosition.whiteKing;
         const time = Date.now();
+        
+        const playerColor = `${game.activeSide}`;  
+        const opponentColor = `${game.activeSide === 'white' ? 'black' : 'white'}`;
+        console.log(playerColor, opponentColor);
+        const userKing = kingsPosition[`${playerColor}King`];
+        const opponentKing = kingsPosition[`${opponentColor}King`];
+        console.log(userKing, opponentKing);
 
         if(checkMove(field, move.from, move.to, userKing)) {
             console.log('   Check move possibility');
-            if(side === 'w') {
-                game.whitePlayer.time -= (time - game.lastMove.time)/1000;
-                if(field[move.from.row][move.from.col].type === 'king') {
-                    kingsPosition.whiteKing = {row: move.to.row, col: move.to.col}
-                }
-            } else if(side === 'b') {
-                game.blackPlayer.time -= (time - game.lastMove.time)/1000;
-                if(field[move.from.row][move.from.col].type === 'king') {
-                    kingsPosition.blackKing = {row: move.to.row, col: move.to.col}
-                }
+
+            game[`${playerColor}Player`].time -= (time - game.lastMove.time)/1000;
+            if(field[move.from.row][move.from.col].type === 'king') {
+                kingsPosition[`${playerColor}King`] = {
+                    row: move.to.row, 
+                    col: move.to.col
+                };
             }
             game.lastMove.time = time;
 
@@ -206,7 +204,7 @@ io.on('connection', (socket) => {
             field[move.to.row][move.to.col] = {...field[move.from.row][move.from.col]};
             field[move.from.row][move.from.col] = null;
             
-            game.activeSide = game.activeSide === 'w' ? 'b' : 'w';
+            game.activeSide = game.activeSide === 'white' ? 'black' : 'white';
             game.lastMove = {player: side, time: time};
             game.moveStory.push(moveInfo);
             io.to(roomId).emit('updateInfo', game);
