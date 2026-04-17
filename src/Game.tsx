@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { hostAdress } from './Services/host';
+import { hostAddress } from './Services/host';
 import { checkMove } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
 import { chachCheck } from 'rules-lib';
@@ -17,6 +17,7 @@ import getUserId from './Services/userId';
 import Board from './Board/Board'
 import PlayerInfo from './PlayerInfo/PlayerInfo';
 import GameInfo from './GameInfo/GameInfo';
+import NavigationMenu from './NavigationMenu/NavigationMenu';
 
 import './Game.css';
 
@@ -46,26 +47,27 @@ const defKingsPos: KingsPosition = {
     blackKing: {row: 0, col: 4}
 }
 
-const socket = io(`${hostAdress}`);
+const socket = io(`${hostAddress}`);
 
 const Game = () => {
+    const [kingsPostion, setKingsPosition] = useState<KingsPosition>(defKingsPos);
     const [field, setField] = useState(createBoard());
     const [tempField, setTempField] = useState(createBoard());
-    const [showMoveStory, setShowMoveStory] = useState<boolean>(false);
     const [selectedCell, setSelectedCell] = useState<SelectedCell>(null);
-    const [availableMoves, setAvailableMoves] = useState<AvailableMoves>([]);
-    const [kingsPostion, setKingsPosition] = useState<KingsPosition>(defKingsPos);
     const [userStatus, setUserStatus] = useState<UserStatus>(defUser);
     const [activeSide, setActiveSide] = useState<string>();
     const [gameTimer, setGameTimer] = useState<GameTimer>(defTimer);
     const [gameEnd, setGameEnd] = useState<boolean>(false);
     const [moveStory, setMoveStory] = useState<MoveStory[]>([]);
+    const [showMoveStory, setShowMoveStory] = useState<boolean>(false);
+    const [availableMoves, setAvailableMoves] = useState<AvailableMoves>([]);
     
     const fieldsCache = useRef<Record<number, any[][]>>({});
     
     const {roomId} = useParams<{roomId: string}>();
 
-    const userKing = userStatus.side === 'spectator' ? null : kingsPostion[`${userStatus.side}King`];
+    const userKing = userStatus.side === 'spectator' ? 
+        null : kingsPostion[`${userStatus.side}King`];
     
     const onUpdateInfo = (data: ServerData) => {
         setActiveSide(data.activeSide);
@@ -101,7 +103,8 @@ const Game = () => {
             if(!roomId) return roomId;
             
             const localStorageDataJSON = localStorage.getItem('DenisChess');
-            const localStorageData = localStorageDataJSON ? JSON.parse(localStorageDataJSON) : {userId: null, prevRoomId: null};
+            const localStorageData = localStorageDataJSON ? 
+                JSON.parse(localStorageDataJSON) : {userId: null, prevRoomId: null};
             localStorageData.prevRoomId = roomId; 
             console.log(localStorageData);
             localStorage.setItem('DenisChess', JSON.stringify(localStorageData));
@@ -114,7 +117,10 @@ const Game = () => {
                 console.log('initializeGame');
                 setField(data.field);
                 setActiveSide(data.activeSide);
-                setGameTimer({whiteTimer: data.whitePlayer.time, blackTimer: data.blackPlayer.time});   
+                setGameTimer({
+                    whiteTimer: data.whitePlayer.time, 
+                    blackTimer: data.blackPlayer.time
+                });   
                 setMoveStory(data.moveStory);
                 setGameEnd(data.gameStatus.gameEnd);
             });
@@ -197,27 +203,32 @@ const Game = () => {
                 return;
             }
             
-            if(userStatus.side !== activeSide) {
+            if(userStatus.side != activeSide) 
+            {
                 updateSelectedCell();
                 return;
             }
             
-            if(userStatus.side === field[selectedCell.row][selectedCell.col]?.color) 
+            const prevFigure = field[selectedCell.row][selectedCell.col];
+            if(prevFigure && userStatus.side != prevFigure.color) 
             {
-                const checkMovement = checkMove(field, selectedCell, { row, col }, userKing);
-                
-                if(checkMovement) 
-                {
-                    socket.emit('newMove', {
-                        side: userStatus.side,
-                        roomId: roomId,
-                        move: { from: selectedCell, to: { row, col } },
-                    });
-                    setSelectedCell(null);
-                    setAvailableMoves([]);
-                    console.log('sending newMove');
-                    return;
-                }
+                updateSelectedCell();
+                return;
+            }
+
+            const checkMovement = checkMove(field, selectedCell, { row, col }, userKing);
+            
+            if(checkMovement) 
+            {
+                socket.emit('newMove', {
+                    side: userStatus.side,
+                    roomId: roomId,
+                    move: { from: selectedCell, to: { row, col } },
+                });
+                setSelectedCell(null);
+                setAvailableMoves([]);
+                console.log('sending newMove');
+                return;
             }
         }
 
@@ -228,15 +239,17 @@ const Game = () => {
         if(fieldsCache.current[index]) {
             setTempField(fieldsCache.current[index]);
             setShowMoveStory(true);
-            console.log('cache');
+            // console.log('cache');
             return;
         }
         const historyField = createBoard();
         
         for(let i=0; i<=index; i++) {
-            console.log('newField', i);
+            // console.log('newField', i);
             const move = moveStory[i].move;
-            historyField[move.to.row][move.to.col] = {...historyField[move.from.row][move.from.col]};
+            historyField[move.to.row][move.to.col] = {
+                ...historyField[move.from.row][move.from.col]
+            };
             historyField[move.from.row][move.from.col] = null;
         }
         
@@ -247,41 +260,43 @@ const Game = () => {
     
     return (
         <div className="main-container">
-            <div className="space-container">
-
+            <NavigationMenu />
+            <div className="page-container">
+                <div className="full-game-container">
+                    <div className="vertical-game-container">
+                        <PlayerInfo
+                            timer = {gameTimer.blackTimer}
+                            player = 'black'
+                            moveStory = {moveStory}
+                            activeSide = {activeSide}
+                            gameEnd = {gameEnd}
+                            socket = {socket}
+                            roomId = {roomId}
+                            setGameEnd = {setGameEnd}
+                        />
+                        <Board 
+                            field = {showMoveStory === false ? field : tempField}
+                            selectedCell = {selectedCell}
+                            availableMoves = {availableMoves}
+                            onSelect = {onSelect}
+                        />
+                        <PlayerInfo
+                            timer = {gameTimer.whiteTimer}
+                            player = 'white'
+                            moveStory = {moveStory}
+                            activeSide = {activeSide}
+                            gameEnd = {gameEnd}
+                            socket = {socket}
+                            roomId = {roomId} 
+                            setGameEnd = {setGameEnd}
+                        />
+                    </div>
+                    <GameInfo 
+                        onMoveClick = {onMoveClick}
+                        moveStory = {moveStory}
+                    />
+                </div>
             </div>
-            <div className="game-container">
-                <PlayerInfo
-                    timer = {gameTimer.blackTimer}
-                    player = 'black'
-                    moveStory = {moveStory}
-                    activeSide = {activeSide}
-                    gameEnd = {gameEnd}
-                    socket = {socket}
-                    roomId = {roomId}
-                    setGameEnd = {setGameEnd}
-                />
-                <Board 
-                    field = {showMoveStory === false ? field : tempField}
-                    selectedCell = {selectedCell}
-                    availableMoves = {availableMoves}
-                    onSelect = {onSelect}
-                />
-                <PlayerInfo
-                    timer = {gameTimer.whiteTimer}
-                    player = 'white'
-                    moveStory = {moveStory}
-                    activeSide = {activeSide}
-                    gameEnd = {gameEnd}
-                    socket = {socket}
-                    roomId = {roomId} 
-                    setGameEnd = {setGameEnd}
-                />
-            </div>
-            <GameInfo 
-                onMoveClick = {onMoveClick}
-                moveStory = {moveStory}
-            />
         </div>
     );
 }

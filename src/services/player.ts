@@ -1,4 +1,4 @@
-import { hostAdress } from "./host";
+import { hostAddress } from "./host";
 
 class Player {
     #side: 'white' | 'black' | 'spectator' = 'spectator';
@@ -8,7 +8,7 @@ class Player {
         if(this.#side != 'spectator') return this.#side;
         
         try{
-            const response = await fetch (`${hostAdress}/get-side`, {
+            const response = await fetch (`${hostAddress}/get-side`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

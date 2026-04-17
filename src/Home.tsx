@@ -2,10 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 
 import { playerService } from './Services/player';
-import { hostAdress } from './Services/host';
+import { hostAddress } from './Services/host';
 import getUserId from './Services/userId';
 
 import CreatingGameMenu from './CreatingGameMenu/CreatingGameMenu'
+import NavigationMenu from './NavigationMenu/NavigationMenu';
 
 import "./Home.css";
 
@@ -23,7 +24,7 @@ const Home = () => {
         }
         
         try {
-            const response = await fetch(`${hostAdress}/create-room`, {
+            const response = await fetch(`${hostAddress}/create-room`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -44,16 +45,19 @@ const Home = () => {
     }
     
     return (
-        <div className="main-menu-container">
-            <div id="start-btn-container">
-                <button className="btn start-btn" onClick={() => setOnCreateGame(true)}>Створити гру</button>
-                <button className="btn new-user-btn" onClick={async () => await getUserId('newUser')}>Створити користувача(костиль)</button>
+        <div className="main-container">
+            <NavigationMenu />
+            <div className="main-menu-container">
+                <div id="start-btn-container">
+                    <button className="main-menu-btn start-btn" onClick={() => setOnCreateGame(true)}>Створити гру</button>
+                    <button className="main-menu-btn new-user-btn" onClick={async () => await getUserId('newUser')}>Створити користувача(костиль)</button>
+                </div>
+                {onCreateGame && <CreatingGameMenu
+                    setOnCreateGame={setOnCreateGame}
+                    onCreateGameHandler={onCreateGameHandler}
+                />
+                }
             </div>
-            {onCreateGame && <CreatingGameMenu
-                setOnCreateGame={setOnCreateGame}
-                onCreateGameHandler={onCreateGameHandler}
-            />
-            }
         </div>
     )
 }

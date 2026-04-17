@@ -6,22 +6,32 @@
     --white-cell-color: rgb(255, 206, 142);
 }
 
+#root{
+    width: 100%;
+}
+
 body{
+    margin: 0;
     background-color: var(--main-color);
 }
 
-
-.main-container {
+.main-container{
     display: flex;
+    
+}
+.page-container {
+    display: flex;
+    flex: 0.9;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
     /* background-color: var(--main-color); */
 }
+.full-game-container{
+    display: flex;
 
-.space-container{
-    margin: 15px;
-    width: 250px
 }
-
-.game-container {
+.vertical-game-container {
     display: flex;
     flex-direction: column;
 }

@@ -1,4 +1,4 @@
-import { hostAdress } from "./host";
+import { hostAddress } from "./host";
 
 const getUserId = async (checker: string) => {
     const localStorageDataJSON = localStorage.getItem('DenisChess');
@@ -9,7 +9,7 @@ const getUserId = async (checker: string) => {
     }
     
     try {
-        const response = await fetch (`${hostAdress}/get-user-id`)
+        const response = await fetch (`${hostAddress}/get-user-id`)
 
         if(!response.ok) {
             throw new Error (`Server response ${response.status}`)
