@@ -1,5 +1,7 @@
 import { useState, Dispatch, SetStateAction } from 'react';
 
+import TimeSelector from './TimeSelector';
+
 import './CreatingGameMenu.css'
 
 interface CreatingGameMenuProps {
@@ -26,32 +28,19 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
         <div className="create-game-container">
             <p className="setting-game-title">Налаштування гри</p>
             <div className="time-picker-container">
-                <div className="time-select-section">
-                    <div className="number-select-section">
-                        <input 
-                            className="time-input-field"
-                            type="number" 
-                            value={minutes.toString()}
-                            onChange={(e) => 
-                                setMinutes(Math.max(0, Math.min(59,Number(e.target.value))))
-                            }
-                        />
-                        <span className="time-input-title">Хвилини</span>
-                    </div>
-                    
+                <div className="manual-time-select-section">
+                    <TimeSelector 
+                        time = {minutes}
+                        title = {'Хвилини'}
+                        setTime = {setMinutes}
+                    />
                     <span className="colon">:</span>
                     
-                    <div className="number-select-section">
-                        <input 
-                            className="time-input-field"    
-                            type="number" 
-                            value={seconds.toString()}
-                            onChange={(e) => 
-                                setSeconds(Math.max(0, Math.min(59,Number(e.target.value))))
-                            }
-                        />
-                        <span className="time-input-title">Секунди</span>
-                    </div>
+                    <TimeSelector 
+                        time = {seconds}
+                        title = {'Секунди'}
+                        setTime = {setSeconds}
+                    />
                 </div>
 
                 <div className="presets-container">

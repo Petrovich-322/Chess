@@ -18,7 +18,7 @@ const Home = () => {
     
     const onCreateGameHandler = async (time: number) => {
         playerService.reset();
-        const data = {
+        const createRoomData = {
             time: time
         }
         
@@ -28,29 +28,26 @@ const Home = () => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(data)
+                body: JSON.stringify(createRoomData)
             });
             
             if(!response.ok) {
                 throw new Error (`failed to create-room ${response.status}`);
             }
-
+            
             const result = await response.json();
+            
             navigate(`/game/${result.roomId}`);
         } catch (err) {
             alert(`server is not responding properly ${err}`);
         }
-    }
-
-    const newUser = async () => {
-        await getUserId('newUser');
     }
     
     return (
         <div className="main-menu-container">
             <div id="start-btn-container">
                 <button className="btn start-btn" onClick={() => setOnCreateGame(true)}>Створити гру</button>
-                <button className="btn new-user-btn" onClick={newUser}>Створити користувача(костиль)</button>
+                <button className="btn new-user-btn" onClick={async () => await getUserId('newUser')}>Створити користувача(костиль)</button>
             </div>
             {onCreateGame && <CreatingGameMenu
                 setOnCreateGame={setOnCreateGame}

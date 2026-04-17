@@ -1,13 +1,13 @@
 import NewCell from "./Cell/NewCell";
 
-import type { Figure } from "../Interfaces/interface"; 
+import type { Figure, SelectedCell, AvailableMoves} from "../Interfaces/interface"; 
 
 import './Board.css';
 
 interface BoardProps {
     field: Array<Array<Figure | null>>,
-    selectedCell: {row: number, col: number} | null,
-    availableMoves: Array<{row: number, col: number}>,
+    selectedCell: SelectedCell,
+    availableMoves: AvailableMoves,
     onSelect: (row: number, col: number) => void,
 }
 

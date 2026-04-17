@@ -8,7 +8,7 @@ import { getAvailableMoves } from 'rules-lib';
 import { chachCheck } from 'rules-lib';
 import { playerService } from './Services/player';
 
-import { ServerData } from './Interfaces/interface';
+import { AvailableMoves, SelectedCell, ServerData } from './Interfaces/interface';
 import { MoveStory } from './Interfaces/interface';
 
 import createBoard from './Services/createBoard';   
@@ -20,6 +20,19 @@ import GameInfo from './GameInfo/GameInfo';
 
 import './Game.css';
 
+interface KingsPosition {
+    whiteKing: {row: number, col: number}, 
+    blackKing: {row: number, col: number}
+}
+interface UserStatus {
+    userId: string, 
+    side: string
+}
+interface GameTimer {
+    whiteTimer: number,
+    blackTimer: number
+}
+
 const defUser = {
     userId: '---',
     side: 'spectator',
@@ -28,7 +41,7 @@ const defTimer = {
     whiteTimer: 600,
     blackTimer: 600,
 }
-const defKingsPosition = {
+const defKingsPos = {
     whiteKing: {row: 7, col: 4},
     blackKing: {row: 0, col: 4}
 }
@@ -39,23 +52,27 @@ const Game = () => {
     const [field, setField] = useState(createBoard());
     const [tempField, setTempField] = useState(createBoard());
     const [showMoveStory, setShowMoveStory] = useState<boolean>(false);
-    const [selectedCell, setSelectedCell] = useState<{row: number; col: number} | null>(null);
-    const [availableMoves, setAvailableMoves] = useState<{row: number; col: number}[]>([]);
-    const [kingsPostion, setKingsPosition] = useState<{whiteKing: {row: number, col: number}; blackKing: {row: number, col: number}}>(defKingsPosition);
-    const [userStatus, setUserStatus] = useState<{userId: string; side: string;}>(defUser);
+    const [selectedCell, setSelectedCell] = useState<SelectedCell>(null);
+    const [availableMoves, setAvailableMoves] = useState<AvailableMoves>([]);
+    const [kingsPostion, setKingsPosition] = useState<KingsPosition>(defKingsPos);
+    const [userStatus, setUserStatus] = useState<UserStatus>(defUser);
     const [activeSide, setActiveSide] = useState<string>();
-    const [gameTimer, setGameTimer] = useState<{whiteTimer: number; blackTimer: number}>(defTimer);
+    const [gameTimer, setGameTimer] = useState<GameTimer>(defTimer);
     const [gameEnd, setGameEnd] = useState<boolean>(false);
-    const [moveStory, setMoveStory] = useState<Array<MoveStory>>([]);
+    const [moveStory, setMoveStory] = useState<MoveStory[]>([]);
     
     const fieldsCache = useRef<Record<number, any[][]>>({});
     
     const {roomId} = useParams<{roomId: string}>();
 
-
+    const userKing = userStatus.side === 'w' ? kingsPostion.whiteKing : kingsPostion.blackKing;
+    
     const onUpdateInfo = (data: ServerData) => {
         setActiveSide(data.activeSide);
-        setGameTimer({whiteTimer: data.whitePlayer.time, blackTimer: data.blackPlayer.time});
+        setGameTimer({
+            whiteTimer: data.whitePlayer.time, 
+            blackTimer: data.blackPlayer.time
+        });
         setKingsPosition(data.kingsPosition);
         
         const lastMove = data.moveStory[data.moveStory.length-1];
@@ -83,6 +100,12 @@ const Game = () => {
         const initGame = async () => {
             if(!roomId) return roomId;
             
+            const localStorageDataJSON = localStorage.getItem('DenisChess');
+            const localStorageData = localStorageDataJSON ? JSON.parse(localStorageDataJSON) : {userId: null, prevRoomId: null};
+            localStorageData.prevRoomId = roomId; 
+            console.log(localStorageData);
+            localStorage.setItem('DenisChess', JSON.stringify(localStorageData));
+
             socket.on('updateInfo', (data: ServerData) => {
                 onUpdateInfo(data);
             });
@@ -118,7 +141,7 @@ const Game = () => {
                 socket.io.once('reconnect_attempt', () => {
                     console.log('Server connection failed, try later');
                 });
-                socket.io.on('reconnect', (data) => {
+                socket.io.on('reconnect', () => {
                     console.log('connection succes');
                 })
             };
@@ -139,50 +162,66 @@ const Game = () => {
     useEffect(() => {
         if(activeSide != userStatus.side) return;
 
-        const king = userStatus.side == 'w' ? kingsPostion.whiteKing : kingsPostion.blackKing;
-        if(chachCheck(king, field)) console.log('SHAH!!!');
+        if(chachCheck(userKing, field)) console.log('SHAH!!!');
     }, [field]);
 
     const onSelect = (row: number, col: number) => {
-        if(showMoveStory){
+        if(showMoveStory)
+        {
             setAvailableMoves([]);
             setSelectedCell(null);
             setShowMoveStory(false);    
             return;
         }
+        
         if (userStatus.side === 'spectator' || gameEnd) return;
 
-        const king = userStatus.side === 'w' ? kingsPostion.whiteKing : kingsPostion.blackKing;
-
-        if (selectedCell?.row === row && selectedCell?.col === col) {
-            setSelectedCell(null);
-            setAvailableMoves([]);
-            return;
-        }
-        if (selectedCell && (roomId === 'test-server' || userStatus.side === activeSide && userStatus.side === field[selectedCell.row][selectedCell.col]?.color)) {
-            const checkMovement = checkMove(field, selectedCell, { row, col }, king);
-            if (checkMovement) {
-                socket.emit('newMove', {
-                    side: userStatus.side,
-                    roomId: roomId,
-                    move: { from: selectedCell, to: { row, col } },
-                });
-                setSelectedCell(null);
-                setAvailableMoves([]);
-                console.log('sending newMove');
+        const updateSelectedCell = () => {
+            const newFigure = field[row][col];
+            if (newFigure?.color === userStatus.side) 
+            {
+                setSelectedCell({ row, col });
+                setAvailableMoves(getAvailableMoves(field, { row, col }, userKing));
                 return;
             }
-        }
-        
-        const newFigure = field[row][col];
-        if (newFigure?.color === userStatus.side || roomId === 'test-server') {
+
             setSelectedCell({ row, col });
-            setAvailableMoves(getAvailableMoves(field, { row, col }, king));
-            return;
+            setAvailableMoves([]);
         }
 
-        setSelectedCell({ row, col });
-        setAvailableMoves([]);
+        if(selectedCell) {
+            if(selectedCell.row === row && selectedCell.col === col) 
+            {
+                setSelectedCell(null);
+                setAvailableMoves([]);
+                return;
+            }
+            
+            if(userStatus.side !== activeSide) {
+                updateSelectedCell();
+                return;
+            }
+            
+            if(userStatus.side === field[selectedCell.row][selectedCell.col]?.color) 
+            {
+                const checkMovement = checkMove(field, selectedCell, { row, col }, userKing);
+                
+                if(checkMovement) 
+                {
+                    socket.emit('newMove', {
+                        side: userStatus.side,
+                        roomId: roomId,
+                        move: { from: selectedCell, to: { row, col } },
+                    });
+                    setSelectedCell(null);
+                    setAvailableMoves([]);
+                    console.log('sending newMove');
+                    return;
+                }
+            }
+        }
+
+        updateSelectedCell();
     }
 
     const onMoveClick = (index: number) => {
@@ -200,6 +239,7 @@ const Game = () => {
             historyField[move.to.row][move.to.col] = {...historyField[move.from.row][move.from.col]};
             historyField[move.from.row][move.from.col] = null;
         }
+        
         fieldsCache.current[index] = historyField
         setTempField(historyField);
         setShowMoveStory(true);

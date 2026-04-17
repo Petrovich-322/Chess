@@ -120,6 +120,7 @@ const callGameEnd = (roomId, side) => {
     const game = gameData[roomId];
     game.gameStatus.gameEnd = true;
     game.gameStatus.winner = side;
+    
     console.log('gameEnd, winner', side);
 }
 
@@ -155,16 +156,20 @@ io.on('connection', (socket) => {
                 time: blackPlayerTime
             }
         }
+        
         socket.emit('initializeGame', actualGameData);
+        
         console.log(`User joined room: ${roomId}`); 
     });
 
     const onNewMove = (side, roomId, move) => {
         console.log('---New move---');
+        
         if(!roomId) {
             console.log(`onNewMove -> no room id ${roomId}`);
             return;
         }
+        
         if(!gameData[roomId]) {
             gameData[roomId] = new Game();
         }
@@ -172,9 +177,11 @@ io.on('connection', (socket) => {
         const game = gameData[roomId];  
         const field = game.field;
         const kingsPosition = game.kingsPosition;
+        const userKing = side === 'w' ? kingsPosition.whiteKing : kingsPosition.blackKing;
+        const opponentKing = side === 'w' ? kingsPosition.blackKing : kingsPosition.whiteKing;
         const time = Date.now();
 
-        if(checkMove(field, move.from, move.to, side === 'w' ? kingsPosition.whiteKing : kingsPosition.blackKing)) {
+        if(checkMove(field, move.from, move.to, userKing)) {
             console.log('   Check move possibility');
             if(side === 'w') {
                 game.whitePlayer.time -= (time - game.lastMove.time)/1000;
@@ -204,10 +211,9 @@ io.on('connection', (socket) => {
             game.moveStory.push(moveInfo);
             io.to(roomId).emit('updateInfo', game);
 
-            const king = side === 'w' ? kingsPosition.blackKing : kingsPosition.whiteKing
-            if(chachCheck(king, field)){
+            if(chachCheck(opponentKing, field)){
                 getAvailableMoves.clear();
-                const isMate = mateCheck(game.activeSide, field, king);
+                const isMate = mateCheck(game.activeSide, field, opponentKing);
                 console.log(isMate);
                 if(isMate) callGameEnd(roomId, side);
             }

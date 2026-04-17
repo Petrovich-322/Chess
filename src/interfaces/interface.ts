@@ -1,13 +1,13 @@
 export interface Figure {
-    color: string;
-    type: string;
-}
+    color: string,
+    type: string
+};
 
 export interface MoveStory {
     move: {from: {row: number, col: number}, to: {row: number, col: number}},
     firstFigure: Figure,
     secondFigure: Figure | null
-}
+};
 
 export interface ServerData {
     field: Array<Array<any>>;
@@ -18,4 +18,15 @@ export interface ServerData {
     prevMoveTime: number;
     kingsPosition: {whiteKing: {row: number, col: number}, blackKing: {row: number, col: number}};
     gameStatus: {gameEnd: boolean, winner: string | null}
-}
+};
+
+
+export type SelectedCell = {
+    row: number, 
+    col: number,
+} | null;
+
+export type AvailableMoves = {
+    row: number, 
+    col: number
+}[];

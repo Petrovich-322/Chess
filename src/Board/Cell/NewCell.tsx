@@ -1,4 +1,4 @@
-import { Figure } from "./interfaces/interface";
+import { Figure } from "../../Interfaces/interface";
 
 interface NewCellProps {
     index: {rowIndex: number;colIndex: number;};
