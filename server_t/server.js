@@ -111,7 +111,7 @@ app.post('/get-side', (req, res) => {
         res.json(whitePlayer);
         return;
     }
-    else if(game.blackPlayer === user) {
+    else if(game.blackPlayer.id === user) {
         res.json(blackPlayer);
         return;
     }
@@ -175,7 +175,7 @@ io.on('connection', (socket) => {
         
         const actualPlayerTime = !game.gameStatus.gameEnd ? 
             game[`${playerColor}Player`].time - timeDif : 0;
-            
+
         const actualGameData = {
             ...game,
             [`${playerColor}Player`]: {
