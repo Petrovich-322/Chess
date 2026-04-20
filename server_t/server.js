@@ -104,30 +104,32 @@ app.post('/get-side', (req, res) => {
         gameData[roomId] = new Game();
     }
     const game = gameData[roomId];
-
-    if((!game.blackPlayer.id && !game.whitePlayer.id) || game.whitePlayer.id === user) {
-        console.log(`white player: ${user}`);
-        if(!game.whitePlayer.id) game.whitePlayer.id = user;
-        res.json({
-            side: 'white',
-            stauts: 'succes',
-        });
+    const whitePlayer = {side: 'white'};
+    const blackPlayer = {side: 'black'};
+    
+    if(game.whitePlayer.id === user) {
+        res.json(whitePlayer);
         return;
     }
-    if(!game.blackPlayer.id || game.blackPlayer.id === user) {
+    else if(game.blackPlayer === user) {
+        res.json(blackPlayer);
+        return;
+    }
+
+    if(!game.whitePlayer.id) {
+        console.log(`white player: ${user}`);
+        if(!game.whitePlayer.id) game.whitePlayer.id = user;
+        res.json(whitePlayer);
+        return;
+    }
+    else if(!game.blackPlayer.id) {
         console.log(`black player: ${user}`);
         if(!game.blackPlayer.id) game.blackPlayer.id = user;
-        res.json({
-            side: 'black',
-            status: 'succes',
-        });
+        res.json(blackPlayer);
         return;
     }
     
-    res.json({
-        side: 'spectator',
-        status: 'succes',
-    });
+    res.json({side: 'spectator'});
 });
 
 const sendChatMessage = (roomId, user, text) => {
@@ -146,7 +148,9 @@ const callGameEnd = (roomId, side) => {
     const game = gameData[roomId];
     game.gameStatus.gameEnd = true;
     game.gameStatus.winner = side;
-    sendChatMessage(roomId, 'Сервер', `Переможець - ${side === 'white' ? 'білий' : 'чорний'}`);
+    
+    const messageText = `Переможець - ${side === 'white' ? 'білий' : 'чорний'}`; 
+    sendChatMessage(roomId, 'Сервер', messageText);
 
     console.log('gameEnd, winner', side);
 }
@@ -169,7 +173,9 @@ io.on('connection', (socket) => {
         const timeDif = (Date.now() - game.lastMove.time)/1000;
         const playerColor = `${game.activeSide}`;
         
-        const actualPlayerTime = !game.gameStatus.gameEnd ? game[`${playerColor}Player`].time - timeDif : 0;
+        const actualPlayerTime = !game.gameStatus.gameEnd ? 
+            game[`${playerColor}Player`].time - timeDif : 0;
+            
         const actualGameData = {
             ...game,
             [`${playerColor}Player`]: {
