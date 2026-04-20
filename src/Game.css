@@ -4,6 +4,7 @@
     --side-gui-elements-color: rgb(186, 83, 28);
     --black-cell-color: rgb(186, 83, 28);
     --white-cell-color: rgb(255, 206, 142);
+    --gray-btn-hover-color: rgb(221, 221, 221);
 }
 
 #root{

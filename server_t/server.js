@@ -49,6 +49,10 @@ class Game {
             gameEnd: false, 
             winner: null
         };
+        this.chatStory = [{
+            user: 'Сервер',
+            text: 'Гру успішно створено'
+        }]
     }
 }
 
@@ -68,17 +72,26 @@ app.get('/get-user-id', (req, res) => {
 
 app.post('/create-room', (req, res) => {
     console.log('---Create room request---');
-    const time = req.body.time ? req.body.time : 600; 
+    const time = req.body.time ?? 600;
+    const userId = req.body.userId ?? null;
+    const userSide = req.body.side ?? 'white';
+
+    console.log(`   userId: ${userId}`);
+    console.log(`   userSide ${userSide} || ${req.body.side}`)
     const roomId = roomNameGeneator.next().value
-    gameData[roomId] = new Game({timeLimit: time});
+    gameData[roomId] = new Game({
+        timeLimit: time,
+        [`${userSide}Id`] : userId
+    });
     res.json({roomId: roomId});
 });
 
 app.post('/get-side', (req, res) => {
+    console.log('---Get-Side-Request---');
     const roomId = req.body.roomId;
     const user = req.body.userId;
 
-    console.log('---Get-side---')
+    console.log(gameData[roomId]);
     if(!roomId || !user) {
         console.log(`get-side fail ${roomId} || ${user}`);
         res.json({
@@ -92,7 +105,7 @@ app.post('/get-side', (req, res) => {
     }
     const game = gameData[roomId];
 
-    if(!game.whitePlayer.id || game.whitePlayer.id === user) {
+    if((!game.blackPlayer.id && !game.whitePlayer.id) || game.whitePlayer.id === user) {
         console.log(`white player: ${user}`);
         if(!game.whitePlayer.id) game.whitePlayer.id = user;
         res.json({
@@ -117,12 +130,24 @@ app.post('/get-side', (req, res) => {
     });
 });
 
+const sendChatMessage = (roomId, user, text) => {
+    console.log('---new message in chat---');
+    const game = gameData[roomId];
+    const message = {
+        user: user,
+        text: text
+    }
+    game.chatStory.push(message);
+    io.to(roomId).emit('chatUpdate', {newMessage: message});
+}
+
 const callGameEnd = (roomId, side) => {
     io.to(roomId).emit('gameEnd', {winner: side, activeSide: 'spectator'});
     const game = gameData[roomId];
     game.gameStatus.gameEnd = true;
     game.gameStatus.winner = side;
-    
+    sendChatMessage(roomId, 'Сервер', `Переможець - ${side === 'white' ? 'білий' : 'чорний'}`);
+
     console.log('gameEnd, winner', side);
 }
 
@@ -230,6 +255,11 @@ io.on('connection', (socket) => {
     socket.on('timerGameEnd', ({ roomId, winner }) => {
         if(!roomId || !winner) return; 
         callGameEnd(roomId, winner);
+    })
+
+    socket.on('chatNewMessage', ({roomId, user, text}) => {
+        if(!roomId || !user || !text) return;
+        sendChatMessage(roomId, user, text);
     })
 });
 

@@ -1,5 +1,5 @@
 
-.game-info-container{
+.game-info.container{
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -9,15 +9,19 @@
     background-color: var(--side-gui-color)
 }
 
-.move-list{
+/* MOVES STORY */
+
+.game-info.move-list{
     width: 92%;
-    margin-top: 5px;
+    margin-top: 10px;
     margin-bottom: 5px;
-    max-height: 400px;
+    max-height: 250px;
+    height: 250px;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;
     scrollbar-color: var(--side-gui-elements-color) #f1f1f1;
+    border: solid 1px black;
 }
 
 .move-info-container{
@@ -45,3 +49,72 @@
     width: 15px;
     height: 23px;
 }
+
+/* CHAT */
+
+.game-info.chat{
+    &.container{
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        margin-top: 10px;
+        height: 250px;
+        border: solid 1px black;
+        width: 92%;
+    }
+    
+    &.list{
+        width: 100%;
+    }
+
+    &.message{
+        width: 95%;
+        margin-left: 5px;
+        /* border-bottom: solid 1px var(--side-gui-elements-color); */
+    }
+
+    &.input{
+        &.container{
+            flex: 0;
+            display: flex;
+            justify-content: space-between;
+            flex-direction: row;
+            width: 100%;
+            margin: 0;
+        }
+
+        &.field{
+            border: 0;
+            width: 85%;
+            padding: 0;
+            height: 100%;
+
+            &:focus{
+                border: 0;
+                outline: none;
+            }
+            &:focus{
+                border-bottom: solid 2px var(--side-gui-elements-color);
+                margin-bottom: -2px;
+            }
+        }   
+
+        &.btn{
+            height: 100%;
+            background-color: rgba(0,0,0,0);
+            border: 0;
+            font-size: 15px;
+            border-radius: 15px;
+            padding: 0;
+            width: 15%;
+            &:hover{
+                cursor: pointer;
+            }
+            &:active{
+                font-size: 20px;
+                margin-top: -5px;
+            }
+        }
+    }
+}
+

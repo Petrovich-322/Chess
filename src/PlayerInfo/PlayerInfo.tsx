@@ -1,28 +1,31 @@
-import { useEffect, useState, Dispatch, SetStateAction } from 'react';
+import { useEffect, useState, Dispatch, SetStateAction, useContext } from 'react';
 
 import { MoveStory } from '../Interfaces/interface';
 
 import './PlayerInfo.css'
+import { SocketContext } from '../SocketContext';
 
 interface PlayerInfoProps {
+    isUser: boolean,
     timer: number, 
     player: string | null,
-    moveStory: Array<MoveStory>, 
+    moveStory: MoveStory, 
     activeSide: string | undefined,
     gameEnd: Boolean,
-    socket: any,
     roomId: string | undefined,
     setGameEnd: Dispatch<SetStateAction<boolean>>
 }
 
 const PlayerInfo = (props: PlayerInfoProps) => {
+    const socket = useContext(SocketContext);
+    
     const {
+        isUser,
         timer,
         player,
         moveStory,
         activeSide,
         gameEnd,
-        socket,
         roomId,
         setGameEnd,
     } = props;
@@ -67,7 +70,7 @@ const PlayerInfo = (props: PlayerInfoProps) => {
     return (
         <div className="player-info-container">
             <div className="first-info-label-container"> 
-                <p className="player-info-title">{player}</p>
+                <p className="player-info-title">{`${player === 'white' ? 'Білий' : 'Чорний'} ${isUser ? '- Користувач' : ' '}`}</p>
                 {takenFigures.map((figure) => {
                     const path = `/assets/${figure.color}-${figure.type}.png`
                     return <img src={path} className="taken-figure-img"/>
