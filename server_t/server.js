@@ -9,6 +9,7 @@ import { getAvailableMoves } from 'rules-lib';
 
 import createBoard from '../src/Services/createBoard.js';
 import createRoomName from "./room-generator.js";
+import { time } from 'console';
 
 const PORT = 3000;
 const corsInfo = {
@@ -20,6 +21,14 @@ const corsInfo = {
 }
 const gameData = {};
 
+class Player {
+    constructor(id, timeLimit) {
+        this.id = id;
+        this.time = timeLimit;
+        this.status = "offline";
+    }
+}
+
 class Game {
     constructor({ 
         timeLimit = 600, 
@@ -28,14 +37,11 @@ class Game {
     } = {}) {
         this.field = createBoard();
         this.activeSide = 'white';
-        this.whitePlayer = {
-            id: whiteId,
-            time: timeLimit,
+        this.players = {
+            white: new Player(whiteId, timeLimit),
+            black: new Player(blackId, timeLimit)
         };
-        this.blackPlayer = {
-            id: blackId,
-            time: timeLimit,
-        };
+
         this.moveStory = [];
         this.lastMove = {
             player: 'black',
@@ -107,24 +113,24 @@ app.post('/get-side', (req, res) => {
     const whitePlayer = {side: 'white'};
     const blackPlayer = {side: 'black'};
     
-    if(game.whitePlayer.id === user) {
+    if(game.players.white.id === user) {
         res.json(whitePlayer);
         return;
     }
-    else if(game.blackPlayer.id === user) {
+    else if(game.players.black.id === user) {
         res.json(blackPlayer);
         return;
     }
 
-    if(!game.whitePlayer.id) {
+    if(!game.players.white.id) {
         console.log(`white player: ${user}`);
-        if(!game.whitePlayer.id) game.whitePlayer.id = user;
+        if(!game.whitePlayer.id) game.players.white.id = user;
         res.json(whitePlayer);
         return;
     }
-    else if(!game.blackPlayer.id) {
+    else if(!game.players.black.id) {
         console.log(`black player: ${user}`);
-        if(!game.blackPlayer.id) game.blackPlayer.id = user;
+        if(!game.blackPlayer.id) game.players.black.id = user;
         res.json(blackPlayer);
         return;
     }

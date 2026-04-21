@@ -27,8 +27,16 @@ export type Figure = {
 export interface ServerData {
     field: Array<Array<any>>;
     activeSide: string;
-    whitePlayer: {id: number | null; time: number};
-    blackPlayer: {id: number | null; time: number};
+    player: {
+        white: {
+            id: string,
+            time: number
+        },
+        black: {
+            id: string,
+            time: number
+        }
+    }
     moveStory: MoveStory,
     chatStory: ChatStory,
     prevMoveTime: number;

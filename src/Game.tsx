@@ -69,7 +69,6 @@ const Game = () => {
 
     const userKing = userStatus.side === 'spectator' ? 
         null : kingsPostion[`${userStatus.side}King`];
-    
 
     useEffect(() => {
         if(!roomId) return;
@@ -77,8 +76,8 @@ const Game = () => {
         const handleUpdateInfo = (data: ServerData) => {
             setActiveSide(data.activeSide);
             setGameTimer({
-                whiteTimer: data.whitePlayer.time, 
-                blackTimer: data.blackPlayer.time
+                whiteTimer: data.player.white.time, 
+                blackTimer: data.player.black.time
             });
             setKingsPosition(data.kingsPosition);
             
@@ -108,8 +107,8 @@ const Game = () => {
             setField(data.field);
             setActiveSide(data.activeSide);
             setGameTimer({
-                whiteTimer: data.whitePlayer.time, 
-                blackTimer: data.blackPlayer.time
+                whiteTimer: data.player.white.time, 
+                blackTimer: data.player.black.time
             });   
             setMoveStory(data.moveStory);
             setGameEnd(data.gameStatus.gameEnd);
