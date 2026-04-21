@@ -18,19 +18,21 @@ const NavigationMenu = () => {
 
     return (
         <div className="main-nav-bar"> 
-            <button 
-                className="nav-btn return-home-btn"
-                onClick={() => window.location.href = devServAddress}
-            >
-                Головне меню
-            </button>
-            {roomId && <button
-                className="nav-btn last-game-btn"
-                onClick={() => window.location.href = `${devServAddress}game/${roomId}`}
-            >   
-                Остання гра 
-            </button>
-            }
+            <div className="main-nav__btn-container">
+                <button
+                    className="nav-btn return-home-btn"
+                    onClick={() => window.location.href = devServAddress}
+                >
+                    Головне меню
+                </button>
+                {roomId && <button
+                    className="nav-btn last-game-btn"
+                    onClick={() => window.location.href = `${devServAddress}game/${roomId}`}
+                >
+                    Остання гра
+                </button>
+                }
+            </div>
         </div>
     )
 }

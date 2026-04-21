@@ -24,7 +24,7 @@ const NewCell = (props: NewCellProps) => {
     // if(figure)console.log(`${figure.color}-${figure.type}.png`);
     return (
         <div className={divClassList} onClick={() => onSelect(index.rowIndex, index.colIndex)}>
-            {figure && <img src={`/assets/${figure?.color}-${figure?.type}.png`} alt={`${figure?.type}`} className={figureClassList} />}
+            {figure && <img src={`/assets/${figure?.color}-${figure?.type}.svg`} alt={`${figure?.type}`} className={figureClassList} />}
         </div>
     )
 }

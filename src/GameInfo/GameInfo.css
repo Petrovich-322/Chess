@@ -1,120 +1,140 @@
+:root{
+    /* --accent: #ab612e;  */
+    --border-color: rgba(255, 255, 255, 0.1);
+}
 
-.game-info.container{
+.game-sidebar{
+    margin-right: 15px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    margin: 10px;
-    width: 250px;
-    /* border: solid 1px; */
-    background-color: var(--side-gui-color)
+    width: 280px;
+    height: 90vh; 
+    background-color: var(--bg-dark);
+    border-radius: 4px;
+    padding: 10px;
+    gap: 15px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* MOVES STORY */
-
-.game-info.move-list{
-    width: 92%;
-    margin-top: 10px;
-    margin-bottom: 5px;
-    max-height: 250px;
-    height: 250px;
-    overflow-y: auto;
-    overflow-x: hidden;
+.move-list{
+    flex: 1; 
+    background-color: var(--bg-light);
+    border-radius: 4px;
+    padding: 5px;
     scrollbar-width: thin;
-    scrollbar-color: var(--side-gui-elements-color) #f1f1f1;
-    border: solid 1px black;
+    scrollbar-color: var(--side-gui-elements-color) transparent;
 }
 
-.move-info-container{
+.move-item{
     display: flex;
-    margin-top: 5px;
-    background-color: var(--side-gui-elements-color);
     align-items: center;
+    padding: 0px 12px;
+    margin-bottom: 5px;
+    background-color: var(--side-gui-elements-color);
+    color: white;
     cursor: pointer;
-    user-select: none;
-    box-shadow: 0px 5px 10px rgba(0,0,0,0.5);
+    border-radius: 3px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-.move-story-elements{   
-    font-size: 20px;
-    margin: 5px;
+.move-item:hover{
+    filter: brightness(1.1);
 }
 
-.move-counter{
-    margin-left: 10px;
-    width: 15px;
+.move-item__number{
+    font-weight: bold;
+    min-width: 25px;
+    opacity: 0.8;
 }
 
-.game-info-figure-image{
-    margin: 10px;
-    width: 15px;
-    height: 23px;
+.move-item__piece{
+    width: 25px;
+    height: 25px;
+    margin: 0 8px;
+    object-fit: contain;
 }
 
-/* CHAT */
+.move-item__coords{
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
 
-.game-info.chat{
-    &.container{
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        margin-top: 10px;
-        height: 250px;
-        border: solid 1px black;
-        width: 92%;
-    }
-    
-    &.list{
-        width: 100%;
-    }
+.chat{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-light);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    scrollbar-width: thin;
+    scrollbar-color: var(--side-gui-elements-color) transparent;
+}
 
-    &.message{
-        width: 95%;
-        margin-left: 5px;
-        /* border-bottom: solid 1px var(--side-gui-elements-color); */
-    }
+.chat__messages{
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
 
-    &.input{
-        &.container{
-            flex: 0;
-            display: flex;
-            justify-content: space-between;
-            flex-direction: row;
-            width: 100%;
-            margin: 0;
-        }
+.chat__message{
+    font-size: 0.9rem;
+    line-height: 1.4;
+    word-break: break-word;
+}
 
-        &.field{
-            border: 0;
-            width: 85%;
-            padding: 0;
-            height: 100%;
+.chat__user{
+    color: var(--side-gui-elements-color);
+    font-weight: bold;
+    margin-right: 6px;
+}
 
-            &:focus{
-                border: 0;
-                outline: none;
-            }
-            &:focus{
-                border-bottom: solid 2px var(--side-gui-elements-color);
-                margin-bottom: -2px;
-            }
-        }   
+.chat__text{
+    color: var(--text-main);
+}
 
-        &.btn{
-            height: 100%;
-            background-color: rgba(0,0,0,0);
-            border: 0;
-            font-size: 15px;
-            border-radius: 15px;
-            padding: 0;
-            width: 15%;
-            &:hover{
-                cursor: pointer;
-            }
-            &:active{
-                font-size: 20px;
-                margin-top: -5px;
-            }
-        }
+.chat__form{
+    display: flex;
+    background-color: rgba(0,0,0,0.2);
+    padding: 5px;
+    border-top: 1px solid var(--border-color);
+}
+
+.chat__input{
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    font-size: 14px;
+
+    &:focus {
+        outline: 0;
+        border-bottom: solid 1px var(--side-gui-elements-color);
+        margin-bottom: -1px;
     }
 }
 
+
+.chat__send-btn{
+    background: transparent;
+    border: none;
+    color: var(--side-gui-elements-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    transition: transform 0.1s, color 0.2s;
+}
+
+.chat__send-btn:hover{
+    color: white;
+}
+
+.chat__send-btn:active{
+    transform: scale(0.9);
+}

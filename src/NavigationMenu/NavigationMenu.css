@@ -2,10 +2,16 @@
     flex: 0.1;
     width: 200px;
     height: 100vh;
-    background-color: rgb(231, 231, 231);
+    background-color: var(--bg-dark);
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.main-nav__btn-container{
+    margin-top: 10px;
 }
 .nav-btn{
     width: 150px;
@@ -17,13 +23,13 @@
 
     &.return-home-btn{
         color: white;
-        background-color: rgb(88, 88, 255);
+        background-color: var(--side-gui-elements-color);
         
         &:hover{
-            background-color: rgb(46, 46, 255);
+            background-color: color-mix(in srgb, var(--side-gui-elements-color), rgb(0, 0, 0) 20%);
         }
         &:active{
-            background-color: rgb(166, 166, 255);
+            background-color: color-mix(in srgb, var(--side-gui-color), rgb(0, 0, 0) 40%);
         }
     }
     &.last-game-btn{

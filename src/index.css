@@ -1,5 +1,15 @@
+:root{
+    --bg-dark: #262421;
+    --bg-light: #302e2c;
+    --main-bg-color: #161512;
+    --side-gui-color: rgb(255, 206, 142);
+    --side-gui-elements-color: rgb(151, 68, 23);
+    --text-main: #bababa;
+    --text-bright: #ffffff;
+}
+
 body, html {
-  margin: 0;
-  padding: 0;
-  background-color: rgb(255, 255, 255);
+    margin: 0;
+    padding: 0;
+    background-color: var(--main-bg-color);
 }

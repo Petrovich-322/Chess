@@ -1,10 +1,8 @@
 :root{
-    --main-color: rgb(255, 255, 255);
-    --side-gui-color: rgb(255, 206, 142);
-    --side-gui-elements-color: rgb(186, 83, 28);
-    --black-cell-color: rgb(186, 83, 28);
-    --white-cell-color: rgb(255, 206, 142);
+    --black-cell-color: rgb(116, 56, 23);
+    --white-cell-color: rgb(224, 176, 113);
     --gray-btn-hover-color: rgb(221, 221, 221);
+    --board-width: 500px;
 }
 
 #root{
@@ -29,10 +27,15 @@ body{
     /* background-color: var(--main-color); */
 }
 .full-game-container{
+    width: 100%;
     display: flex;
-
+    align-items: center;
 }
-.vertical-game-container {
+.vertical-game-container{
+    width: var(--board-width);
+    gap: 5px;
+    flex: 1;
     display: flex;
     flex-direction: column;
+    align-items: center;
 }

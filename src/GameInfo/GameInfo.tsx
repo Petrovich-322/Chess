@@ -44,53 +44,55 @@ const GameInfo = (props: GameInfoProps) => {
         setInputValue('');
     };
     return (
-        <div className="game-info container">
-            <div className="game-info move-list">
+        <aside className="game-sidebar">
+            <div className="move-list">
                 {moveStory.map((element, index) => {
                     const { from, to, } = element.move;
                     const { firstFigure, secondFigure } = element;
-                    const start = `/assets/${firstFigure.color}-${firstFigure.type}.png`;
-                    const end = `/assets/${secondFigure?.color}-${secondFigure?.type}.png`;
+                    const start = `/assets/${firstFigure.color}-${firstFigure.type}.svg`;
+                    const end = `/assets/${secondFigure?.color}-${secondFigure?.type}.svg`;
                     return (
-                        <div className="move-info-container" onClick={() => onMoveClick(index)} key={`move-${index}`}>
-                            <p className="move-story-elements move-counter">{`${index+1}: `}</p> 
-                            <img src={start} className="game-info-figure-image move-story-elements" alt={`${firstFigure.type}`} />
-                            <p className="move-story-elements">{transition.get(from.col)}{8-from.row}{' => '}{transition.get(to.col)}{8-to.row}</p>
-                            {secondFigure && <img src={end} className="game-info-figure-image" alt={`${secondFigure.type}`} />}
+                        <div className="move-item" onClick={() => onMoveClick(index)} key={`move-${index}`}>
+                            <p className="move-item__number">{`${index+1}: `}</p> 
+                            <img src={start} className="move-item__piece" alt={`${firstFigure.type}`} />
+                            <p className="move-item__coords">
+                                {transition.get(from.col)}{8-from.row}{' => '}{transition.get(to.col)}{8-to.row}
+                            </p>
+                            {secondFigure && <img src={end} className="move-item__piece" alt={`${secondFigure.type}`} />}
                         </div>
                     )
                 })}
             </div>
 
-            <div className="game-info chat container">
-                <div className="game-info chat list">
-                    {chatStory.map((message) => (
-                        <p 
-                            className={`game-info chat message`}
-                        >
-                            {`${message.user}> ${message.text}`}
-                        </p>
+            <div className="chat">
+                <div className="chat__messages">
+                    {chatStory.map((message, i) => (
+                        <div key={`#{i}-message`} className="chat__message">
+                            <span className="chat__user">{message.user}&gt;</span>
+                            <span className="chat__text">{message.text}</span>
+                        </div>
                     ))}
                 </div>
                 <form 
-                    className="game-info chat input container"
+                    className="chat__form"
                     onSubmit={handleSubmit}
                 >
                     <input 
-                        className="game-info chat input field" 
+                        className="chat__input" 
                         id="game-info-chat-input-field"
                         placeholder="Введіть повідомлення"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                     />
                     <button 
-                        className="game-info chat input btn"
+                        className="chat__send-btn"
                         type="submit"
-                    >{`>`}
+                    >
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                     </button>
                 </form>
             </div> 
-        </div>
+        </aside>
     )
 }
 

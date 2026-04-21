@@ -153,12 +153,14 @@ input::-webkit-inner-spin-button {
     
     &.confirm-btn{
         color: white;
-        background-color: rgb(88, 88, 255);
+        background-color: var(--side-gui-elements-color);
         font-weight: lighter;
 
-
         &:hover{
-            background-color: rgb(46, 46, 255);
+            background-color: color-mix(in srgb, var(--side-gui-elements-color), rgb(0, 0, 0) 20%);
+        }
+        &:active{
+            background-color: color-mix(in srgb, var(--side-gui-color), rgb(0, 0, 0) 40%);
         }
     }
     &.return-btn{

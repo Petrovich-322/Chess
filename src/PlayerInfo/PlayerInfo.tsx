@@ -67,16 +67,38 @@ const PlayerInfo = (props: PlayerInfoProps) => {
             takenFigures.push(moveElement.secondFigure);
         }
     } 
+
+    const formatTime = (time: number) => {
+        const mins = Math.floor(time / 60);
+        const secs = Math.floor(time % 60);
+        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    };
+
     return (
-        <div className="player-info-container">
-            <div className="first-info-label-container"> 
-                <p className="player-info-title">{`${player === 'white' ? 'Білий' : 'Чорний'} ${isUser ? '- Користувач' : ' '}`}</p>
-                {takenFigures.map((figure) => {
-                    const path = `/assets/${figure.color}-${figure.type}.png`
-                    return <img src={path} className="taken-figure-img"/>
-                })}
+        <div className={`player-card ${(player === activeSide) ? 'player-card--active' : ''}`}>
+            <div className="player-card__main">
+                <div className="player-card__user-info">
+                    <span className="player-card__name">
+                        {player === 'white' ? 'Білий' : 'Чорний'} 
+                        {isUser && <span className="player-card__tag">(користувач)</span>}
+                    </span>
+                    
+                    <div className="player-card__captured">
+                        {takenFigures.map((figure, index) => (
+                            <img 
+                                key={index}
+                                src={`/assets/${figure!.color}-${figure!.type}.svg`} 
+                                className="player-card__piece" 
+                                alt="captured"
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                <div className={`player-card__timer ${playerTimer < 30 ? 'player-card__timer--low' : ''}`}>
+                    {formatTime(playerTimer)}
+                </div>
             </div>
-            <p className="player-info-timer">{`${Math.floor(playerTimer/60)}:${Math.floor(playerTimer%60)}`}</p>
         </div>
     )
 }

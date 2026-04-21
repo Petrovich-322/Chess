@@ -1,26 +1,91 @@
-.player-info-container{
-    margin-top: 10px;
-    margin-bottom: 10px;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    /* border: solid 1px black; */
-    font-size: 20px;
-    background-color: var(--side-gui-color);
+.player-card {
+    background-color: var(--bg-light); 
+    width: 100%;
+    max-width: var(--board-width);
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 8px 0;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
-.player-info-title{
-    margin: 0px;
-    margin-left: 15px;
+
+.player-card--active {
+    background-color: var(--bg-dark);
+    border-left-color: var(--side-gui-elements-color);
+    box-shadow: 0px 0px 10px rgb(from var(--side-gui-elements-color) r g b / 0.5);;
 }
-.player-info-timer{
-    margin: 2px;
-    margin-left: 15px;
-}
-.first-info-label-container{
+
+.player-card__main {
     display: flex;
+    justify-content: space-between;
     align-items: center;
 }
-.taken-figure-img{
-    margin-left: 10px;
-    width: 15px;
+
+.player-card__user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.player-card__name {
+    color: var(--text-bright);
+    font-weight: bolder;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.player-card__tag {
+    font-size: 12px;
+    background: var(--accent);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.player-card__captured {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
     height: 20px;
+}
+
+.player-card__piece {
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
+    object-fit: contain;
+}
+
+.player-card__timer {
+    font-family: 'Courier New', Courier, monospace; 
+    font-size: 25px;
+    font-weight: bold;
+    color: var(--text-main);
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px 12px;
+    border-radius: 4px;
+    min-width: 70px;
+    text-align: center;
+}
+
+.player-card--active .player-card__timer {
+    color: var(--text-bright);
+    background: var(--accent);
+
+    &.player-card__timer--low{
+        color: #ff4d4d;
+        animation: blink 1s infinite;
+    }
+}
+
+.player-card__timer--low {
+    color: #ff4d4d;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0.5; }
 }
