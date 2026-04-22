@@ -1,13 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, Dispatch, SetStateAction } from 'react';
 
-import { playerService } from '../Services/player';
-import { hostAddress } from '../Services/host';
+import { playerService } from '../../Services/player';
+import { hostAddress } from '../../Services/host';
 
 import TimePicker from './TimePicker';
 import SidePicker from './SidePicker';
+import HomeMenuNavBtns from '../HomeMenuNavBtns';
 
-import './CreatingGameMenu.css'
+import './CreatingGameMenu.css';
+import '../HomeMenus.css';
 
 interface CreatingGameMenuProps {
     setOnCreateGame: Dispatch<SetStateAction<boolean>>,
@@ -72,7 +74,7 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
     }
 
     return (
-        <div className="create-game-container">
+        <div className="open-menu__container">
             <p className="setting-game-title">Налаштування гри</p>
             <TimePicker
                 minutes = {minutes}
@@ -85,16 +87,13 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
                 side = {side}
                 setSide = {setSide}
             />
-            <div className="creating-game-menu-navigate-container">
-                <button 
-                    className="create-game-btn return-btn"
-                    onClick={() => setOnCreateGame(false)}
-                >Повернутися</button>
-                <button 
-                    className="create-game-btn confirm-btn"
-                    onClick={() => onCreateGameHandler()}
-                >Почати</button>
-            </div>
+
+            <HomeMenuNavBtns 
+                confirmBtnHandler = {() => onCreateGameHandler}
+                returnBtnHandler = {() => setOnCreateGame(false)}
+                confirmBtnTitle = "Створити"
+                returnBtnTitle = "Повернутися"
+            />
             
         </div>
     );

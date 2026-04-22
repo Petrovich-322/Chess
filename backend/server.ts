@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';    
+import mongoose from 'mongoose';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
-
-
+import registration from './RegistrationController.ts';
 import createRoomName from "./room-generator.js";
 
 import { Game } from './Game.ts'
@@ -27,18 +27,21 @@ app.use(cors(corsInfo));
 const httpServer = createServer(app);
 const io = new Server(httpServer, {cors: corsInfo});
 
+mongoose.connect('mongodb://127.0.0.1:27017/DenisChessDB')
+  .then(() => console.log('Connected to DB'))
+  .catch(err => console.error('Connection error:', err));
+
 const roomNameGeneator = createRoomName();
 
-app.get('/get-user-id', (req, res) => {
+app.post('/get-user-id', (req, res) => {
+    registration(req, res);
     console.log('newUser')
-    const id = crypto.randomUUID();
-    res.json(id);
 });
 
 app.post('/create-room', (req, res) => {
     console.log('---Create room request---');
     if(!req.body.userId) return; 
-    const userId = req.body.userId;
+    const { userId } = req.body;
     const time = req.body.time ?? 600;
     const userSide = req.body.side ?? 'white';
 
@@ -56,8 +59,7 @@ app.post('/create-room', (req, res) => {
 
 app.post('/get-side', (req, res) => {
     console.log('---Get-Side-Request---');
-    const roomId = req.body.roomId;
-    const userId = req.body.userId;
+    const { roomId, userId } = req.body;
 
     if(!roomId || !userId) {
         console.log(`get-side fail ${roomId} || ${userId}`);

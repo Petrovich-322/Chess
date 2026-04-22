@@ -1,34 +1,35 @@
 import { hostAddress } from "./host";
 
-const getUserId = async (checker: string) => {
-    const localStorageDataJSON = localStorage.getItem('DenisChess');
-    const localStorageData = localStorageDataJSON ? JSON.parse(localStorageDataJSON) : null;
+const registration = async ({ userName, password }: {userName: string, password: string}) => {
+    // const localStorageDataJSON = localStorage.getItem('DenisChess');
+    // const localStorageData = localStorageDataJSON ? JSON.parse(localStorageDataJSON) : null;
     
-    if (localStorageData && localStorageData.userId && checker!='newUser') {
-        return localStorageData.userId;
-    }
+    // if (localStorageData) {
+    //     return localStorageData.userId;
+    // }
     
     try {
-        const response = await fetch (`${hostAddress}/get-user-id`)
+        const response = await fetch (`${hostAddress}/get-user-id`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ userName: userName, password: password })
+        });
 
         if(!response.ok) {
             throw new Error (`Server response ${response.status}`)
         }
 
-        const id = await response.json();
-
-        const roomId = (localStorageData ? 
-                (localStorageData.prevRoomId ?? null) : null); 
-        
-        localStorage.setItem('DenisChess', JSON.stringify({userId: id, prevRoomId: roomId}));
-        return id;
+        const data = await response.json();
+        console.log(data.text);
     } catch (err) {
         alert(`failed to get your id, please try later, server ans ${err}`)
         return 'spectator';
     }
 }
 
-export default getUserId;
+export default registration;
 
 
 

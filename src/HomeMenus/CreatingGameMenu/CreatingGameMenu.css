@@ -3,26 +3,14 @@
     --btn-hover-color: rgb(221, 221, 221);
 }
 
-.create-game-container{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 500px;
-    height: 500px;
-    background-color: rgb(255, 255, 255);
-    border-radius: 10px;
-    z-index: 2;
-    align-self: center;
-    justify-self: center;
-    grid-area: stack;
-    box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
-}
+
 .setting-game-title{
     font-size: 30px;
     font-weight: lighter;
     font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
     margin: 10px;
     margin-top: 20px;
+    color: var(--text-bright);
 }
 
 .time-picker.container{
@@ -97,7 +85,7 @@ input::-webkit-inner-spin-button {
         background-color: var(--btn-hover-color);
     }
     &.selected{
-        background-color: black;
+        background-color: var(--side-gui-elements-color);
         color: white;
     }
 }
@@ -123,7 +111,7 @@ input::-webkit-inner-spin-button {
         background-color: var(--btn-hover-color);
     }
     &.selected{
-        background-color: black;
+        background-color: var(--side-gui-elements-color);
         color: white;
     }
     /* &.white{
@@ -136,39 +124,4 @@ input::-webkit-inner-spin-button {
     &.random{
 
     } */
-}
-.creating-game-menu-navigate-container{
-    display: flex;
-    justify-content: center;
-}
-.create-game-btn{
-    border: 0;
-    border-radius: 10px;
-    font-weight: bold;
-    width: 125px;
-    height: 40px;
-    font-size: 15px; 
-    margin: 5px;
-    cursor: pointer;
-    
-    &.confirm-btn{
-        color: white;
-        background-color: var(--side-gui-elements-color);
-        font-weight: lighter;
-
-        &:hover{
-            background-color: color-mix(in srgb, var(--side-gui-elements-color), rgb(0, 0, 0) 20%);
-        }
-        &:active{
-            background-color: color-mix(in srgb, var(--side-gui-color), rgb(0, 0, 0) 40%);
-        }
-    }
-    &.return-btn{
-        font-weight: lighter;
-        color: black;
-
-        &:hover{
-            background-color: var(--btn-hover-color);
-        }
-    }
 }

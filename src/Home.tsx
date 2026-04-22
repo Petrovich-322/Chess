@@ -1,17 +1,14 @@
 import { useState } from 'react';
 
-import getUserId from './Services/userId';
-
-import CreatingGameMenu from './CreatingGameMenu/CreatingGameMenu'
+import CreatingGameMenu from './HomeMenus/CreatingGameMenu/CreatingGameMenu'
 import NavigationMenu from './NavigationMenu/NavigationMenu';
 
 import "./Home.css";
-
-await getUserId('');
+import RegistrationMenu from './HomeMenus/RegistrationMenu/RegistrationMenu';
 
 const Home = () => {        
-    const [onCreateGame, setOnCreateGame] = useState<boolean>(false)
-    
+    const [onCreateGame, setOnCreateGame] = useState<boolean>(false);
+    const [onRegistration, setOnRegistration] = useState<boolean>(false);
     
     return (
         <div className="main-container">
@@ -19,12 +16,15 @@ const Home = () => {
             <div className="main-menu-container">
                 <div id="start-btn-container">
                     <button className="main-menu-btn start-btn" onClick={() => setOnCreateGame(true)}>Створити гру</button>
-                    <button className="main-menu-btn new-user-btn" onClick={async () => await getUserId('newUser')}>Створити користувача(костиль)</button>
+                    <button className="main-menu-btn new-user-btn" onClick={() => setOnRegistration(true)}>Реєстрація</button>
                 </div>
                 {onCreateGame && <CreatingGameMenu
-                    setOnCreateGame={setOnCreateGame}
+                    setOnCreateGame = {setOnCreateGame}
                 />
                 }
+                {onRegistration && <RegistrationMenu 
+                    setOnRegistration = {setOnRegistration}
+                />}
             </div>
         </div>
     )
