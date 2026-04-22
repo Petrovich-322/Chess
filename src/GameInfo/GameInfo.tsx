@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useRef } from 'react';
 
 import { ChatStory, MoveStory } from '../Interfaces/interface';
 
@@ -14,7 +14,6 @@ interface GameInfoProps {
 }
 
 const GameInfo = (props: GameInfoProps) => {
-    const socket = useContext(SocketContext);
     const {
         onMoveClick,
         userId,
@@ -22,15 +21,23 @@ const GameInfo = (props: GameInfoProps) => {
         moveStory,
         roomId
     } = props;
+
+    const [inputValue, setInputValue] = useState<string>('');
+    
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const moveStoryEndRef = useRef<HTMLDivElement>(null);
+    const socket = useContext(SocketContext);
+
     const transition = new Map([
         [0,'a'],[1,'b'],[2,'c'],[3,'d'],[4,'e'],[5,'f'],[6,'g'],[7,'h']
     ]);
 
     useEffect(() => {
-        console.log(chatStory);
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [chatStory])
-
-    const [inputValue, setInputValue] = useState<string>('');
+    useEffect(() => {
+        moveStoryEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [moveStory])
 
     const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -49,29 +56,31 @@ const GameInfo = (props: GameInfoProps) => {
                 {moveStory.map((element, index) => {
                     const { from, to, } = element.move;
                     const { firstFigure, secondFigure } = element;
-                    const start = `/assets/${firstFigure.color}-${firstFigure.type}.svg`;
+                    const start = `/assets/${firstFigure?.color}-${firstFigure?.type}.svg`;
                     const end = `/assets/${secondFigure?.color}-${secondFigure?.type}.svg`;
                     return (
                         <div className="move-item" onClick={() => onMoveClick(index)} key={`move-${index}`}>
                             <p className="move-item__number">{`${index+1}: `}</p> 
-                            <img src={start} className="move-item__piece" alt={`${firstFigure.type}`} />
+                            <img src={start} className="move-item__piece" alt={`${firstFigure?.type}`} />
                             <p className="move-item__coords">
                                 {transition.get(from.col)}{8-from.row}{' => '}{transition.get(to.col)}{8-to.row}
                             </p>
-                            {secondFigure && <img src={end} className="move-item__piece" alt={`${secondFigure.type}`} />}
+                            {secondFigure && <img src={end} className="move-item__piece" alt={`${secondFigure?.type}`} />}
                         </div>
                     )
                 })}
+                <div ref = {moveStoryEndRef}> </div>
             </div>
 
             <div className="chat">
                 <div className="chat__messages">
-                    {chatStory.map((message, i) => (
-                        <div key={`#{i}-message`} className="chat__message">
+                    {chatStory.map((message, index) => (
+                        <div key={`${index}-message`} className="chat__message">
                             <span className="chat__user">{message.user}&gt;</span>
                             <span className="chat__text">{message.text}</span>
                         </div>
                     ))}
+                    <div ref = {messagesEndRef}></div>
                 </div>
                 <form 
                     className="chat__form"

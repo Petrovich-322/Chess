@@ -1,4 +1,4 @@
-const simpleChahCheck= (king, checkBoard, moves, type) => {
+const simpleShahCheck= (king, checkBoard, moves, type) => {
     const { row, col } = king;
     const dir = type!='pawn' ? 1 : (checkBoard[row][col].color==='white' ? -1 : 1); 
     
@@ -13,7 +13,7 @@ const simpleChahCheck= (king, checkBoard, moves, type) => {
     return true;
 }
 
-const lineChahCheck = (king, checkBoard, moves, type) => {
+const lineShahCheck = (king, checkBoard, moves, type) => {
     const { row, col } = king;
     const cycle = (x,y) => {
         for(let i = 1; i < 8; i++) {
@@ -33,7 +33,7 @@ const lineChahCheck = (king, checkBoard, moves, type) => {
     return true;
 }
 
-export const chachCheck = (king, checkBoard) => {
+export const shahCheck = (king, checkBoard) => {
     const kingMoves = [[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[1,1],[0,1]];
     const knightMoves = [[-2,-1],[-1,-2],[1,-2],[2,-1],[2,1],[2,2],[-1,2],[-2,1]];
     const pawnMoves = [[1,1],[1,-1]];
@@ -41,16 +41,16 @@ export const chachCheck = (king, checkBoard) => {
     const bishopMoves = [[1,1],[1,-1],[-1,1],[-1,-1]];
     const rookMoves = [[1,0],[-1,0],[0,1],[0,-1]];  
 
-    if(!simpleChahCheck(king, checkBoard, kingMoves, 'king')) return true;
-    // console.log('no king');
-    if(!simpleChahCheck(king, checkBoard, knightMoves, 'knight')) return true;
-    // console.log('no knight');
-    if(!simpleChahCheck(king, checkBoard, pawnMoves, 'pawn')) return true;
-    // console.log('no pawn');
-    if(!lineChahCheck(king, checkBoard, bishopMoves, 'diagonal')) return true;
-    // console.log('no bishop/queen');
-    if(!lineChahCheck(king, checkBoard, rookMoves, 'linear')) return true;
-    // console.log('no rook/queen');
+    if(!simpleShahCheck(king, checkBoard, kingMoves, 'king')) return true;
+    // console.log('       -no king');
+    if(!simpleShahCheck(king, checkBoard, knightMoves, 'knight')) return true;
+    // console.log('       -no knight');
+    if(!simpleShahCheck(king, checkBoard, pawnMoves, 'pawn')) return true;
+    // console.log('       -no pawn');
+    if(!lineShahCheck(king, checkBoard, bishopMoves, 'diagonal')) return true;
+    // console.log('       -no bishop/queen');
+    if(!lineShahCheck(king, checkBoard, rookMoves, 'linear')) return true;
+    // console.log('       -no rook/queen');
     return false;
 }
 
@@ -62,14 +62,18 @@ const isShah = (board, from, to, king) => {
     checkBoard[from.row][from.col] = null;
     const currentKingPos = figure.type === 'king' ? {row: to.row, col: to.col} : king;
     
-    return chachCheck(currentKingPos, checkBoard);
+    return shahCheck(currentKingPos, checkBoard);
 }
 
 export const checkMove = (board, from, to, king) => {
+    console.log('***Check Move***');
     const figure = board[from.row][from.col];
     const targetFigure = board[to.row][to.col];
 
-    if(!figure)return false;
+    if(!figure) {
+        // console.log('   -no figure-');
+        return false;
+    }
     if(figure.color === targetFigure?.color) return false;
     if(targetFigure?.type === 'king') return false;
 
@@ -90,8 +94,14 @@ export const checkMove = (board, from, to, king) => {
         return true; 
     }
 
-    if(isShah(board, from, to, king)) return false;
+    if(isShah(board, from, to, king)) {
+        return false;
+    }
+    else {
+        console.log('   -shah for user-');
+    }
     
+    let res;
     switch (figure.type) {
         case 'pawn':
             const dir = figure.color === 'white' ? -1 : 1;
@@ -101,15 +111,25 @@ export const checkMove = (board, from, to, king) => {
             return false;
 
         case 'knight':
-            return ((Math.abs(dx) === 2 && Math.abs(dy) === 1) || (Math.abs(dy) === 2 && Math.abs(dx) === 1));
+            res = ((Math.abs(dx) === 2 && Math.abs(dy) === 1) || (Math.abs(dy) === 2 && Math.abs(dx) === 1));
+            // console.log('knight',res);
+            return res;
         case 'king':
-            return Math.abs(dx) <= 1 && Math.abs(dy) <= 1;
+            res = (Math.abs(dx) <= 1 && Math.abs(dy) <= 1);
+            // console.log('king',res);
+            return res;
         case 'bishop':
-            return Math.abs(dx) === Math.abs(dy) && isPathClear();
+            res = (Math.abs(dx) === Math.abs(dy) && isPathClear());
+            // console.log('bishop',res);
+            return res;
         case 'rook':
-            return (dx === 0 || dy === 0) && isPathClear();
+            res = ((dx === 0 || dy === 0) && isPathClear());
+            // console.log('rook',res);
+            return res;
         case 'queen':
-            return (dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy)) && isPathClear();
+            res = ((dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy)) && isPathClear());
+            // console.log('queen',res);
+            return res;
         default:
             return false;
     }

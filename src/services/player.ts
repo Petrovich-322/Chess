@@ -1,6 +1,6 @@
 import { hostAddress } from "./host";
 
-class Player {
+class PlayerService {
     #side: 'white' | 'black' | 'spectator' = 'spectator';
 
     async getSide(roomId: string, userId: string) {
@@ -41,4 +41,4 @@ class Player {
     } 
 }
 
-export const playerService = new Player;
+export const playerService = new PlayerService;

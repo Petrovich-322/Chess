@@ -1,5 +1,5 @@
 export type ChatStory = {
-    user: string
+    user: string,
     text: string
 }[];
 
@@ -21,27 +21,26 @@ export type MoveStory = {
 
 export type Figure = {
     color: 'white' | 'black',
-    type: string
+    type: string,
+    movements: number
+};
+
+type Player = {
+    id: string,
+    time: number
 };
 
 export interface ServerData {
-    field: Array<Array<any>>;
-    activeSide: string;
-    player: {
-        white: {
-            id: string,
-            time: number
-        },
-        black: {
-            id: string,
-            time: number
-        }
+    activeSide: string,
+    players: {
+        white: Player,
+        black: Player
     }
     moveStory: MoveStory,
     chatStory: ChatStory,
-    prevMoveTime: number;
-    kingsPosition: {whiteKing: {row: number, col: number}, blackKing: {row: number, col: number}};
-    gameStatus: {gameEnd: boolean, winner: string | null}
-    
+    prevMoveTime: number,
+    kingsPosition: {whiteKing: {row: number, col: number}, blackKing: {row: number, col: number}},
+    gameInfo: {status: boolean, winner: string | null}
+
 };
 

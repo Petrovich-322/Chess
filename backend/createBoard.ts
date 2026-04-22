@@ -1,12 +1,5 @@
-class Figure {
-    movements = 0;
-    type: string;
-    color: string;
-    constructor(type: string, color: string) {
-        this.type = type;
-        this.color = color;
-    }
-}
+
+import { Figure } from './interfaces'
 
 const createBoard = () => [
     [new Figure('rook','black'),new Figure('knight','black'),new Figure('bishop','black'),

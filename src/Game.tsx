@@ -5,12 +5,12 @@ import { SocketContext } from './SocketContext';
 
 import { checkMove } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
-import { chachCheck } from 'rules-lib';
+import { shahCheck } from 'rules-lib';
 import { playerService } from './Services/player';
 
-import { AvailableMoves, ChatStory, MoveStory, SelectedCell, ServerData } from './Interfaces/interface';
+import { AvailableMoves, ChatStory, MoveStory, SelectedCell, ServerData, Figure } from './Interfaces/interface';
 
-import createBoard from './Services/createBoard';   
+import createBoard from '../backend/createBoard';   
 import getUserId from './Services/userId'; 
 
 import Board from './Board/Board'
@@ -20,20 +20,20 @@ import NavigationMenu from './NavigationMenu/NavigationMenu';
 
 import './Game.css';
 
-interface KingsPosition {
+type KingsPosition = {
     whiteKing: {row: number, col: number}, 
     blackKing: {row: number, col: number},
 }
-interface UserStatus {
+type UserInfo = {
     userId: string, 
     side: 'white' | 'black' | 'spectator'
 }
-interface GameTimer {
+type GameTimer = {
     whiteTimer: number,
     blackTimer: number
 }
 
-const defUser: UserStatus = {
+const defUser: UserInfo = {
     userId: '---',
     side: 'spectator',
 }
@@ -54,7 +54,7 @@ const Game = () => {
     const [field, setField] = useState(createBoard());
     const [tempField, setTempField] = useState(createBoard());
     const [selectedCell, setSelectedCell] = useState<SelectedCell>(null);
-    const [userStatus, setUserStatus] = useState<UserStatus>(defUser);
+    const [userInfo, setUserStatus] = useState<UserInfo>(defUser);
     const [activeSide, setActiveSide] = useState<string>();
     const [gameTimer, setGameTimer] = useState<GameTimer>(defTimer);
     const [gameEnd, setGameEnd] = useState<boolean>(false);
@@ -64,54 +64,55 @@ const Game = () => {
     const [availableMoves, setAvailableMoves] = useState<AvailableMoves>([]);
     
     const fieldsCache = useRef<Record<number, any[][]>>({});
+    // const moveStoryLength = moveStory.length;
     
-    const {roomId} = useParams<{roomId: string}>();
+    const { roomId } = useParams<{roomId: string}>();
 
-    const userKing = userStatus.side === 'spectator' ? 
-        null : kingsPostion[`${userStatus.side}King`];
+    const userKing = userInfo.side === 'spectator' ? 
+        null : kingsPostion[`${userInfo.side}King`];
 
     useEffect(() => {
         if(!roomId) return;
 
         const handleUpdateInfo = (data: ServerData) => {
+            console.log('---update-info-handler---')
             setActiveSide(data.activeSide);
             setGameTimer({
-                whiteTimer: data.player.white.time, 
-                blackTimer: data.player.black.time
+                whiteTimer: data.players.white.time, 
+                blackTimer: data.players.black.time
             });
             setKingsPosition(data.kingsPosition);
-            
+            setShowMoveStory(false);
+            getAvailableMoves.clear();
+
             const lastMove = data.moveStory[data.moveStory.length-1];
             const moveTo = lastMove.move.to;
             const moveFrom = lastMove.move.from;
 
             setMoveStory((prev) => [...prev, lastMove]);
-            setShowMoveStory(false);
 
             setField((prevField) => {
                 const newField = prevField.map(row => [...row]);
                 const figure = newField[moveFrom.row][moveFrom.col];
-                
-                newField[moveTo.row][moveTo.col] = figure;
+                newField[moveTo.row][moveTo.col] = {...figure, movements: figure.movements++};
                 newField[moveFrom.row][moveFrom.col] = null;
                 figure.movements++;
 
                 return newField;
             });
 
-            getAvailableMoves.clear();
         } 
 
-        const handleInitializeGame = (data: ServerData) => {
-            console.log('initializeGame');
+        const handleInitializeGame = (data: ServerData & {field: (Figure | null)[][]}) => {
+            console.log('---initialize Game handler---');
             setField(data.field);
             setActiveSide(data.activeSide);
             setGameTimer({
-                whiteTimer: data.player.white.time, 
-                blackTimer: data.player.black.time
+                whiteTimer: data.players.white.time, 
+                blackTimer: data.players.black.time
             });   
             setMoveStory(data.moveStory);
-            setGameEnd(data.gameStatus.gameEnd);
+            setGameEnd(data.gameInfo.status);
             setChatStory(data.chatStory);
         };
 
@@ -126,10 +127,7 @@ const Game = () => {
         }
 
         const handleChatUpdate = (data: {newMessage: {user: string, text: string}}) => {
-            console.log('Message');
             if(!data.newMessage) return;
-            console.log('Message succes');
-            console.log(data.newMessage);
             setChatStory(prev => [...prev, data.newMessage]);
         }
 
@@ -157,9 +155,9 @@ const Game = () => {
             });
             
             if (socket.connected) {
-                socket.emit('joinRoom', roomId);
+                socket.emit('joinRoom', {roomId: roomId});
             } else {
-                socket.once('connect', () => socket.emit('joinRoom', roomId));
+                socket.once('connect', () => socket.emit('joinRoom', {roomId: roomId}));
             } 
         };
 
@@ -174,9 +172,9 @@ const Game = () => {
     }, [roomId, socket]);
 
     useEffect(() => {
-        if(activeSide != userStatus.side) return;
+        if(activeSide != userInfo.side) return;
 
-        if(userKing && chachCheck(userKing, field)) console.log('SHAH!!!');
+        if(userKing && shahCheck(userKing, field)) console.log('SHAH!!!');
     }, [field]);
 
     const onSelect = (row: number, col: number) => {
@@ -188,11 +186,11 @@ const Game = () => {
             return;
         }
         
-        if (userStatus.side === 'spectator' || gameEnd) return;
+        if (userInfo.side === 'spectator' || gameEnd) return;
 
         const updateSelectedCell = () => {
             const newFigure = field[row][col];
-            if (newFigure?.color === userStatus.side) 
+            if (newFigure?.color === userInfo.side) 
             {
                 setSelectedCell({ row, col });
                 setAvailableMoves(getAvailableMoves(field, { row, col }, userKing));
@@ -211,14 +209,14 @@ const Game = () => {
                 return;
             }
             
-            if(userStatus.side != activeSide) 
+            if(userInfo.side != activeSide) 
             {
                 updateSelectedCell();
                 return;
             }
             
             const prevFigure = field[selectedCell.row][selectedCell.col];
-            if(prevFigure && userStatus.side != prevFigure.color) 
+            if(prevFigure && userInfo.side != prevFigure.color) 
             {
                 updateSelectedCell();
                 return;
@@ -229,7 +227,7 @@ const Game = () => {
             if(checkMovement) 
             {
                 socket.emit('newMove', {
-                    side: userStatus.side,
+                    side: userInfo.side,
                     roomId: roomId,
                     move: { from: selectedCell, to: { row, col } },
                 });
@@ -273,7 +271,7 @@ const Game = () => {
                 <div className="full-game-container">
                     <div className="vertical-game-container">
                         <PlayerInfo
-                            isUser = {userStatus.side === 'black'}
+                            isUser = {userInfo.side === 'black'}
                             timer = {gameTimer.blackTimer}
                             player = 'black'
                             moveStory = {moveStory}
@@ -289,7 +287,7 @@ const Game = () => {
                             onSelect = {onSelect}
                         />
                         <PlayerInfo
-                            isUser = {userStatus.side === 'white'}
+                            isUser = {userInfo.side === 'white'}
                             timer = {gameTimer.whiteTimer}
                             player = 'white'
                             moveStory = {moveStory}
@@ -303,7 +301,7 @@ const Game = () => {
                         onMoveClick = {onMoveClick}
                         moveStory = {moveStory}
                         chatStory={chatStory}
-                        userId = {userStatus.side === 'white' ? 'Білий' : 'Чорний'}
+                        userId = {userInfo.side === 'white' ? 'Білий' : 'Чорний'}
                         roomId = {roomId} 
                     />
                 </div>
