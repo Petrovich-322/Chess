@@ -4,7 +4,7 @@ import CreatingGameMenu from './HomeMenus/CreatingGameMenu/CreatingGameMenu'
 import NavigationMenu from '@/NavigationMenu/NavigationMenu';
 import RegisterLogMenu from './HomeMenus/RegistrationMenu/RegisterLogMenu';
 
-import registration from '@/Services/registration';
+import { RegistrationService, LoginService } from '@/Services/authorization';
 
 import "./Home.css";
 
@@ -15,21 +15,40 @@ const Home = () => {
     const [message, setMessage] = useState<string>('');
 
     const onRegistrationHandler = async (data: {userName: string, password: string}) => {
-        
-        const response = await registration(data);
+
+        const registrationData = {message: 'реєстрація', ...data};
+        const response = await RegistrationService.request(registrationData);
         
         if(!response.ok) {
             setMessage(response.data.message);
+            console.log(response.data.name, response.data.message);
         } else {
             alert('Registration success');
             setMessage('');
         }
-        // alert(`${response.data.name}: ${response.data.message}`);
-        console.log(response.data.name, response.data.message);
     }
 
-    const onLoginHandler = async  () => {
-        console.log('login');
+    const onLoginHandler = async (data: { userName: string, password: string }) => {
+
+        const loginData = {message: 'вхід', ...data};
+        const response = await LoginService.request(loginData);
+
+        if(!response.ok) {
+            setMessage(response.data.message);
+            console.log(response.data.name, response.data.message);
+        } else {
+            alert('Успішний вхід');
+
+            const localStorageJSON = localStorage.getItem('DenisChess');
+            const locaStorageData = localStorageJSON ? JSON.parse(localStorageJSON) : {};
+
+            locaStorageData.token = response.data.token;
+
+            localStorage.setItem('DenisChess', locaStorageData);
+            
+            console.log(response.data.token);
+        }
+        
     }
     return (
         <div className="main-container">

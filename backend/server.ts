@@ -5,6 +5,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 
 import registration from './RegistrationController.ts';
+import login from './LoginController.ts';
 import createRoomName from "./room-generator.js";
 
 import { Game } from './Game.ts'
@@ -35,8 +36,13 @@ const roomNameGeneator = createRoomName();
 
 app.post('/registration', (req, res) => {
     registration(req, res);
-    console.log('New User')
+    console.log('---Registration Request---');
 });
+
+app.post('./login', (req, res) => {
+    login(req, res);
+    console.log('---Login Request---');
+})
 
 app.post('/create-room', (req, res) => {
     console.log('---Create room request---');
@@ -77,6 +83,8 @@ app.post('/get-side', (req, res) => {
 const sendChatMessage = ({ roomId, user, text }: 
     {roomId: string, user: string, text: string}) => {
     
+    if(!roomId || !user || !text) return;
+
     console.log('---new message in chat---');
     const game = gameData[roomId];
     const message = {
@@ -91,6 +99,8 @@ const sendChatMessage = ({ roomId, user, text }:
 
 const callGameEnd = ({ roomId, winner }: {roomId: string, winner: 'white' | 'black'}) => {
     
+    if(!roomId || !winner) return;
+
     const game = gameData[roomId];
     game.setGameStatus({status: true, winner: winner});
     
@@ -104,6 +114,8 @@ const callGameEnd = ({ roomId, winner }: {roomId: string, winner: 'white' | 'bla
 
 const callUpdateInfo = ({ roomId }: {roomId: string}) => {
     
+    if(!roomId) return;
+
     const game = gameData[roomId];
     const { field, ...gameInfo } = game;
     
@@ -118,6 +130,8 @@ type OnNewMoveType = {
 };
 
 const onNewMove = ({ side, roomId, move }: OnNewMoveType) => {
+    if(!side || !roomId || !move) return;
+
     console.log('---New move---');
 
     if(!gameData[roomId] || side != gameData[roomId].activeSide) return;    
@@ -162,24 +176,9 @@ io.on('connection', (socket) => {
     }
 
     socket.on('joinRoom', handleJoinRoom);
-
-    socket.on('newMove', ({ side, roomId, move }) => {
-        if(!roomId || !side || !move) return;
-    
-        onNewMove({ side: side, roomId: roomId, move: move });
-    });
-    
-    socket.on('timerGameEnd', ({ roomId, winner }) => {
-        if(!roomId || !winner) return; 
-
-        callGameEnd({ roomId: roomId, winner: winner });
-    })
-
-    socket.on('chatNewMessage', ({ roomId, user, text }) => {
-        if(!roomId || !user || !text) return;
-        
-        sendChatMessage({ roomId: roomId, user: user, text: text });
-    })
+    socket.on('newMove', onNewMove);
+    socket.on('timerGameEnd', callGameEnd);
+    socket.on('chatNewMessage', sendChatMessage)
 });
 
 

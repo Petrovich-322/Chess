@@ -40,14 +40,16 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
         const randomSide = getRandomInt(0,1) === 0 ? 'white' : 'black';      
         const finalSide = side != 'random' ? side : randomSide;    
         
-        const localStorageDataJSON = localStorage.getItem('DenisChess');
-        const localStorageData = localStorageDataJSON ? 
-            JSON.parse(localStorageDataJSON) : null;
-        const userId = localStorageData ? 
-            localStorageData.userId : null;
+        const localStorageJSON = localStorage.getItem('DenisChess');
+        const locaStorageData = localStorageJSON ? JSON.parse(localStorageJSON) : null;
+
+        const token = locaStorageData ? locaStorageData.token : null;
+        if(!token) {
+            alert('Ви не авторизовані');
+            return;
+        }
 
         const createRoomData = {
-            userId: userId,
             time: time,
             side: finalSide
         }
@@ -56,7 +58,8 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
             const response = await fetch(`${hostAddress}/create-room`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(createRoomData)
             });

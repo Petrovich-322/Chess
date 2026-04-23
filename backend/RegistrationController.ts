@@ -22,7 +22,7 @@ const registration = async (req: any, res: any) => {
             return;
         }
 
-        const existingUser = await User.findOne({ userName });
+        const existingUser = await User.findOne({ userName: userName });
         
         if(existingUser) {
             res.status(409).json(new responseData({ message: 'user already exist' }));
