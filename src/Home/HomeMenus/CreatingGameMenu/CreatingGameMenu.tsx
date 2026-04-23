@@ -1,8 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, Dispatch, SetStateAction } from 'react';
 
-import { playerService } from '../../Services/player';
-import { hostAddress } from '../../Services/host';
+import { playerService } from '@/Services/player';
+import { hostAddress } from '@/Services/host';
 
 import TimePicker from './TimePicker';
 import SidePicker from './SidePicker';
@@ -89,7 +89,7 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
             />
 
             <HomeMenuNavBtns 
-                confirmBtnHandler = {() => onCreateGameHandler}
+                confirmBtnHandler = {() => onCreateGameHandler()}
                 returnBtnHandler = {() => setOnCreateGame(false)}
                 confirmBtnTitle = "Створити"
                 returnBtnTitle = "Повернутися"

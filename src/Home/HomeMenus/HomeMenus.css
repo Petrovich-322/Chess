@@ -6,14 +6,14 @@
     width: 500px;
     height: fit-content;
     min-height: 350px;
-    background-color: var(--bg-light);
+    background-color: white;
     border-radius: 10px;
     z-index: 2;
     align-self: center;
     justify-self: center;
     grid-area: stack;
     box-shadow: 0px 0px 10px rgba(0,0,0,0.5);
-    color: var(--text-main)
+    /* color: var(--text-main) */
 }
 
 .home-menu__btn{

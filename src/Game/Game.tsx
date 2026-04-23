@@ -1,22 +1,21 @@
 import { useState, useEffect, useRef, useContext } from 'react';
 import { useParams } from 'react-router-dom';
 
-import { SocketContext } from './SocketContext';
+import { SocketContext } from '../SocketContext';
 
 import { checkMove } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
 import { shahCheck } from 'rules-lib';
-import { playerService } from './Services/player';
+import { playerService } from '../Services/player';
 
-import { AvailableMoves, ChatStory, MoveStory, SelectedCell, ServerData, Figure } from './Interfaces/interface';
+import { AvailableMoves, ChatStory, MoveStory, SelectedCell, ServerData, Figure } from '../Interfaces/interface';
 
-import createBoard from '../backend/createBoard';   
-import getUserId from './Services/userId'; 
+import createBoard from '../../backend/createBoard';   
 
 import Board from './Board/Board'
 import PlayerInfo from './PlayerInfo/PlayerInfo';
 import GameInfo from './GameInfo/GameInfo';
-import NavigationMenu from './NavigationMenu/NavigationMenu';
+import NavigationMenu from '../NavigationMenu/NavigationMenu';
 
 import './Game.css';
 
@@ -137,20 +136,11 @@ const Game = () => {
         socket.on('chatUpdate', handleChatUpdate);
 
         const initGame = async () => {
-            const localStorageDataJSON = localStorage.getItem('DenisChess');
-            const localStorageData = localStorageDataJSON ? 
-                JSON.parse(localStorageDataJSON) : {userId: null, prevRoomId: null};
-            localStorageData.prevRoomId = roomId; 
-            console.log(localStorageData);
-            localStorage.setItem('DenisChess', JSON.stringify(localStorageData));
-        
-
-            const userIdData = await getUserId('');
-            const userSideData = await playerService.getSide(roomId, userIdData);
+            const userSideData = await playerService.getSide(roomId, '');
             
             console.log(userSideData);
             setUserStatus({
-                userId: userIdData ?? defUser.userId,
+                userId: defUser.userId,
                 side: userSideData ?? defUser.side
             });
             

@@ -9,11 +9,7 @@ const NavigationMenu = () => {
     const [roomId, setRoomId] = useState(null);
     
     useEffect(() => {
-        const localStorageDataJSON = localStorage.getItem('DenisChess');
-        const localStorageData = localStorageDataJSON ? 
-            JSON.parse(localStorageDataJSON) : null;
-        const room = localStorageData.prevRoomId;
-        if(room) setRoomId(room);
+        
     }, []);
 
     return (

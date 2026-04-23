@@ -73,6 +73,7 @@ export class Game {
     }
 
     checkMove = (from: Position, to: Position) => {
+        
         const playerColor = this.activeSide;
 
         if(playerColor === 'spectator') return;
@@ -89,6 +90,7 @@ export class Game {
             return true;
         }
         return false;
+        
     }
    
     makeMove = (from: Position, to: Position) => {

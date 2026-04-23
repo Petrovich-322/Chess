@@ -33,9 +33,9 @@ mongoose.connect('mongodb://127.0.0.1:27017/DenisChessDB')
 
 const roomNameGeneator = createRoomName();
 
-app.post('/get-user-id', (req, res) => {
+app.post('/registration', (req, res) => {
     registration(req, res);
-    console.log('newUser')
+    console.log('New User')
 });
 
 app.post('/create-room', (req, res) => {
@@ -64,6 +64,7 @@ app.post('/get-side', (req, res) => {
     if(!roomId || !userId) {
         console.log(`get-side fail ${roomId} || ${userId}`);
         res.json({ side: 'spectator', status: 'failed to get side' })
+        return;
     }
     
     if(!gameData[roomId]) gameData[roomId] = new Game();
@@ -174,7 +175,7 @@ io.on('connection', (socket) => {
         callGameEnd({ roomId: roomId, winner: winner });
     })
 
-    socket.on('chatNewMessage', ({roomId, user, text}) => {
+    socket.on('chatNewMessage', ({ roomId, user, text }) => {
         if(!roomId || !user || !text) return;
         
         sendChatMessage({ roomId: roomId, user: user, text: text });

@@ -29,6 +29,7 @@ body{
     margin: 10px;
     border: none;
     border-radius: 10px;
+    width: 300px;
 
     &.start-btn{
         color: white;

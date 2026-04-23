@@ -1,0 +1,40 @@
+.open-menu__input-container{
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.open-menu__main-container{
+    box-sizing: border-box;
+    margin-bottom: 20px;
+}
+
+.open-menu__input{
+    font-size: 18px;
+    width: 250px;
+    height: 35px;
+    border: 0;
+    border-bottom: solid 3px transparent;
+    background-color: rgb(225, 225, 225);
+    padding-left: 10px;
+    &:focus{
+        transform: scale(1.05);
+        outline: 0;
+        border-bottom-color: var(--side-gui-elements-color);
+    }
+}
+.open-menu__title{
+    text-align: center;
+    padding: 0;
+    margin-bottom: 10px;
+    padding-top: 10px;
+}
+
+.open-menu__message{
+    color: rgb(208, 117, 117);
+    text-align: center;
+    padding: 0;
+    margin: 0;
+}

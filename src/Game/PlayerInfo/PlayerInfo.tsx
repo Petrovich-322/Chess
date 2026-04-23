@@ -1,9 +1,9 @@
 import { useEffect, useState, Dispatch, SetStateAction, useContext } from 'react';
 
-import { MoveStory } from '../Interfaces/interface';
+import { MoveStory } from '@/Interfaces/interface';
 
 import './PlayerInfo.css'
-import { SocketContext } from '../SocketContext';
+import { SocketContext } from '@/SocketContext';
 
 interface PlayerInfoProps {
     isUser: boolean,

@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'; 
 
-import Home from "./Home";
-import Board from "./Game";  
+import Home from "./Home/Home";
+import Board from "./Game/Game";  
 
 import { SocketContext } from './SocketContext';
 import { socket } from './SocketContext';
