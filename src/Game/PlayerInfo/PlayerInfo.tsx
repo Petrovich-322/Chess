@@ -2,13 +2,16 @@ import { useEffect, useState, Dispatch, SetStateAction, useContext } from 'react
 
 import { MoveStory } from '@/Interfaces/interface';
 
+import { SocketContext } from '@/Context/SocketContext';
+
 import './PlayerInfo.css'
-import { SocketContext } from '@/SocketContext';
+import { User } from '../../../backend/models/UserSchema';
+
 
 interface PlayerInfoProps {
-    isUser: boolean,
     timer: number, 
-    player: string | null,
+    player: string,
+    userName: string | null,
     moveStory: MoveStory, 
     activeSide: string | undefined,
     gameEnd: Boolean,
@@ -20,9 +23,9 @@ const PlayerInfo = (props: PlayerInfoProps) => {
     const socket = useContext(SocketContext);
     
     const {
-        isUser,
         timer,
         player,
+        userName,
         moveStory,
         activeSide,
         gameEnd,
@@ -57,7 +60,10 @@ const PlayerInfo = (props: PlayerInfoProps) => {
         if(playerTimer <= 0 && !gameEnd) {
             setGameEnd(true);
             setPlayerTimer(0);
-            socket.emit('timerGameEnd', {roomId: roomId, winner: player == 'white' ? 'black' : 'white'});
+            socket.emit('timerGameEnd', {
+                roomId: roomId, 
+                winner: player == 'white' ? 'black' : 'white'
+            });
         } 
     }, [playerTimer]);
     
@@ -79,8 +85,7 @@ const PlayerInfo = (props: PlayerInfoProps) => {
             <div className="player-card__main">
                 <div className="player-card__user-info">
                     <span className="player-card__name">
-                        {player === 'white' ? 'Білий' : 'Чорний'} 
-                        {isUser && <span className="player-card__tag">(користувач)</span>}
+                        {userName ? userName : (player === 'white' ? 'Білий' : 'Чорний')} 
                     </span>
                     
                     <div className="player-card__captured">

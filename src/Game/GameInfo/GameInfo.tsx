@@ -3,7 +3,7 @@ import { useState, useContext, useEffect, useRef } from 'react';
 import { ChatStory, MoveStory } from '@/Interfaces/interface';
 
 import './GameInfo.css';
-import { SocketContext } from '@/SocketContext';
+import { SocketContext } from '@/Context/SocketContext';
 
 interface GameInfoProps {
     moveStory: MoveStory, 

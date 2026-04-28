@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-import { devServAddress } from '../Services/host';
+import { devServAddress } from '../../shared/host';
 
 import './NavigationMenu.css';
 

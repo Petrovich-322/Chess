@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, Dispatch, SetStateAction } from 'react';
 
-import { playerService } from '@/Services/player';
-import { hostAddress } from '@/Services/host';
+import PlayerService from '@/Services/playerService';
+import TokenService from '@/Services/tokenService';
+import apiClient from '@/Services/client';
 
 import TimePicker from './TimePicker';
 import SidePicker from './SidePicker';
@@ -12,11 +13,11 @@ import './CreatingGameMenu.css';
 import '../HomeMenus.css';
 
 interface CreatingGameMenuProps {
-    setOnCreateGame: Dispatch<SetStateAction<boolean>>,
+    setOnClick: Dispatch<SetStateAction<string>>,
 }
 
 const CreatingGameMenu = (props: CreatingGameMenuProps) => {
-    const { setOnCreateGame } = props;
+    const { setOnClick } = props;
     
     const [minutes, setMinutes] = useState<number>(10);
     const [seconds, setSeconds] = useState<number>(0);
@@ -34,45 +35,35 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
     const navigate = useNavigate();
     
     const onCreateGameHandler = async () => {
-        playerService.reset();
+        PlayerService.reset();
 
-        const time = minutes*60+seconds;
+        const time = minutes * 60 + seconds;
         const randomSide = getRandomInt(0,1) === 0 ? 'white' : 'black';      
         const finalSide = side != 'random' ? side : randomSide;    
         
-        const localStorageJSON = localStorage.getItem('DenisChess');
-        const locaStorageData = localStorageJSON ? JSON.parse(localStorageJSON) : null;
-
-        const token = locaStorageData ? locaStorageData.token : null;
-        if(!token) {
-            alert('Ви не авторизовані');
-            return;
-        }
-
         const createRoomData = {
             time: time,
             side: finalSide
         }
         
+        const token = TokenService.token;
+        if(!token) {
+            alert('Ви не авторизовані');
+            return;
+        }
+
         try {
-            const response = await fetch(`${hostAddress}/create-room`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(createRoomData)
-            });
+            const response = await apiClient.post('/create-room', createRoomData);
+            const roomId = response.data.roomId;    
             
-            if(!response.ok) {
-                throw new Error (`failed to create-room ${response.status}`);
+            navigate(`/game/${roomId}`);
+        } catch (err: unknown) {
+            
+            if(err instanceof Error) {
+                alert(err.message || 'Сталася помилка при створенні кімнати');
+                console.error(`${err.name}: ${err.message}`);
             }
-            
-            const result = await response.json();
-            
-            navigate(`/game/${result.roomId}`);
-        } catch (err) {
-            alert(`server is not responding properly ${err}`);
+
         }
     }
 
@@ -93,7 +84,7 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
 
             <HomeMenuNavBtns 
                 confirmBtnHandler = {() => onCreateGameHandler()}
-                returnBtnHandler = {() => setOnCreateGame(false)}
+                returnBtnHandler = {() => setOnClick('')}
                 confirmBtnTitle = "Створити"
                 returnBtnTitle = "Повернутися"
             />

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';    
 import mongoose from 'mongoose';
@@ -7,9 +8,10 @@ import { Server } from 'socket.io';
 import registration from './RegistrationController.ts';
 import login from './LoginController.ts';
 import createRoomName from "./room-generator.js";
-
-import { Game } from './Game.ts'
-import { Position } from './interfaces.ts';
+import Game  from './Game.ts'
+import { Position } from '../shared/interfaces.ts';
+import verifyToken from './tokenVerification.ts';
+import jwt from 'jsonwebtoken';
 
 const PORT = 3000;
 const corsInfo = {
@@ -25,6 +27,7 @@ const gameData: Record<string, Game> = {};
 const app = express();
 app.use(express.json());
 app.use(cors(corsInfo));    
+
 const httpServer = createServer(app);
 const io = new Server(httpServer, {cors: corsInfo});
 
@@ -39,15 +42,15 @@ app.post('/registration', (req, res) => {
     console.log('---Registration Request---');
 });
 
-app.post('./login', (req, res) => {
+app.post('/login', (req, res) => {
     login(req, res);
     console.log('---Login Request---');
 })
 
-app.post('/create-room', (req, res) => {
+app.post('/create-room', verifyToken, async (req, res) => {
     console.log('---Create room request---');
-    if(!req.body.userId) return; 
-    const { userId } = req.body;
+    if(!req.body.user.userId) return; 
+    const userId = req.body.user.userId;
     const time = req.body.time ?? 600;
     const userSide = req.body.side ?? 'white';
 
@@ -56,16 +59,17 @@ app.post('/create-room', (req, res) => {
     
     const roomId = roomNameGeneator.next().value as string;
     
-    gameData[roomId] = new Game({
+    gameData[roomId] = await Game.create({
         timeLimit: time,
         [`${userSide}Id`] : userId
     });
     res.json({roomId: roomId});
 });
 
-app.post('/get-side', (req, res) => {
+app.post('/get-side', verifyToken, async (req, res) => {
     console.log('---Get-Side-Request---');
-    const { roomId, userId } = req.body;
+    const userId = req.body.user.userId;
+    const roomId = req.body.roomId;
 
     if(!roomId || !userId) {
         console.log(`get-side fail ${roomId} || ${userId}`);
@@ -73,9 +77,9 @@ app.post('/get-side', (req, res) => {
         return;
     }
     
-    if(!gameData[roomId]) gameData[roomId] = new Game();
+    if(!gameData[roomId]) gameData[roomId] = await Game.create({});
     
-    const side = gameData[roomId].getUserSide(userId);
+    const side = await gameData[roomId].getUserSide(userId);
 
     res.json({ side: side, status: 'success' });
 });
@@ -85,7 +89,7 @@ const sendChatMessage = ({ roomId, user, text }:
     
     if(!roomId || !user || !text) return;
 
-    console.log('---new message in chat---');
+    // console.log('---new message in chat---');
     const game = gameData[roomId];
     const message = {
         user: user,
@@ -97,60 +101,62 @@ const sendChatMessage = ({ roomId, user, text }:
 
 }
 
-const callGameEnd = ({ roomId, winner }: {roomId: string, winner: 'white' | 'black'}) => {
-    
-    if(!roomId || !winner) return;
-
-    const game = gameData[roomId];
-    game.setGameStatus({status: true, winner: winner});
-    
-    const messageText = `Переможець - ${winner === 'white' ? 'білий' : 'чорний'}`; 
-    sendChatMessage({ roomId: roomId, user: 'Сервер', text: messageText });
-
-    io.to(roomId).emit('gameEnd', {winner: winner, activeSide: 'spectator'});
-    console.log('gameEnd, winner', winner);
-
-}
-
-const callUpdateInfo = ({ roomId }: {roomId: string}) => {
-    
-    if(!roomId) return;
-
-    const game = gameData[roomId];
-    const { field, ...gameInfo } = game;
-    
-    io.to(roomId).emit('updateInfo', gameInfo);
-    
-}
-
 type OnNewMoveType = {
     side: 'white' | 'black', 
     roomId: string, 
     move: {from: Position; to: Position}
 };
 
-const onNewMove = ({ side, roomId, move }: OnNewMoveType) => {
-    if(!side || !roomId || !move) return;
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
 
-    console.log('---New move---');
+    if(!token) {
+        console.log('socket auth fail -> no token');
+        return next(new Error('Ви не авторизовані'));
+    }   
 
-    if(!gameData[roomId] || side != gameData[roomId].activeSide) return;    
-    const game = gameData[roomId];
+    try {
+        
+        const decoded = jwt.verify(token, process.env.API_KEY as string);
+        (socket as any).userId = (decoded as any).userId;
+        next();
 
-    const moveRes = game.checkMove(move.from, move.to);
-    if(!moveRes) return;
+    } catch (error) {
+
+        next(new Error('Авторизаційні данні на дійсні'));
+        
+    }
     
-    game.makeMove(move.from, move.to);
-    game.updateTime(side);
-    game.changeActiveSide(); 
-
-    if(moveRes === 'Mate') callGameEnd({ roomId: roomId, winner: side });
-    
-    callUpdateInfo({ roomId: roomId });
-}
+});
 
 io.on('connection', (socket) => {
     console.log('A user connected');
+
+    const callGameEnd = ({ roomId, winner }: {roomId: string, winner: 'white' | 'black'}) => {
+        console.log('---call game end---');
+        if(!roomId || !winner) return;
+
+        const game = gameData[roomId];
+        game.setGameStatus({status: true, winner: winner});
+        
+        const messageText = `Переможець - ${game.players[winner].userName}`; 
+        sendChatMessage({ roomId: roomId, user: 'Сервер', text: messageText });
+
+        io.to(roomId).emit('gameEnd', {winner: winner, activeSide: 'spectator'});
+        console.log('gameEnd, winner', winner);
+
+    }
+
+    const callUpdateInfo = ({ roomId }: {roomId: string}) => {
+        
+        if(!roomId) return;
+
+        const game = gameData[roomId];
+        const { field, ...gameInfo } = game;
+        
+        io.to(roomId).emit('updateInfo', gameInfo);
+        
+    }
 
     const handleJoinRoom = (data: {roomId: string}) => {
         const roomId = data.roomId;
@@ -159,28 +165,57 @@ io.on('connection', (socket) => {
             console.log(`join room -> no room id ${roomId}`);
             return;
         }
-        if(!gameData[roomId]) {
-            gameData[roomId] = new Game();
-        }
+        
+        if(!gameData[roomId]) return;
         
         socket.join(roomId);
 
         const game = gameData[roomId];
         
-        if(!game.gameInfo.status && game.activeSide != 'spectator'){
+        if(!game.gameInfo.status && game.activeSide != 'spectator') {
             game.updateTime(game.activeSide);
         }
-        socket.emit('initializeGame', game);
+        io.to(roomId).emit('initializeGame', game);
         
         console.log(`User joined room: ${roomId}`); 
+    }
+
+    const onNewMove = async ({ roomId, move }: OnNewMoveType) => {
+        if(!roomId || !move) return;
+
+        console.log('---   New move   ---');
+
+        const userId = (socket as any).userId;
+        if(!userId || !gameData[roomId]) return;
+        
+        const userSide = await gameData[roomId].getUserSide(userId);
+        if(userSide === 'spectator') return;
+        
+        const game = gameData[roomId];
+
+        const isMove = game.checkMove(move.from, move.to);
+        if(!isMove) return;
+        
+        game.makeMove(move.from, move.to);
+        game.updateTime(userSide);
+        game.changeActiveSide(); 
+
+        if(isMove === 'Mate') {
+            
+            console.log('---   Mate!   ---');   
+            callGameEnd({ roomId: roomId, winner: userSide });
+
+        }
+        
+        callUpdateInfo({ roomId: roomId });
     }
 
     socket.on('joinRoom', handleJoinRoom);
     socket.on('newMove', onNewMove);
     socket.on('timerGameEnd', callGameEnd);
     socket.on('chatNewMessage', sendChatMessage)
-});
 
+});
 
 httpServer.listen(PORT, '127.0.0.1', () => {
     console.log(`Local: http://localhost:${PORT}`);

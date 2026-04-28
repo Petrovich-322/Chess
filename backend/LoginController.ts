@@ -1,11 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import 'dotenv/config';
 
 import { User } from './models/UserSchema';
-
-const JWT = process.env.API_KEY;
-console.log(JWT);
 
 const login = async (req: any, res: any) => {
     
@@ -22,17 +18,19 @@ const login = async (req: any, res: any) => {
         const passwordCheck = await bcrypt.compare(password, user.password);
         if(!passwordCheck) {
             res.status(400).json({ message: 'неправильний пароль' });
+            return;
         }
         
         const token = jwt.sign(
             { userId: user._id, userName: user.userName },
-            JWT as any,
+            process.env.API_KEY as string,
             { expiresIn: '72h' }
         );
 
         res.json({
             token,
             userId: user._id,
+            userName: user.userName
         });
 
 

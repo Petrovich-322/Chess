@@ -1,4 +1,5 @@
-import { hostAddress } from "./host";
+import clientApi from "./client";
+import axios from "axios";
 
 class ResponseData<T> {
     status: 'success' | 'fail';
@@ -25,7 +26,9 @@ abstract class Authorization {
         const abortController = new AbortController();
         setTimeout(() => abortController.abort(), 4000);
 
-        if(!userName || !password) {        
+        console.log(userName, password);
+
+        if(!userName || !password) {     
             return new ResponseData('fail', {
                 name: 'TypeError',
                 message: "Не введено ім'я або пароль"
@@ -33,42 +36,50 @@ abstract class Authorization {
         }
 
         try {
-            
-            const response = await fetch(`${hostAddress}/${this.endpoint}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userName: userName, password: password }),
+
+            const response = await clientApi.post(this.endpoint, {
+                userName: userName,
+                password: password
+            }, {
                 signal: abortController.signal
             });
 
-            if(!response.ok) {
-                const data = await response.json().catch(() => {});
-                
-                return new ResponseData('fail', {
-                    name: data.name || 'Відповідь сервера',
-                    message: data.message || `Помилка ${message}`
-                });
-            }
-
-            const data = await response.json();
+            const data = response.data;
 
             const result = new ResponseData('success', data);
             return result;
 
-        } catch (err: any) {
-            const result = new ResponseData('fail', {name: err.name, message: err.message});
+        } catch (err: unknown) {
+            let errName = 'Error';
+            let errMessage = 'Сталася невідома помилка';
+
+            if(err instanceof Error) {
+                errName = err.name;
+                errMessage = err.message;
+            } else return new ResponseData('fail', {name: errName, message: errMessage});
             
-            if(err.name === 'AbortError') {
-                result.data.message = 'fetch time limit';
+            if('name' in err && err.name === 'AbortError') {
+                errName = 'AbortError';
+                errMessage = 'Вичерпано час очікування відповіді';
             } 
 
-            return result;
+            else if(axios.isAxiosError(err)) {
+                if(err.response) {
+                    errName = 'ResponseError';
+                    errMessage = err.response.data.message || `Помилка на сервері - ${err.response.status}`;
+                }
+                
+                else if(err.request) {
+                    errName = 'RequestError';
+                    errMessage = 'Помилка запиту, перевірте з\'єднання з інтернетом';
+                }
+            }
+
+            return new ResponseData('fail', {name: errName, message: errMessage});
         }
 
     }
 }
-
-// export default registration;
 
 class Registration extends Authorization {
     protected endpoint = '/registration';

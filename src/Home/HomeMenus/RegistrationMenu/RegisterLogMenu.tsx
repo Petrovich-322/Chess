@@ -10,14 +10,16 @@ interface RegisterLogMenuProps {
     message: string,
     confirmBtnHandler: ({ userName, password }: 
         { userName: string, password: string }) => Promise<void>,
-    setOnRegLog: Dispatch<SetStateAction<boolean>>,
+    setOnClick: Dispatch<SetStateAction<string>>,
+    setMessage: Dispatch<SetStateAction<string>>
 }
 const RegisterLogMenu = (props: RegisterLogMenuProps) => {
     const {
         title,
         message,
         confirmBtnHandler,
-        setOnRegLog
+        setOnClick,
+        setMessage
     } = props;
     
     const [userName, setUserName] = useState<string>('');
@@ -46,7 +48,10 @@ const RegisterLogMenu = (props: RegisterLogMenuProps) => {
 
             <HomeMenuNavBtns 
                 confirmBtnHandler = {() => confirmBtnHandler({ userName: userName, password: password })}
-                returnBtnHandler = {() => setOnRegLog(false)}
+                returnBtnHandler = {() => {
+                    setOnClick('');
+                    setMessage('')
+                }}
                 confirmBtnTitle = "Підтверити"
                 returnBtnTitle = "Повернутися"
             />

@@ -27,7 +27,9 @@ export type Figure = {
 
 type Player = {
     id: string,
-    time: number
+    time: number,
+    status: string,
+    userName: string
 };
 
 export interface ServerData {

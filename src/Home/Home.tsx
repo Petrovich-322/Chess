@@ -5,13 +5,13 @@ import NavigationMenu from '@/NavigationMenu/NavigationMenu';
 import RegisterLogMenu from './HomeMenus/RegistrationMenu/RegisterLogMenu';
 
 import { RegistrationService, LoginService } from '@/Services/authorization';
+import TokenService from '@/Services/tokenService';
+import PlayerService from '@/Services/playerService';
 
 import "./Home.css";
 
 const Home = () => {        
-    const [onCreateGame, setOnCreateGame] = useState<boolean>(false);
-    const [onRegistration, setOnRegistration] = useState<boolean>(false);
-    const [onLogin, setOnLogin] = useState<boolean>(false);
+    const [onClick, setOnClick] = useState<string>('');
     const [message, setMessage] = useState<string>('');
 
     const onRegistrationHandler = async (data: {userName: string, password: string}) => {
@@ -22,10 +22,12 @@ const Home = () => {
         if(!response.ok) {
             setMessage(response.data.message);
             console.log(response.data.name, response.data.message);
-        } else {
-            alert('Registration success');
-            setMessage('');
+            return;
         }
+        
+        alert('Registration success');
+        setMessage('');
+        
     }
 
     const onLoginHandler = async (data: { userName: string, password: string }) => {
@@ -36,20 +38,18 @@ const Home = () => {
         if(!response.ok) {
             setMessage(response.data.message);
             console.log(response.data.name, response.data.message);
-        } else {
-            alert('Успішний вхід');
-
-            const localStorageJSON = localStorage.getItem('DenisChess');
-            const locaStorageData = localStorageJSON ? JSON.parse(localStorageJSON) : {};
-
-            locaStorageData.token = response.data.token;
-
-            localStorage.setItem('DenisChess', locaStorageData);
-            
-            console.log(response.data.token);
-        }
+            return;
+        } 
         
+        setMessage('');
+
+        TokenService.setToken(response.data.token);
+
+        PlayerService.setUserName(response.data.userName);
+        
+        alert('Успішний вхід');
     }
+    
     return (
         <div className="main-container">
             <NavigationMenu />
@@ -57,38 +57,40 @@ const Home = () => {
                 <div id="start-btn-container">
                     <button 
                         className="main-menu-btn start-btn" 
-                        onClick={() => setOnCreateGame(true)}
+                        onClick={() => setOnClick('createGame')}
                     >
                         Створити гру
                     </button>
                     <button 
                         className="main-menu-btn new-user-btn"
-                        onClick={() => setOnLogin(true)}
+                        onClick={() => setOnClick('login')}
                     >
                         Логін
                     </button>
                     <button 
                         className="main-menu-btn new-user-btn" 
-                        onClick={() => setOnRegistration(true)}
+                        onClick={() => setOnClick('registration')}
                     > 
                         Реєстрація
                     </button>
                 </div>
-                {onCreateGame && <CreatingGameMenu
-                    setOnCreateGame = {setOnCreateGame}
+                {onClick === 'createGame' && <CreatingGameMenu
+                    setOnClick = {setOnClick}
                 />
                 }
-                {onRegistration && <RegisterLogMenu 
+                {onClick === 'registration' && <RegisterLogMenu 
                     confirmBtnHandler = {onRegistrationHandler}
                     title = "Реєстрація"
                     message = {message}
-                    setOnRegLog  = {setOnRegistration}
+                    setMessage = {setMessage}
+                    setOnClick  = {setOnClick}
                 />}
-                {onLogin && <RegisterLogMenu
+                {onClick === 'login' && <RegisterLogMenu
                     confirmBtnHandler = {onLoginHandler}
                     title = "Логін" 
                     message = {message}
-                    setOnRegLog = {setOnLogin}
+                    setMessage = {setMessage}
+                    setOnClick = {setOnClick}
                 />}
             </div>
         </div>

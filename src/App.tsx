@@ -3,8 +3,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from "./Home/Home";
 import Board from "./Game/Game";  
 
-import { SocketContext } from './SocketContext';
-import { socket } from './SocketContext';
+import { SocketContext } from '@/Context/SocketContext';
+import { socket } from '@/Context/SocketContext';
 
 const App = () => {
     return (

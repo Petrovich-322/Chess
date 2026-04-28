@@ -33,7 +33,7 @@ const lineShahCheck = (king, checkBoard, moves, type) => {
     return true;
 }
 
-export const shahCheck = (king, checkBoard) => {
+export const shahCheck = (checkBoard, king) => {
     const kingMoves = [[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[1,1],[0,1]];
     const knightMoves = [[-2,-1],[-1,-2],[1,-2],[2,-1],[2,1],[2,2],[-1,2],[-2,1]];
     const pawnMoves = [[1,1],[1,-1]];
@@ -54,7 +54,7 @@ export const shahCheck = (king, checkBoard) => {
     return false;
 }
 
-const isShah = (board, from, to, king) => {
+export const isShah = (board, from, to, king) => {
     const figure = board[from.row][from.col];
     const checkBoard = board.map(row => [...row]);
     
@@ -62,11 +62,11 @@ const isShah = (board, from, to, king) => {
     checkBoard[from.row][from.col] = null;
     const currentKingPos = figure.type === 'king' ? {row: to.row, col: to.col} : king;
     
-    return shahCheck(currentKingPos, checkBoard);
+    return shahCheck(checkBoard, currentKingPos);
 }
 
 export const checkMove = (board, from, to, king) => {
-    console.log('***Check Move***');
+    // console.log('***Check Move***');
     const figure = board[from.row][from.col];
     const targetFigure = board[to.row][to.col];
 
@@ -98,10 +98,9 @@ export const checkMove = (board, from, to, king) => {
         return false;
     }
     else {
-        console.log('   -shah for user-');
+        // console.log('   -shah for user-');
     }
     
-    let res;
     switch (figure.type) {
         case 'pawn':
             const dir = figure.color === 'white' ? -1 : 1;
@@ -111,25 +110,40 @@ export const checkMove = (board, from, to, king) => {
             return false;
 
         case 'knight':
-            res = ((Math.abs(dx) === 2 && Math.abs(dy) === 1) || (Math.abs(dy) === 2 && Math.abs(dx) === 1));
-            // console.log('knight',res);
-            return res;
+            return (Math.abs(dx) === 2 && Math.abs(dy) === 1) || (Math.abs(dy) === 2 && Math.abs(dx) === 1);
+
         case 'king':
-            res = (Math.abs(dx) <= 1 && Math.abs(dy) <= 1);
-            // console.log('king',res);
-            return res;
+            if(Math.abs(dx) <= 1 && Math.abs(dy) <= 1) return true;
+
+            if(Math.abs(dx) === 2 && dy === 0 && figure.movements === 0) {
+                const isLong = dx === -2;
+                const rookCol = isLong ? 0 : 7;
+                const rook = board[from.row][rookCol];
+
+                if(rook?.type !== 'rook' || rook.movements !== 0 || rook.color !== figure.color) return false;
+
+                const step = isLong ? -1 : 1;
+                for(let x = from.col + step; isLong ? x > 0 : x < 7; x += step) {
+                    if (board[from.row][x]) return false;
+                }
+
+                if(shahCheck(board, from)) return false;
+
+                const tempBoard = board.map(r => [...r]);
+                tempBoard[from.row][from.col + step] = { ...figure };
+                tempBoard[from.row][from.col] = null;
+                
+                if(shahCheck(tempBoard, { row: from.row, col: from.col + step })) return false;
+
+                return true;
+            }
+            return false;
         case 'bishop':
-            res = (Math.abs(dx) === Math.abs(dy) && isPathClear());
-            // console.log('bishop',res);
-            return res;
+            return (Math.abs(dx) === Math.abs(dy) && isPathClear());
         case 'rook':
-            res = ((dx === 0 || dy === 0) && isPathClear());
-            // console.log('rook',res);
-            return res;
+            return ((dx === 0 || dy === 0) && isPathClear());
         case 'queen':
-            res = ((dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy)) && isPathClear());
-            // console.log('queen',res);
-            return res;
+            return ((dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy)) && isPathClear());
         default:
             return false;
     }
@@ -168,13 +182,17 @@ const memoizationMoves = (fn) => {
     return memoization;
 }
 
-export const mateCheck = (opponentColor, field, king) => {
+export const mateCheck = (field, kingPos) => {
+    const king = field[kingPos.row][kingPos.col];
+    if(!king) return false; 
+    const color = king.color;
+    
     for(let row = 0; row < 8; row++){
         for(let col = 0 ; col < 8; col++){
             // console.log(field[row][col], getAvailableMoves(field, { row, col }, king));
             const piece = field[row][col] 
-            if(piece?.color === opponentColor) {
-                const moves = getAvailableMoves(field, { row, col }, king);
+            if(piece?.color === color) {
+                const moves = getAvailableMoves(field, { row, col }, kingPos);
                 if(moves.length > 0) return false;
             }
         }
