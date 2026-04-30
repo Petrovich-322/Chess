@@ -1,11 +1,13 @@
 import { hostAddress } from "@shared/host";
 import tokenService from './tokenService';
 
-class PlayerService {
+class UserService {
     #side: 'white' | 'black' | 'spectator' = 'spectator';
     #userName: string | null = null;
+    #rating: number = 0;
 
     async getSide(roomId: string, userId: string) {
+
         console.log('get-side-front')
         if(this.#side != 'spectator') return this.#side;
         
@@ -15,7 +17,8 @@ class PlayerService {
             return;
         }
         
-        try{
+        try {
+
             const response = await fetch (`${hostAddress}/get-side`, {
                 method: 'POST',
                 headers: {
@@ -35,9 +38,12 @@ class PlayerService {
             const data = await response.json();
             this.#side = data.side;
             return this.#side;
+
         } catch (err) {
-            alert(`failed to get your side, you are aded to spectartor ${err}`)
+            
+            alert(`Проблема з отриманням данних - ${err}`)
             return 'spectator';
+
         }
     }
 
@@ -56,9 +62,29 @@ class PlayerService {
         localStorageData.userName = userName;
         localStorage.setItem('DenisChess', JSON.stringify(localStorageData));
     }
+
+    getRating() {
+        const localStorageJSON = localStorage.getItem('DenisChess');
+        if(!localStorageJSON) return 0;
+        const localStorageData = JSON.parse(localStorageJSON);
+        this.#rating = localStorageData.rating || 0;
+        return this.#rating;
+    }
+
+    setRating(rating: number) {
+        this.#rating = rating;
+        const localStorageJSON = localStorage.getItem('DenisChess');
+        const localStorageData = localStorageJSON ? JSON.parse(localStorageJSON) : {};
+        localStorageData.rating = rating;
+        localStorage.setItem('DenisChess', JSON.stringify(localStorageData));
+    }
         
     get UserName() {
         return this.#userName || this.getUserName();
+    }
+
+    get Rating() {
+        return this.#rating || 0;
     }
 
     reset() {
@@ -67,4 +93,4 @@ class PlayerService {
    
 }
 
-export default new PlayerService();
+export default new UserService();

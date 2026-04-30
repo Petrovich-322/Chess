@@ -23,9 +23,12 @@ class TokenService {
         localStorage.setItem('DenisChess', JSON.stringify(locaStorageData));
     }
 
+    get isLoggedIn() {
+        return !!this.token;
+    }
     get token(){
         return this.#tokenData ?? this.getToken();
     }
 } 
 
-export default new TokenService()
+export default new TokenService();

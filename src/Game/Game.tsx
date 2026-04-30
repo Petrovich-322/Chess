@@ -6,7 +6,7 @@ import { SocketContext } from '@/Context/SocketContext';
 import { checkMove } from 'rules-lib';
 import { getAvailableMoves } from 'rules-lib';
 import { shahCheck } from 'rules-lib';
-import PlayerService from '../Services/playerService';
+import PlayerService from '../Services/userService';
 
 import { AvailableMoves, ChatStory, MoveStory, SelectedCell, ServerData, Figure } from '../Interfaces/interface';
 

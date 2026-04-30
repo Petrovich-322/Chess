@@ -38,16 +38,21 @@ mongoose.connect('mongodb://127.0.0.1:27017/DenisChessDB')
 const roomNameGeneator = createRoomName();
 
 app.post('/registration', (req, res) => {
+
     registration(req, res);
     console.log('---Registration Request---');
+    
 });
 
 app.post('/login', (req, res) => {
+
     login(req, res);
     console.log('---Login Request---');
+
 })
 
 app.post('/create-room', verifyToken, async (req, res) => {
+
     console.log('---Create room request---');
     if(!req.body.user.userId) return; 
     const userId = req.body.user.userId;
@@ -64,9 +69,11 @@ app.post('/create-room', verifyToken, async (req, res) => {
         [`${userSide}Id`] : userId
     });
     res.json({roomId: roomId});
+
 });
 
 app.post('/get-side', verifyToken, async (req, res) => {
+
     console.log('---Get-Side-Request---');
     const userId = req.body.user.userId;
     const roomId = req.body.roomId;
@@ -178,6 +185,7 @@ io.on('connection', (socket) => {
         io.to(roomId).emit('initializeGame', game);
         
         console.log(`User joined room: ${roomId}`); 
+
     }
 
     const onNewMove = async ({ roomId, move }: OnNewMoveType) => {
@@ -218,5 +226,7 @@ io.on('connection', (socket) => {
 });
 
 httpServer.listen(PORT, '127.0.0.1', () => {
+
     console.log(`Local: http://localhost:${PORT}`);
+    
 });

@@ -5,16 +5,21 @@ import NavigationMenu from '@/NavigationMenu/NavigationMenu';
 import RegisterLogMenu from './HomeMenus/RegistrationMenu/RegisterLogMenu';
 
 import { RegistrationService, LoginService } from '@/Services/authorization';
-import TokenService from '@/Services/tokenService';
-import PlayerService from '@/Services/playerService';
+import tokenService from '@/Services/tokenService';
+import userService from '@/Services/userService';
 
 import "./Home.css";
+
+interface AuthData {
+    userName: string;
+    password: string;
+}
 
 const Home = () => {        
     const [onClick, setOnClick] = useState<string>('');
     const [message, setMessage] = useState<string>('');
 
-    const onRegistrationHandler = async (data: {userName: string, password: string}) => {
+    const onRegistrationHandler = async (data: AuthData) => {
 
         const registrationData = {message: 'реєстрація', ...data};
         const response = await RegistrationService.request(registrationData);
@@ -22,15 +27,13 @@ const Home = () => {
         if(!response.ok) {
             setMessage(response.data.message);
             console.log(response.data.name, response.data.message);
-            return;
+            return false;
         }
-        
-        alert('Registration success');
-        setMessage('');
-        
+                
+        return true;
     }
 
-    const onLoginHandler = async (data: { userName: string, password: string }) => {
+    const onLoginHandler = async (data: AuthData) => {
 
         const loginData = {message: 'вхід', ...data};
         const response = await LoginService.request(loginData);
@@ -38,16 +41,29 @@ const Home = () => {
         if(!response.ok) {
             setMessage(response.data.message);
             console.log(response.data.name, response.data.message);
-            return;
+            return false;
         } 
         
-        setMessage('');
+        try {
+            tokenService.setToken(response.data.token);
 
-        TokenService.setToken(response.data.token);
+            userService.setUserName(response.data.userName);
+            
+            userService.setRating(response.data.rating);
 
-        PlayerService.setUserName(response.data.userName);
-        
-        alert('Успішний вхід');
+        } catch (err) {
+            console.error('Error in setting user data:', err);
+        }
+
+        return true;
+    }
+
+    const handlerWrapper = (fn: (data: AuthData) => Promise<boolean>) => {
+        return async function(data: AuthData) {
+            if(!await fn(data)) return;
+            setMessage('');
+            setOnClick('');
+        }
     }
     
     return (
@@ -79,14 +95,14 @@ const Home = () => {
                 />
                 }
                 {onClick === 'registration' && <RegisterLogMenu 
-                    confirmBtnHandler = {onRegistrationHandler}
+                    confirmBtnHandler = {handlerWrapper(onRegistrationHandler)}
                     title = "Реєстрація"
                     message = {message}
                     setMessage = {setMessage}
                     setOnClick  = {setOnClick}
                 />}
                 {onClick === 'login' && <RegisterLogMenu
-                    confirmBtnHandler = {onLoginHandler}
+                    confirmBtnHandler = {handlerWrapper(onLoginHandler)}
                     title = "Логін" 
                     message = {message}
                     setMessage = {setMessage}

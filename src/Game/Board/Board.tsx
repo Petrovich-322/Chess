@@ -1,6 +1,6 @@
 import NewCell from "./Cell/NewCell";
 
-import type { Figure, SelectedCell, AvailableMoves} from "../Interfaces/interface"; 
+import type { Figure, SelectedCell, AvailableMoves} from "@/Interfaces/interface"; 
 
 import './Board.css';
 

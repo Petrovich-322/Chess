@@ -30,11 +30,13 @@ const login = async (req: any, res: any) => {
         res.json({
             token,
             userId: user._id,
-            userName: user.userName
+            userName: user.userName,
+            rating: user.rating
         });
 
 
     } catch(err: any) {
+        
         console.log(err.name, err.message);
         res.status(500).json({ message: 'помилка серверу' });
 
