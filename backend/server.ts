@@ -12,6 +12,7 @@ import Game  from './Game.ts'
 import { Position } from '../shared/interfaces.ts';
 import verifyToken from './tokenVerification.ts';
 import jwt from 'jsonwebtoken';
+import { send } from 'vite';
 
 const PORT = 3000;
 const corsInfo = {
@@ -97,22 +98,6 @@ app.post('/get-side', verifyToken, async (req: DecodedTokenReq, res) => {
 
 });
 
-const sendChatMessage = ({ roomId, user, text }: 
-    {roomId: string, user: string, text: string}) => {
-    
-    if(!roomId || !user || !text) return;
-
-    // console.log('---new message in chat---');
-    const game = gameData[roomId];
-    const message = {
-        user: user,
-        text: text
-    }
-    game.sendMessage(message);
-
-    io.to(roomId).emit('chatUpdate', {newMessage: message});
-
-}
 
 type OnNewMoveType = {
     side: 'white' | 'black', 
@@ -145,12 +130,41 @@ io.use((socket, next) => {
 io.on('connection', (socket) => {
     console.log('A user connected');
 
+    const sendChatMessage = ({ roomId, user, text }: 
+        {roomId: string, user: string, text: string}) => {
+        
+        if(!roomId || !user || !text) return;
+
+        if(text[0] === '/') {
+            const command = text.slice(1).trim().toLowerCase();
+            if(command === 'start') {
+                if(gameData[roomId].status !== 'prepearing' || !gameData[roomId].allPlayers) {
+                    sendChatMessage({ roomId: roomId, user: 'Сервер', text: 'Цю команду не можливо виконати'});
+                    return;
+                }
+                sendChatMessage({ roomId: roomId, user: 'Сервер', text: 'Гру успішно почато'});
+                gameData[roomId].setGameStatus({ status: 'in-progress' });    
+                handleJoinRoom({ roomId: roomId });
+            }
+        }
+
+        const game = gameData[roomId];
+        const message = {
+            user: user,
+            text: text
+        }
+        game.sendMessage(message);
+
+        io.to(roomId).emit('chatUpdate', {newMessage: message});
+
+    }
+
     const callGameEnd = ({ roomId, winner }: {roomId: string, winner: 'white' | 'black'}) => {
         console.log('---call game end---');
         if(!roomId || !winner) return;
 
         const game = gameData[roomId];
-        game.setGameStatus({status: true, winner: winner});
+        game.setGameStatus({status: 'finished', winner: winner});
         
         const messageText = `Переможець - ${game.players[winner].userName}`; 
         sendChatMessage({ roomId: roomId, user: 'Сервер', text: messageText });
@@ -194,7 +208,18 @@ io.on('connection', (socket) => {
     }
 
     const onNewMove = async ({ roomId, move }: OnNewMoveType) => {
+        
         if(!roomId || !move) return;
+        
+        if(gameData[roomId].gameInfo.status === 'prepearing') {
+            sendChatMessage({ roomId: roomId, user: 'Сервер', text: 'Гра ще не почалася!' });
+            return;
+        }
+
+        if(gameData[roomId].gameInfo.status === 'finished') {
+            sendChatMessage({ roomId: roomId, user: 'Сервер', text: 'Гра вже закінчилася!' });
+            return;
+        }
 
         console.log('---   New move   ---');
 

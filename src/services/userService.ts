@@ -35,6 +35,7 @@ class UserService {
     }
         
     get UserName() {
+        console.log(this.#userName);
         return this.#userName || this.getUserName();
     }
 

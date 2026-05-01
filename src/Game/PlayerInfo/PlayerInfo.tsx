@@ -15,9 +15,9 @@ interface PlayerInfoProps {
     },
     moveStory: MoveStory, 
     activeSide: string | undefined,
-    gameEnd: Boolean,
+    gameStatus: string,
     roomId: string | undefined,
-    setGameEnd: Dispatch<SetStateAction<boolean>>
+    setGameStatus: Dispatch<SetStateAction<string>>
 }
 
 const PlayerInfo = (props: PlayerInfoProps) => {
@@ -28,9 +28,9 @@ const PlayerInfo = (props: PlayerInfoProps) => {
         userInfo,
         moveStory,
         activeSide,
-        gameEnd,
+        gameStatus,
         roomId,
-        setGameEnd,
+        setGameStatus,
     } = props;
 
     if(userInfo.userName === null) userInfo.userName = userInfo.side === 'white' ? 'Білий' : 'Чорний';
@@ -44,7 +44,7 @@ const PlayerInfo = (props: PlayerInfoProps) => {
     useEffect(() => {
         let timerInterval: any;
 
-        if(!activeSide || activeSide != userInfo.side || gameEnd) {
+        if(!activeSide || activeSide != userInfo.side || gameStatus === 'finished' || gameStatus === 'prepearing') {
             clearInterval(timerInterval);
             return;
         }
@@ -56,11 +56,11 @@ const PlayerInfo = (props: PlayerInfoProps) => {
                 clearInterval(timerInterval);
             }
         }
-    }, [activeSide, gameEnd]);
+    }, [activeSide, gameStatus]);
 
     useEffect(() => {
-        if(playerTimer <= 0 && !gameEnd) {
-            setGameEnd(true);
+        if(playerTimer <= 0 && gameStatus !== 'finished') {
+            setGameStatus('finished');
             setPlayerTimer(0);
             socket.emit('timerGameEnd', {
                 roomId: roomId, 

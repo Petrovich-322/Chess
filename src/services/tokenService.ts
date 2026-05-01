@@ -1,6 +1,6 @@
 
 class TokenService {
-    #tokenData = null;
+    #tokenData: string | null = null;
     
     getToken() {
         const localStorageJSON = localStorage.getItem('DenisChess');
@@ -21,6 +21,7 @@ class TokenService {
         locaStorageData.token = token;
 
         localStorage.setItem('DenisChess', JSON.stringify(locaStorageData));
+        this.#tokenData = token;
     }
 
     get isLoggedIn() {

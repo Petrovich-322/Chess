@@ -1,10 +1,9 @@
-import userService from "@/Services/userService";
-import tokenService from "@/Services/tokenService";
+import userService from "@/services/userService";
+import tokenService from "@/services/tokenService";
 
 const UserProfile = () => { 
     const isLoggedIn = tokenService.isLoggedIn;
     
-    console.log(isLoggedIn);
     return (
         <div className="user-profile__container">
             {isLoggedIn && (

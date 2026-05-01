@@ -55,7 +55,7 @@ class Game {
         blackKing: Position;
     };
     gameInfo: {
-        status: boolean;
+        status: string;
         winner: string | null;
     };
     chatStory: [{user: string; text: string}];
@@ -86,7 +86,7 @@ class Game {
             blackKing: {row: 0, col: 4}
         };
         this.gameInfo = {
-            status: false, 
+            status: 'prepearing',
             winner: null
         };
         this.chatStory = [{
@@ -207,7 +207,7 @@ class Game {
 
     };
 
-    getUserSide = async (userId: string) => {
+    getUserSide = async (userId: string | null) => {
         
         const sides = ['white', 'black'] as const;
 
@@ -221,6 +221,7 @@ class Game {
             const userName = user ? user.userName : newSide === 'white' ? 'Білий' : 'Чорний';
             this.players[newSide].id = userId;
             this.players[newSide].userName = userName;
+
             return newSide;
 
         }
@@ -260,16 +261,27 @@ class Game {
 
     };
 
-    setGameStatus = ({status, winner}: {status: boolean, winner: 'white' | 'black' | null}) => {
+    setGameStatus = ({status = null, winner = null}: {status?: string | null, winner?: 'white' | 'black' | null}) => {
         
-        this.gameInfo.status = status;
-        this.gameInfo.winner = winner;
+        this.gameInfo.status = status ?? this.gameInfo.status;
+        this.gameInfo.winner = winner ?? this.gameInfo.winner;
 
-        if(status === true) {
+        if(status === 'finished') {
             this.activeSide = 'spectator';
         }
 
     };
+
+    get status() {
+        return this.gameInfo.status;
+    }
+
+    get allPlayers() {
+        const sides = ['white', 'black'] as const;
+        const newSide = sides.find(side => !this.players[side].id);
+        if(newSide) return false;
+        return true;
+    }
 
 }
 

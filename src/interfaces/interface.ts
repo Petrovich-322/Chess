@@ -42,7 +42,7 @@ export interface ServerData {
     chatStory: ChatStory,
     prevMoveTime: number,
     kingsPosition: {whiteKing: {row: number, col: number}, blackKing: {row: number, col: number}},
-    gameInfo: {status: boolean, winner: string | null}
+    gameInfo: {status: string, winner: string | null}
 
 };
 
