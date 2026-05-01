@@ -71,7 +71,7 @@ abstract class Authorization {
                 
                 else if(err.request) {
                     errName = 'RequestError';
-                    errMessage = 'Помилка запиту, перевірте з\'єднання з інтернетом';
+                    errMessage = 'Помилка запиту, спроуйте пізніше/перевірте з\'єднання';
                 }
             }
 

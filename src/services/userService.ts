@@ -87,9 +87,16 @@ class UserService {
         return this.#rating || 0;
     }
 
-    reset() {
+    resetSide() {
         this.#side = 'spectator';
     }
+
+    reset() {
+        this.#userName = null;
+        this.#rating = 0;
+        this.resetSide();
+    }
+    
    
 }
 

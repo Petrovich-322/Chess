@@ -3,10 +3,8 @@ import { useParams } from 'react-router-dom';
 
 import { SocketContext } from '@/Context/SocketContext';
 
-import { checkMove } from 'rules-lib';
-import { getAvailableMoves } from 'rules-lib';
-import { shahCheck } from 'rules-lib';
-import PlayerService from '../Services/userService';
+import { checkMove, getAvailableMoves, shahCheck} from 'rules-lib';
+import userService from '@/services/userService';
 
 import { AvailableMoves, ChatStory, MoveStory, SelectedCell, ServerData, Figure } from '../Interfaces/interface';
 
@@ -62,6 +60,8 @@ const Game = () => {
     const [chatStory, setChatStory] = useState<ChatStory>([]);
     const [showMoveStory, setShowMoveStory] = useState<boolean>(false);
     const [availableMoves, setAvailableMoves] = useState<AvailableMoves>([]);
+
+    console.log(userInfo, opponentInfo);
     
     const fieldsCache = useRef<Record<number, any[][]>>({});
     
@@ -136,9 +136,10 @@ const Game = () => {
             setMoveStory(data.moveStory);
             setGameEnd(data.gameInfo.status);
             setChatStory(data.chatStory);
+            
             setOpponentInfo(() => {
                 
-                const opponentSide = data.players.white.userName === PlayerService.UserName ? 'black' : 'white';
+                const opponentSide = data.players.white.userName === userService.UserName ? 'black' : 'white';
 
                 return ({
                     side: opponentSide,
@@ -169,12 +170,12 @@ const Game = () => {
         socket.on('chatUpdate', handleChatUpdate);
 
         const initGame = async () => {
-            const userSide = await PlayerService.getSide(roomId, '');
+            const userSide = await userService.getSide(roomId, '');
             
             console.log(userSide);
             setUserInfo({
                 side: userSide ?? defUser.side,
-                userName: PlayerService.UserName
+                userName: userService.UserName
             });
             
             if (socket.connected) {
@@ -292,8 +293,7 @@ const Game = () => {
                     <div className="vertical-game-container">
                         <PlayerInfo
                             timer = {gameTimer.blackTimer}
-                            player = "black"
-                            userName = {userInfo.side === 'black' ? userInfo.userName : opponentInfo.userName}
+                            userInfo = {userInfo.side === 'black' ? userInfo : opponentInfo}
                             moveStory = {moveStory}
                             activeSide = {activeSide}
                             gameEnd = {gameEnd}
@@ -308,8 +308,7 @@ const Game = () => {
                         />
                         <PlayerInfo
                             timer = {gameTimer.whiteTimer}
-                            player = "white"
-                            userName = {userInfo.side === 'white' ? userInfo.userName : opponentInfo.userName}
+                            userInfo = {userInfo.side === 'white' ? userInfo : opponentInfo}
                             moveStory = {moveStory}
                             activeSide = {activeSide}
                             gameEnd = {gameEnd}

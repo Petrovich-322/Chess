@@ -4,9 +4,9 @@ import CreatingGameMenu from './HomeMenus/CreatingGameMenu/CreatingGameMenu'
 import NavigationMenu from '@/NavigationMenu/NavigationMenu';
 import RegisterLogMenu from './HomeMenus/RegistrationMenu/RegisterLogMenu';
 
-import { RegistrationService, LoginService } from '@/Services/authorization';
-import tokenService from '@/Services/tokenService';
-import userService from '@/Services/userService';
+import { RegistrationService, LoginService } from '@/services/authorization';
+import tokenService from '@/services/tokenService';
+import userService from '@/services/userService';
 
 import "./Home.css";
 
@@ -43,6 +43,8 @@ const Home = () => {
             console.log(response.data.name, response.data.message);
             return false;
         } 
+
+        userService.reset();
         
         try {
             tokenService.setToken(response.data.token);

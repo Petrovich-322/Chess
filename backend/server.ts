@@ -31,7 +31,7 @@ app.use(cors(corsInfo));
 const httpServer = createServer(app);
 const io = new Server(httpServer, {cors: corsInfo});
 
-mongoose.connect('mongodb://127.0.0.1:27017/DenisChessDB')
+mongoose.connect('mongodb://192.168.1.108:27017/DenisChessDB')
   .then(() => console.log('Connected to DB'))
   .catch(err => console.error('Connection error:', err));
 

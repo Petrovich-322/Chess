@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, Dispatch, SetStateAction } from 'react';
 
-import userService from '@/Services/userService';
-import TokenService from '@/Services/tokenService';
-import apiClient from '@/Services/client';
+import userService from '@/services/userService';
+import TokenService from '@/services/tokenService';
+import apiClient from '@/services/client';
 
 import TimePicker from './TimePicker';
 import SidePicker from './SidePicker';
@@ -35,7 +35,7 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
     const navigate = useNavigate();
     
     const onCreateGameHandler = async () => {
-        userService.reset();
+        userService.resetSide();
 
         const time = minutes * 60 + seconds;
         const randomSide = getRandomInt(0,1) === 0 ? 'white' : 'black';      
