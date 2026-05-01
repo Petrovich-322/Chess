@@ -35,7 +35,6 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
     const navigate = useNavigate();
     
     const onCreateGameHandler = async () => {
-        userService.resetSide();
 
         const time = minutes * 60 + seconds;
         const randomSide = getRandomInt(0,1) === 0 ? 'white' : 'black';      

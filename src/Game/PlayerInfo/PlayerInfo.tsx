@@ -33,6 +33,8 @@ const PlayerInfo = (props: PlayerInfoProps) => {
         setGameEnd,
     } = props;
 
+    if(userInfo.userName === null) userInfo.userName = userInfo.side === 'white' ? 'Білий' : 'Чорний';
+
     const [playerTimer, setPlayerTimer] = useState(timer)
 
     useEffect(() => {
@@ -85,7 +87,7 @@ const PlayerInfo = (props: PlayerInfoProps) => {
             <div className="player-card__main">
                 <div className="player-card__user-info">
                     <span className="player-card__name">
-                        {userInfo?.userName ? userInfo.userName : (userInfo?.side === 'white' ? 'Білий' : 'Чорний')} 
+                        {userInfo.userName ? userInfo.userName : (userInfo.side === 'white' ? 'Білий' : 'Чорний')} 
                     </span>
                     
                     <div className="player-card__captured">

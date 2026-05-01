@@ -1,51 +1,6 @@
-import { hostAddress } from "@shared/host";
-import tokenService from './tokenService';
-
 class UserService {
-    #side: 'white' | 'black' | 'spectator' = 'spectator';
     #userName: string | null = null;
     #rating: number = 0;
-
-    async getSide(roomId: string, userId: string) {
-
-        console.log('get-side-front')
-        if(this.#side != 'spectator') return this.#side;
-        
-        const token = tokenService.token;
-        if(!token) {
-            alert('Ви не авторизовані');
-            return;
-        }
-        
-        try {
-
-            const response = await fetch (`${hostAddress}/get-side`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    roomId: roomId,
-                    userId: userId
-                }),
-            });
-
-            if(!response.ok) {
-                throw new Error (`Server response ${response.status}`)
-            }
-
-            const data = await response.json();
-            this.#side = data.side;
-            return this.#side;
-
-        } catch (err) {
-            
-            alert(`Проблема з отриманням данних - ${err}`)
-            return 'spectator';
-
-        }
-    }
 
     getUserName() {
         const localStorageJSON = localStorage.getItem('DenisChess');
@@ -87,14 +42,9 @@ class UserService {
         return this.#rating || 0;
     }
 
-    resetSide() {
-        this.#side = 'spectator';
-    }
-
     reset() {
         this.#userName = null;
         this.#rating = 0;
-        this.resetSide();
     }
     
    

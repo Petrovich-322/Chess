@@ -37,6 +37,11 @@ mongoose.connect('mongodb://192.168.1.108:27017/DenisChessDB')
 
 const roomNameGeneator = createRoomName();
 
+
+interface DecodedTokenReq extends express.Request {
+    decoded?: any;
+}
+
 app.post('/registration', (req, res) => {
 
     registration(req, res);
@@ -51,11 +56,11 @@ app.post('/login', (req, res) => {
 
 })
 
-app.post('/create-room', verifyToken, async (req, res) => {
+app.post('/create-room', verifyToken, async (req: DecodedTokenReq, res) => {
 
     console.log('---Create room request---');
-    if(!req.body.user.userId) return; 
-    const userId = req.body.user.userId;
+    if(!req.decoded.user.userId) return; 
+    const userId = req.decoded.user.userId;
     const time = req.body.time ?? 600;
     const userSide = req.body.side ?? 'white';
 
@@ -72,13 +77,13 @@ app.post('/create-room', verifyToken, async (req, res) => {
 
 });
 
-app.post('/get-side', verifyToken, async (req, res) => {
+app.post('/get-side', verifyToken, async (req: DecodedTokenReq, res) => {
 
     console.log('---Get-Side-Request---');
-    const userId = req.body.user.userId;
-    const roomId = req.body.roomId;
+    const userId = req.decoded.user.userId;
+    const roomId = req.query.roomId;
 
-    if(!roomId || !userId) {
+    if(!roomId || typeof roomId !== 'string' || !userId) {
         console.log(`get-side fail ${roomId} || ${userId}`);
         res.json({ side: 'spectator', status: 'failed to get side' })
         return;
@@ -89,6 +94,7 @@ app.post('/get-side', verifyToken, async (req, res) => {
     const side = await gameData[roomId].getUserSide(userId);
 
     res.json({ side: side, status: 'success' });
+
 });
 
 const sendChatMessage = ({ roomId, user, text }: 
@@ -124,8 +130,8 @@ io.use((socket, next) => {
 
     try {
         
-        const decoded = jwt.verify(token, process.env.API_KEY as string);
-        (socket as any).userId = (decoded as any).userId;
+        const decoded = jwt.verify(token, process.env.API_KEY as string) as any;
+        (socket as any).userId = decoded.userId;
         next();
 
     } catch (error) {
@@ -165,8 +171,7 @@ io.on('connection', (socket) => {
         
     }
 
-    const handleJoinRoom = (data: {roomId: string}) => {
-        const roomId = data.roomId;
+    const handleJoinRoom = ({ roomId }: {roomId: string}) => {
 
         if(!roomId) { 
             console.log(`join room -> no room id ${roomId}`);

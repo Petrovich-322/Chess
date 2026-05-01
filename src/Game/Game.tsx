@@ -16,6 +16,7 @@ import GameInfo from './GameInfo/GameInfo';
 import NavigationMenu from '../NavigationMenu/NavigationMenu';
 
 import './Game.css';
+import apiClient from '@/services/client';
 
 type KingsPosition = {
     whiteKing: {row: number, col: number}, 
@@ -60,9 +61,7 @@ const Game = () => {
     const [chatStory, setChatStory] = useState<ChatStory>([]);
     const [showMoveStory, setShowMoveStory] = useState<boolean>(false);
     const [availableMoves, setAvailableMoves] = useState<AvailableMoves>([]);
-
-    console.log(userInfo, opponentInfo);
-    
+        
     const fieldsCache = useRef<Record<number, any[][]>>({});
     
     const { roomId } = useParams<{roomId: string}>();
@@ -127,6 +126,7 @@ const Game = () => {
 
         const handleInitializeGame = (data: ServerData & {field: (Figure | null)[][]}) => {
             console.log('---initialize Game handler---');
+            
             setField(data.field);
             setActiveSide(data.activeSide);
             setGameTimer({
@@ -147,6 +147,7 @@ const Game = () => {
                 });
 
             });
+
         };
 
         const handleGameEnd = (data: {winner: string, activeSide: string}) => {
@@ -170,19 +171,23 @@ const Game = () => {
         socket.on('chatUpdate', handleChatUpdate);
 
         const initGame = async () => {
-            const userSide = await userService.getSide(roomId, '');
-            
-            console.log(userSide);
-            setUserInfo({
-                side: userSide ?? defUser.side,
-                userName: userService.UserName
-            });
-            
-            if (socket.connected) {
-                socket.emit('joinRoom', {roomId: roomId});
-            } else {
-                socket.once('connect', () => socket.emit('joinRoom', {roomId: roomId}));
-            } 
+            try {
+                const { data: userSide } = await apiClient.post(`/get-side?roomId=${roomId}`);
+                
+                console.log(userSide);
+                setUserInfo({
+                    side: userSide ?? defUser.side,
+                    userName: userService.UserName
+                });
+                
+                if (socket.connected) {
+                    socket.emit('joinRoom', {roomId: roomId});
+                } else {
+                    socket.once('connect', () => socket.emit('joinRoom', {roomId: roomId}));
+                } 
+            } catch (err) {
+                console.error('Error in initializing game:', err);
+            }
         };
 
         initGame();
@@ -193,6 +198,7 @@ const Game = () => {
             socket.off('gameEnd', handleGameEnd);
             socket.off('chatUpdate', handleChatUpdate);
         }; 
+
     }, [roomId, socket]);
 
     useEffect(() => {
