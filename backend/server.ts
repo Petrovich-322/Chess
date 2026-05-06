@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';    
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
@@ -9,10 +10,10 @@ import registration from './RegistrationController.ts';
 import login from './LoginController.ts';
 import createRoomName from "./room-generator.js";
 import Game  from './Game.ts'
-import { Position } from '../shared/interfaces.ts';
 import verifyToken from './tokenVerification.ts';
-import jwt from 'jsonwebtoken';
-import { send } from 'vite';
+import userManager from './userManager.ts';
+
+import { DecodedTokenReq, CallGameEnd, OnNewMove } from './interfaces/serverInterfaces.ts';
 
 const PORT = 3000;
 const corsInfo = {
@@ -39,26 +40,22 @@ mongoose.connect('mongodb://192.168.1.108:27017/DenisChessDB')
 const roomNameGeneator = createRoomName();
 
 
-interface DecodedTokenReq extends express.Request {
-    decoded?: any;
-}
-
 app.post('/registration', (req, res) => {
-
     registration(req, res);
     console.log('---Registration Request---');
-    
 });
 
 app.post('/login', (req, res) => {
-
     login(req, res);
     console.log('---Login Request---');
+});
 
-})
+app.get('/update-user', verifyToken, async (req: DecodedTokenReq, res) => {
+    res.json(await userManager.getUserData(req.decoded.user.userId));
+    // console.log('user updating success', userManager.getUserData(req.decoded.user.userId));
+});
 
 app.post('/create-room', verifyToken, async (req: DecodedTokenReq, res) => {
-
     console.log('---Create room request---');
     if(!req.decoded.user.userId) return; 
     const userId = req.decoded.user.userId;
@@ -98,13 +95,6 @@ app.post('/get-side', verifyToken, async (req: DecodedTokenReq, res) => {
 
 });
 
-
-type OnNewMoveType = {
-    side: 'white' | 'black', 
-    roomId: string, 
-    move: {from: Position; to: Position}
-};
-
 io.use((socket, next) => {
     const token = socket.handshake.auth.token;
 
@@ -138,11 +128,13 @@ io.on('connection', (socket) => {
         if(text[0] === '/') {
             const command = text.slice(1).trim().toLowerCase();
             if(command === 'start') {
-                if(gameData[roomId].status !== 'prepearing' || !gameData[roomId].allPlayers) {
+                if(gameData[roomId].status !== 'prepearing' || !gameData[roomId].isAllPlayers) {
                     sendChatMessage({ roomId: roomId, user: 'Сервер', text: 'Цю команду не можливо виконати'});
                     return;
                 }
                 sendChatMessage({ roomId: roomId, user: 'Сервер', text: 'Гру успішно почато'});
+                gameData[roomId].startTimer();
+                gameData[roomId].activeSide = 'white';
                 gameData[roomId].setGameStatus({ status: 'in-progress' });    
                 handleJoinRoom({ roomId: roomId });
             }
@@ -159,20 +151,29 @@ io.on('connection', (socket) => {
 
     }
 
-    const callGameEnd = ({ roomId, winner }: {roomId: string, winner: 'white' | 'black'}) => {
+    const callGameEnd = ({ roomId, winnerSide }: CallGameEnd) => {
+        
         console.log('---call game end---');
-        if(!roomId || !winner) return;
+        if(!roomId || !winnerSide) return;
 
         const game = gameData[roomId];
-        game.setGameStatus({status: 'finished', winner: winner});
+        game.setGameStatus({status: 'finished', winner: winnerSide});
+
+        const winner = game.getPlayerId(winnerSide);
+        const looser = game.getPlayerId(winnerSide === 'white' ? 'black' : 'white');
         
-        const messageText = `Переможець - ${game.players[winner].userName}`; 
+        if(winner) userManager.changeRating({dRating: +30, userId: winner});
+        if(looser) userManager.changeRating({dRating: -30, userId: looser});
+
+        const messageText = `Переможець - ${game.players[winnerSide].userName}`; 
         sendChatMessage({ roomId: roomId, user: 'Сервер', text: messageText });
 
-        io.to(roomId).emit('gameEnd', {winner: winner, activeSide: 'spectator'});
-        console.log('gameEnd, winner', winner);
+        io.to(roomId).emit('gameEnd', {
+            winner: winnerSide,
+            activeSide: 'spectator'
+        });
 
-    }
+    }   
 
     const callUpdateInfo = ({ roomId }: {roomId: string}) => {
         
@@ -198,7 +199,7 @@ io.on('connection', (socket) => {
 
         const game = gameData[roomId];
         
-        if(!game.gameInfo.status && game.activeSide != 'spectator') {
+        if(game.status != 'finished' && game.activeSide != 'spectator') {
             game.updateTime(game.activeSide);
         }
         io.to(roomId).emit('initializeGame', game);
@@ -207,7 +208,7 @@ io.on('connection', (socket) => {
 
     }
 
-    const onNewMove = async ({ roomId, move }: OnNewMoveType) => {
+    const onNewMove = async ({ roomId, move }: OnNewMove) => {
         
         if(!roomId || !move) return;
         
@@ -241,7 +242,7 @@ io.on('connection', (socket) => {
         if(isMove === 'Mate') {
             
             console.log('---   Mate!   ---');   
-            callGameEnd({ roomId: roomId, winner: userSide });
+            callGameEnd({ roomId: roomId, winnerSide: userSide });
 
         }
         

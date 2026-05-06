@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import CreatingGameMenu from './HomeMenus/CreatingGameMenu/CreatingGameMenu'
 import NavigationMenu from '@/NavigationMenu/NavigationMenu';
@@ -18,6 +18,11 @@ interface AuthData {
 const Home = () => {        
     const [onClick, setOnClick] = useState<string>('');
     const [message, setMessage] = useState<string>('');
+
+
+    useEffect(() => {
+        userService.updateUser();
+    }, [])
 
     const onRegistrationHandler = async (data: AuthData) => {
 

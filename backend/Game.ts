@@ -4,24 +4,18 @@ import { Figure, Position } from "../shared/interfaces.ts";
 
 import { checkMove, shahCheck, mateCheck, getAvailableMoves } from 'rules-lib';
 import { User } from './models/UserSchema.ts';
+import userManager from './userManager.ts';
 
-type CreateGameData = {
-    timeLimit?: number;
-    whiteId?: string | null;
-    blackId?: string | null;
-}
-interface CreateGameConstructorData extends CreateGameData {
-    whiteUserName: string ;
-    blackUserName: string;
+import { PlayerConstructor, CreateGameConstructorData, CreateGameData } from './interfaces/gameInterfaces.ts';
+
+const defUser = {
+    userName: null,
+    rating: 0
 }
 
-type PlayerConstructor = {
-    id: string | null, 
-    timeLimit: number, 
-    userName: string
-}
 class Player {
     id: string | null;
+    rating: number;
     time: number;
     status: string;
     userName: string;
@@ -31,6 +25,7 @@ class Player {
         this.time = timeLimit;
         this.status = "offline";
         this.userName = userName;
+        this.rating = 0;
     }
 }
 
@@ -64,16 +59,16 @@ class Game {
         timeLimit = 600, 
         whiteId = null, 
         blackId = null,
-        whiteUserName = 'Білий',
-        blackUserName = 'Чорний'
+        whitePlayer,
+        blackPlayer,
 
     }: CreateGameConstructorData) {
         this.field = createBoard();
-        this.activeSide = 'white';
+        this.activeSide = 'spectator';
 
         this.players = {
-            white: new Player({id: whiteId, timeLimit, userName: whiteUserName}),
-            black: new Player({id: blackId, timeLimit, userName: blackUserName})
+            white: new Player({id: whiteId, timeLimit, userName: whitePlayer.userName}),
+            black: new Player({id: blackId, timeLimit, userName: blackPlayer.userName})
         };
 
         this.moveStory = [];
@@ -97,18 +92,18 @@ class Game {
     
     static async create({whiteId, blackId, timeLimit}: CreateGameData) {
         
-        const whitePlayer = await User.findById(whiteId);
-        const blackPlayer = await User.findById(blackId);
-        const whiteUserName = whitePlayer ? whitePlayer.userName : 'Білий';
-        const blackUserName = blackPlayer ? blackPlayer.userName : 'Чорний';
-
+        const whiteUser = await userManager.getUserData(whiteId);
+        const blackUser = await userManager.getUserData(blackId);
+    
+        const whitePlayer = whiteUser ?? {...defUser, userName: 'Білий'};
+        const blackPlayer = blackUser ?? {...defUser, userName: 'Чорний'};
 
         return new Game({
             timeLimit,
             whiteId,
             blackId,
-            whiteUserName,
-            blackUserName
+            whitePlayer,
+            blackPlayer
         });
 
     };
@@ -124,7 +119,6 @@ class Game {
         const opponentKingPos = this.kingsPosition[`${opponentColor}King`];
 
         if(!checkMove(this.field, from, to, userKingPos)) return false;
-        // console.log('check-move true');
 
         const fieldCopy = this.field.map(row => [...row]);
         const figure = fieldCopy[from.row][from.col];
@@ -132,7 +126,6 @@ class Game {
         fieldCopy[from.row][from.col] = null;
 
         if(!shahCheck(fieldCopy, opponentKingPos)) return true;
-        // console.log('shah true');
         if(mateCheck(fieldCopy, opponentKingPos)) {
             console.log('mate true');
             return 'Mate';
@@ -261,6 +254,14 @@ class Game {
 
     };
 
+    startTimer = () => {
+        
+        const time = Date.now();
+
+        this.lastMove = { ...this.lastMove, time: time}
+
+    }
+
     setGameStatus = ({status = null, winner = null}: {status?: string | null, winner?: 'white' | 'black' | null}) => {
         
         this.gameInfo.status = status ?? this.gameInfo.status;
@@ -275,8 +276,12 @@ class Game {
     get status() {
         return this.gameInfo.status;
     }
+    
+    getPlayerId(side: 'white' | 'black') {
+        return this.players[side].id ?? null;
+    }
 
-    get allPlayers() {
+    get isAllPlayers() {
         const sides = ['white', 'black'] as const;
         const newSide = sides.find(side => !this.players[side].id);
         if(newSide) return false;

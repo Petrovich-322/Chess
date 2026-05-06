@@ -29,7 +29,8 @@ type Player = {
     id: string,
     time: number,
     status: string,
-    userName: string
+    userName: string,
+    rating: number
 };
 
 export interface ServerData {

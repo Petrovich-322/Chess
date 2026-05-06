@@ -46,6 +46,7 @@ const defKingsPos: KingsPosition = {
 
 
 const Game = () => {
+    console.log('render');
     const socket = useContext(SocketContext);
 
     const [kingsPostion, setKingsPosition] = useState<KingsPosition>(defKingsPos);
@@ -159,6 +160,8 @@ const Game = () => {
             console.log(`Winner is ${data.winner}`);
             setActiveSide(data.activeSide);
             setGameStatus('finished');
+
+            userService.updateUser();
         }
 
         const handleChatUpdate = (data: {newMessage: {user: string, text: string}}) => {
@@ -178,7 +181,7 @@ const Game = () => {
 
                 setUserInfo({
                     side: userSide ?? defUser.side,
-                    userName: userService.UserName
+                    userName: userService.userName
                 });
 
                 if (socket.connected) {
