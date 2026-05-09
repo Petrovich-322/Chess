@@ -7,13 +7,13 @@ class UserService {
     async updateUser() {
         try {
             const response = await apiClient.get('/update-user');
-            console.log(response.data);
+            // console.log(response.data);
             const { userName, rating } = response.data;
 
             if(userName) this.setUserName(userName);
             if(rating) this.setRating(rating);
 
-            console.log(userName, rating);
+            // console.log(userName, rating);
 
         } catch (err) {
             console.error('apiClient answer problem');
@@ -57,7 +57,7 @@ class UserService {
     }
 
     get rating() {
-        return this.#rating || 0;
+        return this.#rating || this.getRating();
     }
 
     reset() {

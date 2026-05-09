@@ -17,7 +17,7 @@ interface PlayerInfoProps {
     activeSide: string | undefined,
     gameStatus: string,
     roomId: string | undefined,
-    setGameStatus: Dispatch<SetStateAction<string>>
+    setGameStatus: Dispatch<SetStateAction<string>> | undefined
 }
 
 const PlayerInfo = (props: PlayerInfoProps) => {
@@ -38,10 +38,6 @@ const PlayerInfo = (props: PlayerInfoProps) => {
     const [playerTimer, setPlayerTimer] = useState(timer)
 
     useEffect(() => {
-        setPlayerTimer(timer);
-    }, [timer])
-
-    useEffect(() => {
         let timerInterval: any;
 
         if(!activeSide || activeSide != userInfo.side || gameStatus === 'finished' || gameStatus === 'prepearing') {
@@ -60,7 +56,7 @@ const PlayerInfo = (props: PlayerInfoProps) => {
 
     useEffect(() => {
         if(playerTimer <= 0 && gameStatus !== 'finished') {
-            setGameStatus('finished');
+            if(setGameStatus) setGameStatus('finished');
             setPlayerTimer(0);
             socket.emit('timerGameEnd', {
                 roomId: roomId, 

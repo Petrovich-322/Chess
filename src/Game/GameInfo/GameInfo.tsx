@@ -8,7 +8,7 @@ import { SocketContext } from '@/Context/SocketContext';
 interface GameInfoProps {
     moveStory: MoveStory, 
     chatStory: ChatStory,
-    userId: string,
+    userName: string,
     roomId: string | undefined,
     onMoveClick: (index: number) => void
 }
@@ -16,7 +16,7 @@ interface GameInfoProps {
 const GameInfo = (props: GameInfoProps) => {
     const {
         onMoveClick,
-        userId,
+        userName,
         chatStory,
         moveStory,
         roomId
@@ -44,7 +44,7 @@ const GameInfo = (props: GameInfoProps) => {
         if(inputValue === '') return;
         // console.log(inputValue);
         socket.emit('chatNewMessage', {
-            user: userId,
+            user: userName,
             text: inputValue,   
             roomId: roomId
         }); 

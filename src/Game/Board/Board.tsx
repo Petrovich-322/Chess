@@ -8,7 +8,7 @@ interface BoardProps {
     field: Array<Array<Figure | null>>,
     selectedCell: SelectedCell,
     availableMoves: AvailableMoves,
-    onSelect: (row: number, col: number) => void,
+    onSelect: ((row: number, col: number) => void) | undefined,
 }
 
 const Board = (props: BoardProps) => {

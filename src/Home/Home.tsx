@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import CreatingGameMenu from './HomeMenus/CreatingGameMenu/CreatingGameMenu'
 import NavigationMenu from '@/NavigationMenu/NavigationMenu';
 import RegisterLogMenu from './HomeMenus/RegistrationMenu/RegisterLogMenu';
+import GameHistory from './GameHistory/GameHistory';
 
 import { RegistrationService, LoginService } from '@/services/authorization';
 import tokenService from '@/services/tokenService';
@@ -62,6 +63,8 @@ const Home = () => {
             console.error('Error in setting user data:', err);
         }
 
+        window.location.reload();
+
         return true;
     }
 
@@ -115,7 +118,9 @@ const Home = () => {
                     setMessage = {setMessage}
                     setOnClick = {setOnClick}
                 />}
+
             </div>
+            <GameHistory />
         </div>
     )
 }

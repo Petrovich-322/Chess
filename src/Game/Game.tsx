@@ -161,7 +161,7 @@ const Game = () => {
             setActiveSide(data.activeSide);
             setGameStatus('finished');
 
-            userService.updateUser();
+            window.location.reload();
         }
 
         const handleChatUpdate = (data: {newMessage: {user: string, text: string}}) => {
@@ -330,7 +330,7 @@ const Game = () => {
                         onMoveClick = {onMoveClick}
                         moveStory = {moveStory}
                         chatStory={chatStory}
-                        userId = {userInfo.userName ? 
+                        userName = {userInfo.userName ? 
                             userInfo.userName : (userInfo.side === 'white' ? 'Білий' : 'Чорний')}
                         roomId = {roomId} 
                     />

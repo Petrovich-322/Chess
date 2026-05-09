@@ -5,6 +5,7 @@ body{
 
 .main-container{
     display: flex;
+    justify-content: space-around;
 }
 
 .main-menu-container{

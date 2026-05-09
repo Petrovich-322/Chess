@@ -6,7 +6,7 @@ interface NewCellProps {
     color: string;
     isSelected: boolean;
     isAvailable: boolean;
-    onSelect: (rowIndex: number, colIndex: number) => void;
+    onSelect: ((rowIndex: number, colIndex: number) => void) | undefined;
 }
 const NewCell = (props: NewCellProps) => {
     const {
@@ -23,7 +23,10 @@ const NewCell = (props: NewCellProps) => {
 
     // if(figure)console.log(`${figure.color}-${figure.type}.png`);
     return (
-        <div className={divClassList} onClick={() => onSelect(index.rowIndex, index.colIndex)}>
+        <div className={divClassList} onClick={() => {
+                if(onSelect) onSelect(index.rowIndex, index.colIndex)
+            }
+        }>
             {figure && <img src={`/assets/${figure?.color}-${figure?.type}.svg`} alt={`${figure?.type}`} className={figureClassList} />}
         </div>
     )

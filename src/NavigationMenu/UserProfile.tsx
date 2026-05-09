@@ -4,18 +4,8 @@ import userService from "@/services/userService";
 import tokenService from "@/services/tokenService";
 
 const UserProfile = () => { 
-    const [isReady, setIsReady]= useState(false);
-
-    // useEffect(() => {
-    //     const timer = setTimeout(() => {
-    //     setIsReady(true);
-    //     }, 500);
-
-    //     return () => clearTimeout(timer);
-    // }, []);
-
     const isLoggedIn = tokenService.isLoggedIn;
-    console.log('322');
+    
     return (
         <div className="user-profile__container">
             {isLoggedIn && (

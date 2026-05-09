@@ -4,7 +4,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import { createServer } from 'http';
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 
 import registration from './RegistrationController.ts';
 import login from './LoginController.ts';
@@ -12,6 +12,7 @@ import createRoomName from "./room-generator.js";
 import Game  from './Game.ts'
 import verifyToken from './tokenVerification.ts';
 import userManager from './userManager.ts';
+import GameHistoryService from './GameHistoryService.ts';
 
 import { DecodedTokenReq, CallGameEnd, OnNewMove } from './interfaces/serverInterfaces.ts';
 
@@ -33,7 +34,7 @@ app.use(cors(corsInfo));
 const httpServer = createServer(app);
 const io = new Server(httpServer, {cors: corsInfo});
 
-mongoose.connect('mongodb://192.168.1.108:27017/DenisChessDB')
+mongoose.connect('mongodb://0.0.0.0:27017/DenisChessDB')
   .then(() => console.log('Connected to DB'))
   .catch(err => console.error('Connection error:', err));
 
@@ -95,7 +96,13 @@ app.post('/get-side', verifyToken, async (req: DecodedTokenReq, res) => {
 
 });
 
-io.use((socket, next) => {
+interface DecodedSocket extends Socket{
+    userId: string
+}
+
+io.use((defSocket, next) => {
+    const socket = defSocket as DecodedSocket;
+
     const token = socket.handshake.auth.token;
 
     if(!token) {
@@ -106,7 +113,7 @@ io.use((socket, next) => {
     try {
         
         const decoded = jwt.verify(token, process.env.API_KEY as string) as any;
-        (socket as any).userId = decoded.userId;
+        socket.userId = decoded.userId;
         next();
 
     } catch (error) {
@@ -117,13 +124,27 @@ io.use((socket, next) => {
     
 });
 
-io.on('connection', (socket) => {
+io.on('connection', (defSocket) => {
     console.log('A user connected');
+
+    const socket = defSocket as DecodedSocket;
+
+    socket.on('get-game-history', async () => {
+        console.log('get-game-hist');
+        const generator = GameHistoryService.getHistoryGenerator(socket.userId);
+
+        for await (const game of generator) {
+            socket.emit('update-game-history', game);
+        }
+
+        socket.emit('get-history-complete');
+    });
 
     const sendChatMessage = ({ roomId, user, text }: 
         {roomId: string, user: string, text: string}) => {
         
         if(!roomId || !user || !text) return;
+
 
         if(text[0] === '/') {
             const command = text.slice(1).trim().toLowerCase();
@@ -137,6 +158,7 @@ io.on('connection', (socket) => {
                 gameData[roomId].activeSide = 'white';
                 gameData[roomId].setGameStatus({ status: 'in-progress' });    
                 handleJoinRoom({ roomId: roomId });
+                return;
             }
         }
 
@@ -146,6 +168,7 @@ io.on('connection', (socket) => {
             text: text
         }
         game.sendMessage(message);
+
 
         io.to(roomId).emit('chatUpdate', {newMessage: message});
 
@@ -173,6 +196,11 @@ io.on('connection', (socket) => {
             activeSide: 'spectator'
         });
 
+        GameHistoryService.saveGame(game);
+
+        socket.off('timerGameEnd', callGameEnd);
+        socket.off('newMove', onNewMove);
+        
     }   
 
     const callUpdateInfo = ({ roomId }: {roomId: string}) => {
