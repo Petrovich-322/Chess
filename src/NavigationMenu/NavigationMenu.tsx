@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 
+import UserProfile from './UserProfile';
 import NavBtns from './NavBtns';
 
 import './NavigationMenu.css';
-import UserProfile from './UserProfile';
 
 
 const NavigationMenu = () => {

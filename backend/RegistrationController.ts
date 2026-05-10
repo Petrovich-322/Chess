@@ -13,7 +13,7 @@ class responseData {
     }
 }
 
-const registration = async (req: any, res: any) => {
+const Registration = async (req: any, res: any) => {
     try {
         const { userName, password } = req.body;
 
@@ -47,4 +47,4 @@ const registration = async (req: any, res: any) => {
     }
 }
 
-export default registration;
+export const registration = Registration;

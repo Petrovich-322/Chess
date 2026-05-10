@@ -10,7 +10,7 @@ interface ChangeRating {
     userId: string
 }
 
-class userManager {
+class UserManager {
     
     async getUserData (userId: string | null | undefined) {
         const user = await User.findById(userId);
@@ -45,4 +45,4 @@ class userManager {
 
 } 
 
-export default new userManager;
+export const userManager = new UserManager;

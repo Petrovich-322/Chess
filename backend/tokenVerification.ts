@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const verifyToken = (req: any, res: any, next: any) => {
+const VerifyToken = (req: any, res: any, next: any) => {
     
     console.log('---verify token---');
 
@@ -28,4 +28,4 @@ const verifyToken = (req: any, res: any, next: any) => {
 
 }
 
-export default verifyToken;
+export const verifyToken = VerifyToken;

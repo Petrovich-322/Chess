@@ -28,7 +28,7 @@ interface SavedGameProps {
 }
 const SavedGame = () => {
     const location = useLocation();
-    const game = location.state?.game;
+    const game = location.state?.game as SavedGameProps;
 
     if (!game) window.location.href = './';
 
@@ -43,12 +43,20 @@ const SavedGame = () => {
 
     const onMoveClick = (index: number) => {
         const tempField = createBoard();
+
+        if(moveStory[0].move === null && index === 0) {
+            setField(tempField);
+            return;
+        }
+
         for(let i = 0; i <= index; i++) {
             const move = moveStory[i].move;
-            tempField[move.to.row][move.to.col] = {
-                ...tempField[move.from.row][move.from.col]
-            };
-            tempField[move.from.row][move.from.col] = null;
+            if(move){
+                tempField[move.to.row][move.to.col] = {
+                    ...tempField[move.from.row][move.from.col]
+                };
+                tempField[move.from.row][move.from.col] = null;
+            }
         }
         setField(tempField);
     }

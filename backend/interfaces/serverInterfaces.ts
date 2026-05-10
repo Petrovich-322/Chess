@@ -7,11 +7,9 @@ export interface DecodedTokenReq extends express.Request {
 
 export interface OnNewMove {
     side: 'white' | 'black', 
-    roomId: string, 
     move: {from: Position; to: Position}
 };
 
 export interface CallGameEnd {
-    roomId: string, 
     winnerSide: 'white' | 'black',
 }

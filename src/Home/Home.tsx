@@ -6,8 +6,7 @@ import RegisterLogMenu from './HomeMenus/RegistrationMenu/RegisterLogMenu';
 import GameHistory from './GameHistory/GameHistory';
 
 import { RegistrationService, LoginService } from '@/services/authorization';
-import tokenService from '@/services/tokenService';
-import userService from '@/services/userService';
+import { userService } from '@/services/userService';
 
 import "./Home.css";
 
@@ -20,9 +19,11 @@ const Home = () => {
     const [onClick, setOnClick] = useState<string>('');
     const [message, setMessage] = useState<string>('');
 
-
     useEffect(() => {
-        userService.updateUser();
+        if(userService.token) {
+            console.log('loh');
+            userService.updateUser();
+        }
     }, [])
 
     const onRegistrationHandler = async (data: AuthData) => {
@@ -49,15 +50,13 @@ const Home = () => {
             console.log(response.data.name, response.data.message);
             return false;
         } 
-
-        userService.reset();
         
         try {
-            tokenService.setToken(response.data.token);
+            userService.setData('token', response.data.token);
 
-            userService.setUserName(response.data.userName);
+            userService.setData('userName',response.data.userName);
             
-            userService.setRating(response.data.rating);
+            userService.setData('rating', response.data.rating);
 
         } catch (err) {
             console.error('Error in setting user data:', err);

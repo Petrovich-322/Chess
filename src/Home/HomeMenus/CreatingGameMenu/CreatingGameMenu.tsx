@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, Dispatch, SetStateAction } from 'react';
 
-import TokenService from '@/services/tokenService';
+import { userService } from '@/services/userService';
 import apiClient from '@/services/client';
 
 import TimePicker from './TimePicker';
@@ -44,7 +44,7 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
             side: finalSide
         }
         
-        const token = TokenService.token;
+        const token = userService.token;
         if(!token) {
             alert('Ви не авторизовані');
             return;

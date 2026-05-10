@@ -9,6 +9,14 @@ class GameHistoryService {
     async saveGame (game: Game) {
         const { players, moveStory, chatStory, gameInfo: { winner } } = game;
 
+        const now = new Date();
+
+        const day = now.getDate();
+        const month = now.toLocaleString('uk-UA', { month: 'long' });
+        const time = now.toLocaleTimeString('uk-UA', { hour12: false });
+
+        const date = `${month} ${day}, ${time}`;
+
         const newGame = new SavedGame({
             whitePlayer: {
                 userData: players.white.id,
@@ -20,7 +28,8 @@ class GameHistoryService {
             },
             moveStory: moveStory,
             chatStory: chatStory,
-            winner: winner
+            winner: winner,
+            date: date
         })
 
         await newGame.save();
@@ -45,4 +54,4 @@ class GameHistoryService {
 
 }
 
-export default new GameHistoryService();
+export const gameHistoryService = new GameHistoryService();

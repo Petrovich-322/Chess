@@ -6,13 +6,13 @@ import jwt from 'jsonwebtoken';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 
-import registration from './RegistrationController.ts';
-import login from './LoginController.ts';
-import createRoomName from "./room-generator.js";
-import Game  from './Game.ts'
-import verifyToken from './tokenVerification.ts';
-import userManager from './userManager.ts';
-import GameHistoryService from './GameHistoryService.ts';
+import { registration } from './RegistrationController.ts';
+import { login } from './LoginController.ts';
+import { createRoomName } from "./room-generator.js";
+import { verifyToken } from './tokenVerification.ts';
+import { userManager }  from './userManager.ts';
+import { gameHistoryService } from './GameHistoryService.ts';
+import Game from './Game.ts'
 
 import { DecodedTokenReq, CallGameEnd, OnNewMove } from './interfaces/serverInterfaces.ts';
 
@@ -42,13 +42,13 @@ const roomNameGeneator = createRoomName();
 
 
 app.post('/registration', (req, res) => {
-    registration(req, res);
     console.log('---Registration Request---');
+    registration(req, res);
 });
 
 app.post('/login', (req, res) => {
-    login(req, res);
     console.log('---Login Request---');
+    login(req, res);
 });
 
 app.get('/update-user', verifyToken, async (req: DecodedTokenReq, res) => {
@@ -97,6 +97,7 @@ app.post('/get-side', verifyToken, async (req: DecodedTokenReq, res) => {
 });
 
 interface DecodedSocket extends Socket{
+    roomId: string,
     userId: string
 }
 
@@ -129,9 +130,29 @@ io.on('connection', (defSocket) => {
 
     const socket = defSocket as DecodedSocket;
 
+    socket.on('disconnect', async () => {
+        const roomId = socket.roomId;
+        const game = gameData[roomId];
+        if(!roomId || !game) return;
+
+        const room = io.sockets.adapter.rooms.get(roomId);
+        const usersCount = room ? room.size : 0;
+        
+        if(game.status === 'active' && usersCount === 0) {
+            game.gameEndTimer = setTimeout(async () => {
+                console.log(`Таймер вийшов. Автозавершення гри ${roomId}`);
+                
+                callGameEnd({ winnerSide: game.activeSide === 'white' ? 'black' : 'white' });
+                
+                delete gameData[roomId];
+            }, 60000);
+        }
+
+    })
+
     socket.on('get-game-history', async () => {
         console.log('get-game-hist');
-        const generator = GameHistoryService.getHistoryGenerator(socket.userId);
+        const generator = gameHistoryService.getHistoryGenerator(socket.userId);
 
         for await (const game of generator) {
             socket.emit('update-game-history', game);
@@ -140,9 +161,10 @@ io.on('connection', (defSocket) => {
         socket.emit('get-history-complete');
     });
 
-    const sendChatMessage = ({ roomId, user, text }: 
-        {roomId: string, user: string, text: string}) => {
-        
+    const sendChatMessage = ({ user, text }: 
+        { user: string, text: string}) => {
+        const roomId = socket.roomId;
+
         if(!roomId || !user || !text) return;
 
 
@@ -150,13 +172,13 @@ io.on('connection', (defSocket) => {
             const command = text.slice(1).trim().toLowerCase();
             if(command === 'start') {
                 if(gameData[roomId].status !== 'prepearing' || !gameData[roomId].isAllPlayers) {
-                    sendChatMessage({ roomId: roomId, user: 'Сервер', text: 'Цю команду не можливо виконати'});
+                    sendChatMessage({ user: 'Сервер', text: 'Цю команду не можливо виконати'});
                     return;
                 }
-                sendChatMessage({ roomId: roomId, user: 'Сервер', text: 'Гру успішно почато'});
+                sendChatMessage({ user: 'Сервер', text: 'Гру успішно почато'});
                 gameData[roomId].startTimer();
                 gameData[roomId].activeSide = 'white';
-                gameData[roomId].setGameStatus({ status: 'in-progress' });    
+                gameData[roomId].setGameStatus({ status: 'active' });    
                 handleJoinRoom({ roomId: roomId });
                 return;
             }
@@ -174,8 +196,8 @@ io.on('connection', (defSocket) => {
 
     }
 
-    const callGameEnd = ({ roomId, winnerSide }: CallGameEnd) => {
-        
+    const callGameEnd = ({ winnerSide }: CallGameEnd) => {
+        const roomId = socket.roomId;
         console.log('---call game end---');
         if(!roomId || !winnerSide) return;
 
@@ -189,22 +211,20 @@ io.on('connection', (defSocket) => {
         if(looser) userManager.changeRating({dRating: -30, userId: looser});
 
         const messageText = `Переможець - ${game.players[winnerSide].userName}`; 
-        sendChatMessage({ roomId: roomId, user: 'Сервер', text: messageText });
+        sendChatMessage({ user: 'Сервер', text: messageText });
 
         io.to(roomId).emit('gameEnd', {
             winner: winnerSide,
             activeSide: 'spectator'
         });
 
-        GameHistoryService.saveGame(game);
-
-        socket.off('timerGameEnd', callGameEnd);
-        socket.off('newMove', onNewMove);
-        
+        gameHistoryService.saveGame(game);
+    
     }   
 
-    const callUpdateInfo = ({ roomId }: {roomId: string}) => {
-        
+    const callUpdateInfo = () => {
+        const roomId = socket.roomId;
+
         if(!roomId) return;
 
         const game = gameData[roomId];
@@ -216,16 +236,20 @@ io.on('connection', (defSocket) => {
 
     const handleJoinRoom = ({ roomId }: {roomId: string}) => {
 
-        if(!roomId) { 
+        if(!roomId || !gameData[roomId]) { 
             console.log(`join room -> no room id ${roomId}`);
             return;
         }
         
-        if(!gameData[roomId]) return;
-        
+        socket.roomId = roomId;
         socket.join(roomId);
 
         const game = gameData[roomId];
+        if(game.gameEndTimer) {
+            console.log('Cancel game end (user returned)');
+            clearTimeout(game.gameEndTimer);
+            game.gameEndTimer = null;
+        }
         
         if(game.status != 'finished' && game.activeSide != 'spectator') {
             game.updateTime(game.activeSide);
@@ -236,17 +260,18 @@ io.on('connection', (defSocket) => {
 
     }
 
-    const onNewMove = async ({ roomId, move }: OnNewMove) => {
-        
+    const onNewMove = async ({ move }: OnNewMove) => {
+        const roomId = socket.roomId;
+
         if(!roomId || !move) return;
         
         if(gameData[roomId].gameInfo.status === 'prepearing') {
-            sendChatMessage({ roomId: roomId, user: 'Сервер', text: 'Гра ще не почалася!' });
+            sendChatMessage({ user: 'Сервер', text: 'Гра ще не почалася!' });
             return;
         }
 
         if(gameData[roomId].gameInfo.status === 'finished') {
-            sendChatMessage({ roomId: roomId, user: 'Сервер', text: 'Гра вже закінчилася!' });
+            sendChatMessage({ user: 'Сервер', text: 'Гра вже закінчилася!' });
             return;
         }
 
@@ -270,11 +295,11 @@ io.on('connection', (defSocket) => {
         if(isMove === 'Mate') {
             
             console.log('---   Mate!   ---');   
-            callGameEnd({ roomId: roomId, winnerSide: userSide });
+            callGameEnd({ winnerSide: userSide });
 
         }
         
-        callUpdateInfo({ roomId: roomId });
+        callUpdateInfo();
     }
 
     socket.on('joinRoom', handleJoinRoom);

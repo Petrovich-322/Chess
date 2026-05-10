@@ -33,6 +33,10 @@ const PlayerInfo = (props: PlayerInfoProps) => {
         setGameStatus,
     } = props;
 
+    useEffect(() => {
+        setPlayerTimer(timer);
+    }, [timer]);
+
     if(userInfo.userName === null) userInfo.userName = userInfo.side === 'white' ? 'Білий' : 'Чорний';
 
     const [playerTimer, setPlayerTimer] = useState(timer)

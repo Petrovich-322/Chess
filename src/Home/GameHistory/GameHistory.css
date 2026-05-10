@@ -23,16 +23,17 @@
 }
 
 .game-history__game {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     height: fit-content;
-    max-height: 25px;
+    max-height: 35px;
     margin-top: 5px;
-    width: 95%;
+    width: 100%;
     padding-top: 10px;
     padding-bottom: 10px;
     border-radius: 2.5px;
-    display: flex;
     color: var(--text-bright);
-    align-items: center;
     background-color: var(--side-gui-elements-color);
 
     &:hover{
@@ -41,6 +42,15 @@
     &:active{
         background-color: color-mix(in srgb, var(--side-gui-color), rgb(0, 0, 0) 40%);
     }
+}
+
+.game-history__game-first__column{
+    display: flex;
+    align-items: center;
+    height: fit-content;
+    max-height: 25px;
+    width: 100%;
+    border-radius: 2.5px;
 }
 .game-history__game-img__container{
     flex: 0.15;
@@ -58,9 +68,10 @@
     font-size: 13px;
 }
 .game-history__game-result__container{
-    flex: 0.6;
+    flex: 0.85;
     display: flex;
-    justify-content: center;
+    justify-content: right;
+    padding-right: 20px;
 }
 .game-history__game-result{
     &.win {
@@ -69,4 +80,7 @@
     &.loose {
         color: rgb(255, 115, 73);
     }
+}
+.game-history__game-date__container{
+    margin-left: 5px;
 }

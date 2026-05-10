@@ -2,70 +2,105 @@ import apiClient from "./client";
 
 class UserService {
     #userName: string | null = null;
-    #rating: number = 0;
+    #token: string | null = null;
+    #rating: number | null = null;
 
     async updateUser() {
+        
+        if(!this.#token) {
+            console.error('Не авторизований користувач');
+            return;
+        }
+
         try {
             const response = await apiClient.get('/update-user');
-            // console.log(response.data);
             const { userName, rating } = response.data;
 
-            if(userName) this.setUserName(userName);
-            if(rating) this.setRating(rating);
+            if(userName) this.setData('userName', userName);
+            if(rating) this.setData('rating', rating);
 
-            // console.log(userName, rating);
+            console.log(this.#rating);
 
         } catch (err) {
             console.error('apiClient answer problem');
         }
     }
 
-    setUserName(userName: string) { 
-        const localStorageJSON = localStorage.getItem('DenisChess');
-        const localStorageData = localStorageJSON ? JSON.parse(localStorageJSON) : {};
-        localStorageData.userName = userName;
-        localStorage.setItem('DenisChess', JSON.stringify(localStorageData));
-        this.#userName = userName;
+    logOut() {
+        this.setData('userName', null);
+        this.setData('token', null);
+        this.setData('rating', null);
     }
 
-    setRating(rating: number) {
+    setData(key: 'userName' | 'rating' | 'token', value: string | number | null) {
+
         const localStorageJSON = localStorage.getItem('DenisChess');
         const localStorageData = localStorageJSON ? JSON.parse(localStorageJSON) : {};
-        localStorageData.rating = rating;
+
+        localStorageData[key] = value;
         localStorage.setItem('DenisChess', JSON.stringify(localStorageData));
-        this.#rating = rating;
+
+        if(value) this.setLocalVariables(key, value);
+        
     }
 
-    getRating() {
-        const localStorageJSON = localStorage.getItem('DenisChess');
-        if(!localStorageJSON) return 0;
-        const localStorageData = JSON.parse(localStorageJSON);
-        this.#rating = localStorageData.rating || 0;
-        return this.#rating;
+    setLocalVariables(key: 'userName' | 'rating' | 'token', value: string | number) {
+        switch (key) {
+            case 'userName':
+                if(typeof(value) != 'string') throw new TypeError;
+                this.#userName = value;
+                break;
+            case 'rating':
+                if(typeof(value) != 'number') throw new TypeError;
+                this.#rating = value;
+                break;
+            case 'token':
+                if(typeof(value) != 'string') throw new TypeError;
+                this.#token = value;
+                break;
+        }
     }
-    
-    getUserName() {
+
+    getData(type: 'userName' | 'token' | 'rating') {
+       
         const localStorageJSON = localStorage.getItem('DenisChess');
         if(!localStorageJSON) return null;
         const localStorageData = JSON.parse(localStorageJSON);
-        this.#userName = localStorageData.userName;
-        return this.#userName;
+        
+        const data = localStorageData[type];
+        
+        if(!data && data !== 0) {
+            return;
+        }
+
+        this.setLocalVariables(type, data);
+        return data;
+
+    }
+
+    #getToken() {
+        return this.getData('token');
+    }
+
+    #getRating() {
+        return this.getData('rating');
+    }
+    
+    #getUserName() {
+        return this.getData('userName');
     }
         
     get userName() {
-        return this.#userName || this.getUserName();
+        return this.#userName || this.#getUserName();
     }
 
     get rating() {
-        return this.#rating || this.getRating();
+        return this.#rating || this.#getRating();
     }
 
-    reset() {
-        this.#userName = null;
-        this.#rating = 0;
+    get token() {
+        return this.#token || this.#getToken();
     }
-    
-   
 }
 
-export default new UserService();
+export const userService = new UserService();

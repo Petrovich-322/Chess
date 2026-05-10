@@ -1,4 +1,4 @@
-function* createRoomName() {
+function* CreateRoomName() {
     const roomNames = new Set();
 
     const firstW = ['King', 'Queen', 'Rook', 'Bishop', 'Knight', 'Pawn'];
@@ -13,4 +13,4 @@ function* createRoomName() {
     }
 }
 
-export default createRoomName;
+export const createRoomName = CreateRoomName;

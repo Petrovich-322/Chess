@@ -35,6 +35,10 @@ const gameSchema = new mongoose.Schema({
     winner: {
         type: String,
         default: null
+    },
+    date: {
+        type: String,
+        default: null
     }
 
 });

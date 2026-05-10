@@ -4,9 +4,11 @@ import { Figure, Position } from "../shared/interfaces.ts";
 
 import { checkMove, shahCheck, mateCheck, getAvailableMoves } from 'rules-lib';
 import { User } from './models/UserSchema.ts';
-import userManager from './userManager.ts';
+import { userManager } from './userManager.ts';
 
 import { PlayerConstructor, CreateGameConstructorData, CreateGameData } from './interfaces/gameInterfaces.ts';
+
+const serverUser = 'Сервер';
 
 const defUser = {
     userName: null,
@@ -17,7 +19,7 @@ class Player {
     id: string | null;
     rating: number;
     time: number;
-    status: string;
+    status: 'active' | 'offline';
     userName: string;
    
     constructor({id, timeLimit, userName}: PlayerConstructor) {
@@ -37,7 +39,7 @@ class Game {
         black: Player;
     };
     moveStory: {
-        move: {from: Position; to: Position};
+        move: {from: Position; to: Position} | null;
         firstFigure: any;
         secondFigure: any;
     }[];
@@ -54,6 +56,7 @@ class Game {
         winner: string | null;
     };
     chatStory: [{user: string; text: string}];
+    gameEndTimer: any;
 
     constructor({ 
         timeLimit = 600, 
@@ -71,7 +74,11 @@ class Game {
             black: new Player({id: blackId, timeLimit, userName: blackPlayer.userName})
         };
 
-        this.moveStory = [];
+        this.moveStory = [{
+            move: null,
+            firstFigure: null,
+            secondFigure: null
+        }];
         this.lastMove = {
             player: 'black',
             time: Date.now()
@@ -85,9 +92,10 @@ class Game {
             winner: null
         };
         this.chatStory = [{
-            user: 'Сервер',
+            user: serverUser,
             text: 'Гру успішно створено'
         }];
+        this.gameEndTimer = null;
     }
     
     static async create({whiteId, blackId, timeLimit}: CreateGameData) {
@@ -214,6 +222,8 @@ class Game {
             const userName = user ? user.userName : newSide === 'white' ? 'Білий' : 'Чорний';
             this.players[newSide].id = userId;
             this.players[newSide].userName = userName;
+            this.players[newSide].status = 'active';
+            this.sendMessage({user: serverUser, text: `Користувач ${userName} приєднався`});
 
             return newSide;
 
@@ -272,7 +282,19 @@ class Game {
         }
 
     };
+    
+    removeActivePlayer = (userId: string) => {
+        const sides = ['white', 'black'] as const;
+        for(const side of sides) {
+            if(this.players[side].id === userId) {
+                const user =this.players[side];
 
+                user.status === 'offline';
+                this.sendMessage({user: serverUser, text: `Користувач ${user.userName} вийшов`});
+            }
+        }
+    }
+    
     get status() {
         return this.gameInfo.status;
     }

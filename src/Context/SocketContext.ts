@@ -2,11 +2,11 @@ import { createContext } from 'react';
 import { io } from 'socket.io-client';
 
 import { hostAddress } from '@shared/host';
-import TokenService from '@/services/tokenService';
+import { userService } from '@/services/userService';
 
 export const socket = io(`${hostAddress}`, {
     auth: {
-        token: TokenService.token 
+        token: userService.token
     }
 });
 export const SocketContext = createContext(socket);

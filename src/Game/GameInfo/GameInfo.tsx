@@ -54,13 +54,20 @@ const GameInfo = (props: GameInfoProps) => {
         <aside className="game-sidebar">
             <div className="move-list">
                 {moveStory.map((element, index) => {
+                    if(!element.move) {
+                        return (
+                            <div className="move-item" onClick={() => onMoveClick(index)} key={`move-${index}`}>
+                            <p className="move-item__number">Start</p> 
+                        </div>
+                        )
+                    }
                     const { from, to, } = element.move;
                     const { firstFigure, secondFigure } = element;
                     const start = `/assets/${firstFigure?.color}-${firstFigure?.type}.svg`;
                     const end = `/assets/${secondFigure?.color}-${secondFigure?.type}.svg`;
                     return (
                         <div className="move-item" onClick={() => onMoveClick(index)} key={`move-${index}`}>
-                            <p className="move-item__number">{`${index+1}: `}</p> 
+                            <p className="move-item__number">{`${index}: `}</p> 
                             <img src={start} className="move-item__piece" alt={`${firstFigure?.type}`} />
                             <p className="move-item__coords">
                                 {transition.get(from.col)}{8-from.row}{' => '}{transition.get(to.col)}{8-to.row}

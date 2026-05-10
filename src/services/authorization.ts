@@ -22,7 +22,7 @@ interface AuthorizationInput {
 abstract class Authorization { 
     protected abstract endpoint: string;
 
-    async request ({ userName, password, message }: AuthorizationInput) {
+    async request ({ userName, password }: AuthorizationInput) {
         const abortController = new AbortController();
         setTimeout(() => abortController.abort(), 4000);
 

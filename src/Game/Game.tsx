@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { SocketContext } from '@/Context/SocketContext';
 
 import { checkMove, getAvailableMoves, shahCheck} from 'rules-lib';
-import userService from '@/services/userService';
+import { userService } from '@/services/userService';
 
 import { AvailableMoves, ChatStory, MoveStory, SelectedCell, ServerData, Figure } from '../Interfaces/interface';
 
@@ -89,7 +89,7 @@ const Game = () => {
 
 
             const lastMove = data.moveStory[data.moveStory.length-1];
-            const castlingMove = data.moveStory[data.moveStory.length-2];
+            const castlingMove = data.moveStory.length > 2 ? data.moveStory[data.moveStory.length-2] : null;
             const moveTo = lastMove.move.to;
             const moveFrom = lastMove.move.from;
 
@@ -137,6 +137,7 @@ const Game = () => {
                 whiteTimer: data.players.white.time, 
                 blackTimer: data.players.black.time
             });   
+            console.log(data.players.white.time);
             setMoveStory(data.moveStory);
             setGameStatus(data.gameInfo.status);
             setChatStory(data.chatStory);
@@ -160,7 +161,7 @@ const Game = () => {
             console.log(`Winner is ${data.winner}`);
             setActiveSide(data.activeSide);
             setGameStatus('finished');
-
+            userService.updateUser();
             window.location.reload();
         }
 
@@ -282,7 +283,12 @@ const Game = () => {
         }
         const historyField = createBoard();
         
-        for(let i=0; i<=index; i++) {
+        if(index==0){
+            setTempField(historyField);
+            setShowMoveStory(true);
+            return
+        }
+        for(let i=1; i<=index; i++) {
             const move = moveStory[i].move;
             historyField[move.to.row][move.to.col] = {
                 ...historyField[move.from.row][move.from.col]
@@ -290,11 +296,12 @@ const Game = () => {
             historyField[move.from.row][move.from.col] = null;
         }
         
+
         fieldsCache.current[index] = historyField
         setTempField(historyField);
         setShowMoveStory(true);
     }
-    
+    console.log("Рендер пропсів таймера:", gameTimer.whiteTimer);
     return (
         <div className="main-container">
             <NavigationMenu />

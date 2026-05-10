@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 import { User } from './models/UserSchema';
 
-const login = async (req: any, res: any) => {
+const Login = async (req: any, res: any) => {
     
     try {
 
@@ -44,4 +44,4 @@ const login = async (req: any, res: any) => {
 
 }   
 
-export default login;
+export const login = Login;
