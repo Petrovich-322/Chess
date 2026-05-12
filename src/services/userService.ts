@@ -22,6 +22,8 @@ class UserService {
             console.log(this.#rating);
 
         } catch (err) {
+            this.logOut();
+            
             console.error('apiClient answer problem');
         }
     }

@@ -17,6 +17,7 @@ import NavigationMenu from '../NavigationMenu/NavigationMenu';
 
 import './Game.css';
 import apiClient from '@/services/client';
+import { AppContext } from '@/App';
 
 type KingsPosition = {
     whiteKing: {row: number, col: number}, 
@@ -48,6 +49,7 @@ const defKingsPos: KingsPosition = {
 const Game = () => {
     console.log('render');
     const socket = useContext(SocketContext);
+    const { updatePage } = useContext(AppContext)
 
     const [kingsPostion, setKingsPosition] = useState<KingsPosition>(defKingsPos);
     const [field, setField] = useState(createBoard());
@@ -163,6 +165,7 @@ const Game = () => {
             setGameStatus('finished');
             userService.updateUser();
             window.location.reload();
+            // updatePage();
         }
 
         const handleChatUpdate = (data: {newMessage: {user: string, text: string}}) => {

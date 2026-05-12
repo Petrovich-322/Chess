@@ -77,6 +77,7 @@ const PlayerInfo = (props: PlayerInfoProps) => {
     } 
 
     const formatTime = (time: number) => {
+        if(time < 0) return '00:00'
         const mins = Math.floor(time / 60);
         const secs = Math.floor(time % 60);
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;

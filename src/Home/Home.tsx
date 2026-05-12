@@ -19,21 +19,12 @@ const Home = () => {
     const [onClick, setOnClick] = useState<string>('');
     const [message, setMessage] = useState<string>('');
 
-    useEffect(() => {
-        if(userService.token) {
-            console.log('loh');
-            userService.updateUser();
-        }
-    }, [])
-
     const onRegistrationHandler = async (data: AuthData) => {
-
-        const registrationData = {message: 'реєстрація', ...data};
-        const response = await RegistrationService.request(registrationData);
+        const response = await RegistrationService.request(data);
         
         if(!response.ok) {
             setMessage(response.data.message);
-            console.log(response.data.name, response.data.message);
+            console.error(response.data.name, response.data.message);
             return false;
         }
                 
@@ -41,33 +32,29 @@ const Home = () => {
     }
 
     const onLoginHandler = async (data: AuthData) => {
-
-        const loginData = {message: 'вхід', ...data};
-        const response = await LoginService.request(loginData);
+        const response = await LoginService.request(data);
 
         if(!response.ok) {
             setMessage(response.data.message);
-            console.log(response.data.name, response.data.message);
+            console.error(response.data.name, response.data.message);
             return false;
         } 
         
         try {
             userService.setData('token', response.data.token);
-
             userService.setData('userName',response.data.userName);
-            
             userService.setData('rating', response.data.rating);
 
         } catch (err) {
             console.error('Error in setting user data:', err);
         }
 
-        window.location.reload();
+        // window.location.reload();
 
         return true;
     }
 
-    const handlerWrapper = (fn: (data: AuthData) => Promise<boolean>) => {
+    const wrapper = (fn: (data: AuthData) => Promise<boolean>) => {
         return async function(data: AuthData) {
             if(!await fn(data)) return;
             setMessage('');
@@ -104,14 +91,14 @@ const Home = () => {
                 />
                 }
                 {onClick === 'registration' && <RegisterLogMenu 
-                    confirmBtnHandler = {handlerWrapper(onRegistrationHandler)}
+                    confirmBtnHandler = {wrapper(onRegistrationHandler)}
                     title = "Реєстрація"
                     message = {message}
                     setMessage = {setMessage}
                     setOnClick  = {setOnClick}
                 />}
                 {onClick === 'login' && <RegisterLogMenu
-                    confirmBtnHandler = {handlerWrapper(onLoginHandler)}
+                    confirmBtnHandler = {wrapper(onLoginHandler)}
                     title = "Логін" 
                     message = {message}
                     setMessage = {setMessage}

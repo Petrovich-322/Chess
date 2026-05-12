@@ -20,15 +20,16 @@ apiClient.interceptors.request.use((config: any) => {
     return config;
 });
 
-apiClient.interceptors.response.use(
-    (response) => response,
-    (err) => {
-        console.error('Axious error', err.message);
-        if(err.response?.status === 401) {
-            userService.logOut;
-            window.location.reload();
-        }
-    }
-)
+// apiClient.interceptors.response.use(
+//     (response) => response,
+//     (err) => {
+//         console.error('Axious error', err.message);
+//         if(err.response?.status === 401) {
+//             userService.logOut;
+//             window.location.reload();
+//         }
+//         return err.response;
+//     }
+// )
 
 export default apiClient;

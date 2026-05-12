@@ -6,10 +6,9 @@ import jwt from 'jsonwebtoken';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 
-import { registration } from './RegistrationController.ts';
-import { login } from './LoginController.ts';
+import { registration, login} from './Authorization.ts';
 import { createRoomName } from "./room-generator.js";
-import { verifyToken } from './tokenVerification.ts';
+import { verifyToken } from './dataValidating.ts';
 import { userManager }  from './userManager.ts';
 import { gameHistoryService } from './GameHistoryService.ts';
 import Game from './Game.ts'

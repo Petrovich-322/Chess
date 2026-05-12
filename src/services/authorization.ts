@@ -16,9 +16,22 @@ class ResponseData<T> {
 interface AuthorizationInput {
     userName: string,
     password: string,
-    message: string
 }
 
+const parseMessage = (text: string) => {
+    switch(text) {
+        case 'noData':
+            return "Не введено ім'я або пароль";
+        case 'exist':
+            return "Такий користувач вже існує";
+        case 'notExist':
+            return "Такий користувач не існує";
+        case 'unCorPass': 
+            return 'Не правильний пароль';
+        default:
+            return null;
+    } 
+}
 abstract class Authorization { 
     protected abstract endpoint: string;
 
@@ -26,12 +39,26 @@ abstract class Authorization {
         const abortController = new AbortController();
         setTimeout(() => abortController.abort(), 4000);
 
-        console.log(userName, password);
+        // console.log(userName, password);
 
         if(!userName || !password) {     
             return new ResponseData('fail', {
                 name: 'TypeError',
                 message: "Не введено ім'я або пароль"
+            });
+        }
+        
+        if(userName.length < 4 || userName.length > 12) {
+            return new ResponseData('fail', {
+                name: 'TypeError',
+                message: `Введене ім'я ${userName.length < 4 ? 'замале' : 'завелике'}`
+            });
+        }
+
+        if(password.length < 8 || password.length > 14) {
+            return new ResponseData('fail', {
+                name: 'TypeError',
+                message: `Введений пароль ${password.length < 8 ? 'замалий' : 'завеликий'}`
             });
         }
 
@@ -45,34 +72,34 @@ abstract class Authorization {
             });
 
             const data = response.data;
-
             const result = new ResponseData('success', data);
             return result;
 
         } catch (err: unknown) {
-            let errName = 'Error';
-            let errMessage = 'Сталася невідома помилка';
+            let errName = 'Error', errMessage = 'Сталася невідома помилка';
+            console.log(err);
 
-            if(err instanceof Error) {
-                errName = err.name;
-                errMessage = err.message;
-            } else return new ResponseData('fail', {name: errName, message: errMessage});
-            
-            if('name' in err && err.name === 'AbortError') {
-                errName = 'AbortError';
-                errMessage = 'Вичерпано час очікування відповіді';
-            } 
-
-            else if(axios.isAxiosError(err)) {
+            if(axios.isAxiosError(err)) {
                 if(err.response) {
                     errName = 'ResponseError';
-                    errMessage = err.response.data.message || `Помилка на сервері - ${err.response.status}`;
+
+                    const unparsedErrMessage = err.response.data.message;
+                    const parsedMessage = parseMessage(unparsedErrMessage);
+
+                    errMessage = parsedMessage || unparsedErrMessage || `Помилкa - ${err.response.status}`;
                 }
                 
                 else if(err.request) {
                     errName = 'RequestError';
                     errMessage = 'Помилка запиту, спроуйте пізніше/перевірте з\'єднання';
                 }
+
+                else errMessage = err.message;
+            }
+
+            else if(err instanceof Error) {
+                errName = err.name;
+                errMessage = err.name === 'AbortError' ? 'Вичерпано час очікування відповіді' : err.message;
             }
 
             return new ResponseData('fail', {name: errName, message: errMessage});

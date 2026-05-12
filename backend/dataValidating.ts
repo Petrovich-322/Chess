@@ -1,18 +1,13 @@
 import jwt from 'jsonwebtoken';
+import { responseData } from './interfaces/shared.ts';
 
-const VerifyToken = (req: any, res: any, next: any) => {
-    
+export const verifyToken = (req: any, res: any, next: any) => {
     console.log('---verify token---');
 
     const authData = req.headers['authorization'];
     const token = authData.split(' ')[1];
 
-    // console.log(`DEBUG-auth: ${authData}`);
-    // console.log(`DEBUG-token: ${token}`);
-    // console.log(`DEBUG-API_KEY: ${process.env.API_KEY}`);
-
     if(!token) {
-        console.log('token not in headers');
         res.status(401).json({ message: 'Ви не авторизовані, запит неможливий' });
         return;
     }
@@ -21,11 +16,21 @@ const VerifyToken = (req: any, res: any, next: any) => {
         const decoded = jwt.verify(token, process.env.API_KEY as string);
         req.decoded = {user: decoded};
         next();
-    } catch (error) {
-        console.log('token verification failed');
+    } catch (err) {
         res.status(401).json({ message: 'Ви не авторизовані, запит неможливий' });
     }
+}
+
+export const validateAuth = (req: any, res: any, next: any) => {
+    const { userName, password } = req.body;
+
+    if(!userName || !password) {
+        res.status(400).json(new responseData({ message: 'noData' }));
+        return;
+    }
+
+    next();
 
 }
 
-export const verifyToken = VerifyToken;
+
