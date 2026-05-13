@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 
 import { User } from './models/UserSchema';
 
+// console.log('1',process.env.ACCESS_KEY);
+// console.log('2',process.env.REFRESH_KEY);
 class responseData {
     message: string;
     name: string;
@@ -12,6 +14,40 @@ class responseData {
     } = {}) {
         this.message = message,
         this.name = name
+    }
+}
+
+const createAccessToken = ( userId: Object, userName: string ) => {
+    const accessToken = jwt.sign(
+        { userId: userId, userName: userName },
+        process.env.ACCESS_KEY as string,
+        { expiresIn: '15m' }
+    );
+
+    return accessToken;
+}
+
+export const refresh = async (req: any, res: any) => {
+    const refreshToken = req.cookies.refreshToken;
+    if(!refreshToken) {
+        return res.status(401).json({ message: 'noData' });
+    }
+    try { 
+        const decoded: any = jwt.verify(refreshToken, process.env.REFRESH_KEY as string);
+        const { userId } = decoded;
+        const user = await User.findById(userId);
+        if(!user) {
+            return res.status(401).json({ message: 'notExist' });
+        }
+        const userName = user.userName;
+        const accessToken = createAccessToken(userId, userName);
+        res.json({ accessToken });
+
+    } catch (err: unknown) {
+        if(err instanceof Error) {
+            console.error(err.name, err.message);
+        }
+        res.status(400).json({ message: 'invalid' });
     }
 }
 
@@ -30,23 +66,33 @@ export const login = async (req: any, res: any) => {
             return;
         }
         
-        const token = jwt.sign(
-            { userId: user._id, userName: user.userName },
-            process.env.API_KEY as string,
-            { expiresIn: '72h' }
+        const accessToken = createAccessToken(user._id, user.userName);
+
+        const refreshToken = jwt.sign(
+            { userId: user._id },
+            process.env.REFRESH_KEY as string,
+            { expiresIn: '10d' }
         );
 
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            sameSite: 'lax',
+            maxAge: 10*24*60*1000
+        });
+
         res.json({
-            token,
+            accessToken,
             userId: user._id,
             userName: user.userName,
             rating: user.rating
-        });
+        }); 
 
-
-    } catch(err: any) {
-        console.log(err.name, err.message);
-        res.status(500).json({ message: 'Помилка на сервері' });
+        return;
+    } catch(err: unknown) {
+        if(err instanceof Error) {
+            console.error(err.name, err.message, 'Key');
+            res.status(500).json(new responseData({ message: err.message }));
+        }
         return;
     }
 

@@ -1,3 +1,11 @@
+
+.app__container{
+    display: flex;
+}
+.main-route__container {
+    flex: 1;
+}
+
 :root{
     --bg-dark: #262421;
     --bg-light: #302e2c;

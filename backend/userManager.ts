@@ -15,7 +15,7 @@ class UserManager {
     async getUserData (userId: string | null | undefined) {
         const user = await User.findById(userId);
         if(!user) {
-            console.log('такого користувача не існує/проблема db');
+            console.log('Не можливо знайти користувача');
             return null;
         }
         return user;
@@ -24,7 +24,7 @@ class UserManager {
     async update ({ data, userId }: UpdateUser) {
         const user = await User.findByIdAndUpdate(userId, data);
         if(!user) {
-            console.log('такого користувача не існує/проблема db');
+            console.log('Неможливо оновити користувача');
             return false;
         }
     }
@@ -32,7 +32,7 @@ class UserManager {
     async changeRating ({ dRating, userId }: ChangeRating) {
         const user = await User.findById(userId);
         if(!user) {
-            console.log('такого користувача не існує/проблема db');
+            console.log('Неможливо змінити данні користувача');
             return false;
         }
 

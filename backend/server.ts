@@ -3,10 +3,11 @@ import express from 'express';
 import cors from 'cors';    
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
+import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 
-import { registration, login} from './Authorization.ts';
+import { registration, login, refresh} from './Authorization.ts';
 import { createRoomName } from "./room-generator.js";
 import { verifyToken } from './dataValidating.ts';
 import { userManager }  from './userManager.ts';
@@ -21,6 +22,7 @@ const corsInfo = {
         "http://localhost:5173",    
         "https://nondisputatiously-tetched-kimber.ngrok-free.dev"
     ],
+    credentials: true,
     methods: ["GET", "POST"]
 }
 
@@ -29,6 +31,7 @@ const gameData: Record<string, Game> = {};
 const app = express();
 app.use(express.json());
 app.use(cors(corsInfo));    
+app.use(cookieParser());
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {cors: corsInfo});
@@ -38,7 +41,6 @@ mongoose.connect('mongodb://0.0.0.0:27017/DenisChessDB')
   .catch(err => console.error('Connection error:', err));
 
 const roomNameGeneator = createRoomName();
-
 
 app.post('/registration', (req, res) => {
     console.log('---Registration Request---');
@@ -50,33 +52,32 @@ app.post('/login', (req, res) => {
     login(req, res);
 });
 
+app.post('/refresh', (req, res) => {
+    console.log('---Tokin Refresh---');
+    refresh(req, res);
+})
+
 app.get('/update-user', verifyToken, async (req: DecodedTokenReq, res) => {
     res.json(await userManager.getUserData(req.decoded.user.userId));
-    // console.log('user updating success', userManager.getUserData(req.decoded.user.userId));
 });
 
 app.post('/create-room', verifyToken, async (req: DecodedTokenReq, res) => {
     console.log('---Create room request---');
     if(!req.decoded.user.userId) return; 
+    
     const userId = req.decoded.user.userId;
     const time = req.body.time ?? 600;
     const userSide = req.body.side ?? 'white';
-
-    console.log(`   userId: ${userId}`);
-    console.log(`   userSide ${userSide} || ${req.body.side}`)
-    
     const roomId = roomNameGeneator.next().value as string;
-    
+    console.log('DEBUG-user', userId);
     gameData[roomId] = await Game.create({
         timeLimit: time,
         [`${userSide}Id`] : userId
     });
     res.json({roomId: roomId});
-
 });
 
 app.post('/get-side', verifyToken, async (req: DecodedTokenReq, res) => {
-
     console.log('---Get-Side-Request---');
     const userId = req.decoded.user.userId;
     const roomId = req.query.roomId;
@@ -92,7 +93,6 @@ app.post('/get-side', verifyToken, async (req: DecodedTokenReq, res) => {
     const side = await gameData[roomId].getUserSide(userId);
 
     res.json({ side: side, status: 'success' });
-
 });
 
 interface DecodedSocket extends Socket{
@@ -112,7 +112,7 @@ io.use((defSocket, next) => {
 
     try {
         
-        const decoded = jwt.verify(token, process.env.API_KEY as string) as any;
+        const decoded = jwt.verify(token, process.env.ACCESS_KEY as string) as any;
         socket.userId = decoded.userId;
         next();
 

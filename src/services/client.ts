@@ -1,7 +1,7 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 import { hostAddress } from '@shared/host';
-import { userService} from './userService';
+import { userService } from './userService';
 
 const apiClient = axios.create({
     baseURL: hostAddress,
@@ -20,16 +20,46 @@ apiClient.interceptors.request.use((config: any) => {
     return config;
 });
 
-// apiClient.interceptors.response.use(
-//     (response) => response,
-//     (err) => {
-//         console.error('Axious error', err.message);
-//         if(err.response?.status === 401) {
-//             userService.logOut;
-//             window.location.reload();
-//         }
-//         return err.response;
-//     }
-// )
+interface ErrorMessage {
+    message: string;
+}
+
+apiClient.interceptors.response.use(
+    (response) => response,
+    async (err: AxiosError<ErrorMessage>) => {
+        console.error('Axious error', err.message);
+        if(!err.response || !err.config) {
+            userService.logOut;
+            return Promise.reject(err);
+        }
+
+        const request = err.config;
+        if(err.response.status === 401) {
+            if(err.response.data.message !== 'tokenExpired') {
+                userService.logOut;
+                return Promise.reject(err);
+            } 
+            try {
+                const res = await axios.post(`${hostAddress}/refresh`, {}, { 
+                    withCredentials: true
+                });
+                const accessToken = res.data.accessToken as string;
+                userService.setData('token', accessToken);
+                console.log('success updating token');
+
+                if (request.headers) {
+                    request.headers['Authorization'] = `Bearer ${accessToken}`;
+                }
+                return apiClient(request);
+
+            } catch (fetchError) {
+                userService.logOut;
+                return Promise.reject(err);
+            }
+        }
+
+        return Promise.reject(err);
+    }
+);
 
 export default apiClient;

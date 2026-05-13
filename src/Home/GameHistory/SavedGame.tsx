@@ -62,44 +62,39 @@ const SavedGame = () => {
     }
     return (
         <div className="main-container">
-            <NavigationMenu />
-            <div className="page-container">
-                <div className="full-game-container">
-                    <div className="vertical-game-container">
-                        <PlayerInfo
-                            timer = {blackPlayer.time}
-                            userInfo = {{userName: blackPlayer.userData.userName, side: 'spectator'}}
-                            moveStory = {moveStory}
-                            activeSide = {'spectator'}
-                            gameStatus = {'finished'}
-                            roomId = {undefined}
-                            setGameStatus = {undefined}
-                        />
-                        <Board 
-                            field = {field}
-                            selectedCell = {null}
-                            availableMoves = {[]}
-                            onSelect = {undefined}
-                        />
-                        <PlayerInfo
-                            timer = {whitePlayer.time}
-                            userInfo = {{userName: whitePlayer.userData.userName, side: 'spectator'}}
-                            moveStory = {moveStory}
-                            activeSide = {'spectator'}
-                            gameStatus = {'finished'}
-                            roomId = {undefined} 
-                            setGameStatus = {undefined}
-                        />
-                    </div>
-                    <GameInfo 
-                        onMoveClick = {onMoveClick}
-                        moveStory = {moveStory}
-                        chatStory={chatStory}
-                        userName = {'Spectator'}
-                        roomId = {undefined} 
-                    />
-                </div>
+            <div className="vertical-game-container">
+                <PlayerInfo
+                    timer = {blackPlayer.time}
+                    userInfo = {{userName: blackPlayer.userData.userName, side: 'spectator'}}
+                    moveStory = {moveStory}
+                    activeSide = {'spectator'}
+                    gameStatus = {'finished'}
+                    roomId = {undefined}
+                    setGameStatus = {undefined}
+                />
+                <Board 
+                    field = {field}
+                    selectedCell = {null}
+                    availableMoves = {[]}
+                    onSelect = {undefined}
+                />
+                <PlayerInfo
+                    timer = {whitePlayer.time}
+                    userInfo = {{userName: whitePlayer.userData.userName, side: 'spectator'}}
+                    moveStory = {moveStory}
+                    activeSide = {'spectator'}
+                    gameStatus = {'finished'}
+                    roomId = {undefined} 
+                    setGameStatus = {undefined}
+                />
             </div>
+            <GameInfo 
+                onMoveClick = {onMoveClick}
+                moveStory = {moveStory}
+                chatStory={chatStory}
+                userName = {'Spectator'}
+                roomId = {undefined} 
+            />
         </div>
     );
 };

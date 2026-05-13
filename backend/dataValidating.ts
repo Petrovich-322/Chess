@@ -1,6 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { responseData } from './interfaces/shared.ts';
 
+const { JsonWebTokenError } = jwt;
+
 export const verifyToken = (req: any, res: any, next: any) => {
     console.log('---verify token---');
 
@@ -13,11 +15,24 @@ export const verifyToken = (req: any, res: any, next: any) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.API_KEY as string);
+        const decoded = jwt.verify(token, process.env.ACCESS_KEY as string);
         req.decoded = {user: decoded};
         next();
-    } catch (err) {
-        res.status(401).json({ message: 'Ви не авторизовані, запит неможливий' });
+    } catch (err: unknown) {
+        let message = 'Ви не авторизовані, запит неможливий';
+        
+        if(err instanceof JsonWebTokenError) {
+            if(err.name === 'TokenExpiredError') {
+                message = 'tokenExpired';
+            }
+            else message = 'tokenError';
+        }
+
+        if(err instanceof Error) {
+            console.error(err.name, err.message);
+        }
+        
+        res.status(401).json({ message: message });
     }
 }
 

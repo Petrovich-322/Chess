@@ -2,8 +2,7 @@ import { Dispatch, SetStateAction, useState } from "react";
 
 import HomeMenuNavBtns from "../HomeMenuNavBtns";
 
-import './RegisterLogMenu.css';
-import '../HomeMenus.css';
+import './Authorization.css';
 
 interface RegisterLogMenuProps {
     title: string,

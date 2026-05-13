@@ -1,14 +1,15 @@
 .main-nav-bar{
     flex: 0.1;
-    width: 200px;
-    min-width: fit-content;
     height: 100vh;
-    background-color: var(--bg-dark);
+    min-width: fit-content;
+    padding-left: 10px;
+    padding-right: 10px;
+
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-left: 10px;
-    padding-right: 20px;
+
+    background-color: var(--bg-dark);
 }
 
 .main-nav__btn-container{
@@ -23,19 +24,19 @@
     width: 100%;
     box-sizing: border-box;
     min-width: fit-content;
-    padding-right: 10px;
-    height: 50px;
     min-height: fit-content;
+    height: 50px;
+    border-radius: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+
     display: flex;
     flex-direction: column;
-    /* justify-content: flex-start; */
-    padding-left: 15px;
     align-items: center;
+        
     color: var(--text-bright);
     font-size: 18px;
     background-color: var(--bg-light);
-    border-radius: 5px;
-    padding-bottom: 5px;
 }
 
 .user-profile__title {
@@ -61,8 +62,28 @@
     color: var(--text-main);
 }
 
+.user-profile__out{
+    margin-top: 10px;
+    width: 100%;
+    background-color: rgba(0,0,0,0);
+    border: 0;
+    box-sizing: border-box;
+    margin-right: 10px;
+    text-align: left;
+    color: var(--text-bright);
+    cursor: pointer;
+    opacity: 0.7;
+
+    &:hover {
+        opacity: 1;
+    }
+    &:active {
+        opacity: 0.5;
+    }
+}
+
 .nav-btn{
-    width: 150px;
+    width: 100%;
     margin: 5px;
     padding: 10px;
     border: 0;

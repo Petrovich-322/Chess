@@ -17,7 +17,6 @@ import NavigationMenu from '../NavigationMenu/NavigationMenu';
 
 import './Game.css';
 import apiClient from '@/services/client';
-import { AppContext } from '@/App';
 
 type KingsPosition = {
     whiteKing: {row: number, col: number}, 
@@ -49,7 +48,6 @@ const defKingsPos: KingsPosition = {
 const Game = () => {
     console.log('render');
     const socket = useContext(SocketContext);
-    const { updatePage } = useContext(AppContext)
 
     const [kingsPostion, setKingsPosition] = useState<KingsPosition>(defKingsPos);
     const [field, setField] = useState(createBoard());
@@ -164,8 +162,7 @@ const Game = () => {
             setActiveSide(data.activeSide);
             setGameStatus('finished');
             userService.updateUser();
-            window.location.reload();
-            // updatePage();
+            // window.location.reload();
         }
 
         const handleChatUpdate = (data: {newMessage: {user: string, text: string}}) => {
@@ -307,45 +304,40 @@ const Game = () => {
     console.log("Рендер пропсів таймера:", gameTimer.whiteTimer);
     return (
         <div className="main-container">
-            <NavigationMenu />
-            <div className="page-container">
-                <div className="full-game-container">
-                    <div className="vertical-game-container">
-                        <PlayerInfo
-                            timer = {gameTimer.blackTimer}
-                            userInfo = {blackPlayerInfo}
-                            moveStory = {moveStory}
-                            activeSide = {activeSide}
-                            gameStatus = {gameStatus}
-                            roomId = {roomId}
-                            setGameStatus = {setGameStatus}
-                        />
-                        <Board 
-                            field = {showMoveStory === false ? field : tempField}
-                            selectedCell = {selectedCell}
-                            availableMoves = {availableMoves}
-                            onSelect = {onSelect}
-                        />
-                        <PlayerInfo
-                            timer = {gameTimer.whiteTimer}
-                            userInfo = {whitePlayerInfo}
-                            moveStory = {moveStory}
-                            activeSide = {activeSide}
-                            gameStatus = {gameStatus}
-                            roomId = {roomId} 
-                            setGameStatus = {setGameStatus}
-                        />
-                    </div>
-                    <GameInfo 
-                        onMoveClick = {onMoveClick}
-                        moveStory = {moveStory}
-                        chatStory={chatStory}
-                        userName = {userInfo.userName ? 
-                            userInfo.userName : (userInfo.side === 'white' ? 'Білий' : 'Чорний')}
-                        roomId = {roomId} 
-                    />
-                </div>
+            <div className="vertical-game-container">
+                <PlayerInfo
+                    timer = {gameTimer.blackTimer}
+                    userInfo = {blackPlayerInfo}
+                    moveStory = {moveStory}
+                    activeSide = {activeSide}
+                    gameStatus = {gameStatus}
+                    roomId = {roomId}
+                    setGameStatus = {setGameStatus}
+                />
+                <Board 
+                    field = {showMoveStory === false ? field : tempField}
+                    selectedCell = {selectedCell}
+                    availableMoves = {availableMoves}
+                    onSelect = {onSelect}
+                />
+                <PlayerInfo
+                    timer = {gameTimer.whiteTimer}
+                    userInfo = {whitePlayerInfo}
+                    moveStory = {moveStory}
+                    activeSide = {activeSide}
+                    gameStatus = {gameStatus}
+                    roomId = {roomId} 
+                    setGameStatus = {setGameStatus}
+                />
             </div>
+            <GameInfo 
+                onMoveClick = {onMoveClick}
+                moveStory = {moveStory}
+                chatStory={chatStory}
+                userName = {userInfo.userName ? 
+                    userInfo.userName : (userInfo.side === 'white' ? 'Білий' : 'Чорний')}
+                roomId = {roomId} 
+            />
         </div>
     );
 }

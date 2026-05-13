@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import CreatingGameMenu from './HomeMenus/CreatingGameMenu/CreatingGameMenu'
-import NavigationMenu from '@/NavigationMenu/NavigationMenu';
-import RegisterLogMenu from './HomeMenus/RegistrationMenu/RegisterLogMenu';
+import RegisterLogMenu from './HomeMenus/Authorization/Authorization';
 import GameHistory from './GameHistory/GameHistory';
 
 import { RegistrationService, LoginService } from '@/services/authorization';
@@ -41,15 +40,17 @@ const Home = () => {
         } 
         
         try {
-            userService.setData('token', response.data.token);
+            userService.setData('token', response.data.accessToken);
             userService.setData('userName',response.data.userName);
             userService.setData('rating', response.data.rating);
-
-        } catch (err) {
-            console.error('Error in setting user data:', err);
+        } catch (err: unknown) {
+            if(err instanceof Error) {
+                console.error('Невдалося зберегти інфо', err.name, err.message);
+            }
+            console.error('Невідома помилка')
         }
 
-        // window.location.reload();
+        window.location.reload();
 
         return true;
     }
@@ -64,32 +65,31 @@ const Home = () => {
     
     return (
         <div className="main-container">
-            <NavigationMenu />
-            <div className="main-menu-container">
-                <div id="start-btn-container">
-                    <button 
-                        className="main-menu-btn start-btn" 
+            <div className='home-menu__container'>
+                <div className="start-btn-container">
+                    <button
+                        className="main-menu-btn start-btn"
                         onClick={() => setOnClick('createGame')}
                     >
                         Створити гру
                     </button>
-                    <button 
+                    <button
                         className="main-menu-btn new-user-btn"
                         onClick={() => setOnClick('login')}
                     >
                         Логін
                     </button>
-                    <button 
-                        className="main-menu-btn new-user-btn" 
+                    <button
+                        className="main-menu-btn new-user-btn"
                         onClick={() => setOnClick('registration')}
-                    > 
+                    >
                         Реєстрація
                     </button>
+                    
                 </div>
                 {onClick === 'createGame' && <CreatingGameMenu
                     setOnClick = {setOnClick}
-                />
-                }
+                />}
                 {onClick === 'registration' && <RegisterLogMenu 
                     confirmBtnHandler = {wrapper(onRegistrationHandler)}
                     title = "Реєстрація"
@@ -104,8 +104,8 @@ const Home = () => {
                     setMessage = {setMessage}
                     setOnClick = {setOnClick}
                 />}
-
             </div>
+            
             <GameHistory />
         </div>
     )

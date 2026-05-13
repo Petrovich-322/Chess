@@ -1,17 +1,19 @@
+import { EventEmitter } from "stream";
 import apiClient from "./client";
 
-class UserService {
+class UserService{
+    #listeners: (() => void)[] = [];
+
     #userName: string | null = null;
     #token: string | null = null;
     #rating: number | null = null;
 
     async updateUser() {
-        
         if(!this.#token) {
             console.error('Не авторизований користувач');
+            this.logOut();
             return;
         }
-
         try {
             const response = await apiClient.get('/update-user');
             const { userName, rating } = response.data;
@@ -19,19 +21,31 @@ class UserService {
             if(userName) this.setData('userName', userName);
             if(rating) this.setData('rating', rating);
 
-            console.log(this.#rating);
-
-        } catch (err) {
+            this.#updatePage();
+        } catch (err: unknown) {
             this.logOut();
-            
-            console.error('apiClient answer problem');
+            if(err instanceof Error) {
+                console.error(err.name, err.message);
+            }
+            console.error('Unknown error');
         }
     }
 
+    #updatePage() {
+        for (const listener of this.#listeners) listener();
+    }
+
+    subscribe(callback: () => void) {
+        this.#listeners.push(callback);
+    }
+
     logOut() {
+        console.log(322);
         this.setData('userName', null);
         this.setData('token', null);
         this.setData('rating', null);
+
+        window.location.reload();
     }
 
     setData(key: 'userName' | 'rating' | 'token', value: string | number | null) {
@@ -79,6 +93,7 @@ class UserService {
         return data;
 
     }
+
 
     #getToken() {
         return this.getData('token');

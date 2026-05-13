@@ -63,11 +63,11 @@ abstract class Authorization {
         }
 
         try {
-
             const response = await clientApi.post(this.endpoint, {
                 userName: userName,
                 password: password
             }, {
+                withCredentials: true,
                 signal: abortController.signal
             });
 
