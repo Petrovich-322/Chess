@@ -7,6 +7,7 @@ import { User } from './models/UserSchema.ts';
 import { userManager } from './userManager.ts';
 
 import { PlayerConstructor, CreateGameConstructorData, CreateGameData } from './interfaces/gameInterfaces.ts';
+import { log } from './Logger.ts';
 
 const serverUser = 'Сервер';
 
@@ -115,8 +116,9 @@ class Game {
         });
 
     };
-        
-    checkMove = (from: Position, to: Position) => {
+    
+    @log
+    checkMove(from: Position, to: Position) {
         
         const playerColor = this.activeSide;
 
@@ -142,10 +144,9 @@ class Game {
         return true;
     };
    
-    makeMove = (from: Position, to: Position) => {
-        
+    @log
+    makeMove(from: Position, to: Position) {
         if(!from || !to) return;
-
         try {
             const field = this.field;
             const figure = field[from.row][from.col];
@@ -169,15 +170,12 @@ class Game {
             field[from.row][from.col] = null;
 
             const castling = () => {
-
-                // console.log('castling');
                 const isLong = to.col < from.col;
                 const rookFromCol = isLong ? 0 : 7;
                 const rookToCol = isLong ? 3 : 5;
                 
                 const rook = field[from.row][rookFromCol];
                 if(!rook) return;
-                // console.log('rook', rook);
 
                 field[from.row][rookToCol] = { ...rook, movements: rook.movements++ };
                 field[from.row][rookFromCol] = null;
@@ -191,7 +189,6 @@ class Game {
             }
 
             if(figure.type === 'king') {
-                // console.log('king move');
                 if(Math.abs(to.col - from.col) === 2) castling();
 
                 this.kingsPosition[`${updatedFigure.color}King`] = {
@@ -208,8 +205,7 @@ class Game {
 
     };
 
-    getUserSide = async (userId: string | null) => {
-        
+    async getUserSide(userId: string | null) {
         const sides = ['white', 'black'] as const;
 
         const savedSide = sides.find(side => this.players[side].id === userId);
@@ -230,60 +226,48 @@ class Game {
         }
 
         return 'spectator';
-
     };
 
-    changeActiveSide = () => {
-
+    changeActiveSide() {
         this.activeSide = this.activeSide === 'white' ? 'black' : 'white';
-
     };
 
     sendMessage = (message: {user: string; text: string}) => {
-
        this.chatStory.push(message);
-
     };
 
-    addMove = (moveInfo: {
+    addMove(moveInfo: {
         move: {from: Position, to: Position},
         firstFigure: Figure | null,
         secondFigure: Figure | null
-    }) => {
+    }) {
 
         this.moveStory.push(moveInfo);
-
     };
 
-    updateTime = (playerColor: 'white' | 'black') => {
-        
+    updateTime(playerColor: 'white' | 'black') {
         const time = Date.now();
         
         this.players[playerColor].time -= (time - this.lastMove.time)/1000;
         this.lastMove = {...this.lastMove, time: time};
-
     };
 
-    startTimer = () => {
-        
+    startTimer() {
         const time = Date.now();
 
         this.lastMove = { ...this.lastMove, time: time}
-
     }
 
-    setGameStatus = ({status = null, winner = null}: {status?: string | null, winner?: 'white' | 'black' | null}) => {
-        
+    setGameStatus({status = null, winner = null}: {status?: string | null, winner?: 'white' | 'black' | null}) {
         this.gameInfo.status = status ?? this.gameInfo.status;
         this.gameInfo.winner = winner ?? this.gameInfo.winner;
 
         if(status === 'finished') {
             this.activeSide = 'spectator';
         }
-
     };
     
-    removeActivePlayer = (userId: string) => {
+    removeActivePlayer(userId: string) {
         const sides = ['white', 'black'] as const;
         for(const side of sides) {
             if(this.players[side].id === userId) {

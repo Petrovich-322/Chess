@@ -1,4 +1,4 @@
-import { UserDataKey, UserDataValue } from "./UserService";
+import { UserDataKey, UserDataValue } from "./UserService.ts";
 
 export class UserCache {
     #storageKey = 'DenisChess';

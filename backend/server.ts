@@ -95,10 +95,11 @@ app.post('/get-side', verifyToken, async (req: DecodedTokenReq, res) => {
     res.json({ side: side, status: 'success' });
 });
 
-interface DecodedSocket extends Socket{
+interface IDecoded {
     roomId: string,
     userId: string
 }
+interface DecodedSocket extends Socket, IDecoded {};
 
 io.use((defSocket, next) => {
     const socket = defSocket as DecodedSocket;
@@ -112,7 +113,7 @@ io.use((defSocket, next) => {
 
     try {
         
-        const decoded = jwt.verify(token, process.env.ACCESS_KEY as string) as any;
+        const decoded = jwt.verify(token, process.env.ACCESS_KEY as string) as IDecoded;
         socket.userId = decoded.userId;
         next();
 

@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 import { hostAddress } from '@shared/host';
 import { userService } from './UserServiceProxy';
@@ -10,7 +10,7 @@ const apiClient = axios.create({
     }
 }); 
 
-apiClient.interceptors.request.use((config: any) => {
+apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const token = userService.token;
 
     config.headers['Authorization'] = ``
