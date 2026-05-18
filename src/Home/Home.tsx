@@ -5,7 +5,7 @@ import RegisterLogMenu from './HomeMenus/Authorization/Authorization';
 import GameHistory from './GameHistory/GameHistory';
 
 import { RegistrationService, LoginService } from '@/services/authorization';
-import { userService } from '@/services/userService';
+import { userService } from '@/services/UserServiceProxy';
 
 import "./Home.css";
 

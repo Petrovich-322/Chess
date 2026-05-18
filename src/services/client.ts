@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios';
 
 import { hostAddress } from '@shared/host';
-import { userService } from './userService';
+import { userService } from './UserServiceProxy';
 
 const apiClient = axios.create({
     baseURL: hostAddress,

@@ -1,7 +1,24 @@
-import { EventEmitter } from "stream";
 import apiClient from "./client";
 
-class UserService{
+import { UserCache, userCache } from "./UserServiceCache";
+
+export type UserDataKey = 'userName' | 'token' | 'rating';
+export type UserDataValue = string | number | null;
+export interface IUserService {
+    readonly userName: string | null;
+    readonly rating: number | null;
+    readonly token: string | null;
+
+    updateUser(): Promise<void>;
+    subscribe(callback: () => void): void;
+    logOut(): void; 
+
+    setData(key: UserDataKey, value: UserDataValue): void;
+}
+
+export class UserService implements IUserService{
+    #cache: UserCache = userCache;
+
     #listeners: (() => void)[] = [];
 
     #userName: string | null = null;
@@ -11,7 +28,7 @@ class UserService{
     async updateUser() {
         if(!this.#token) {
             console.error('Не авторизований користувач');
-            this.logOut();
+            // this.logOut();
             return;
         }
         try {
@@ -32,7 +49,10 @@ class UserService{
     }
 
     #updatePage() {
-        for (const listener of this.#listeners) listener();
+        for (const listener of this.#listeners) {
+            listener();
+            console.log(listener);
+        }
     }
 
     subscribe(callback: () => void) {
@@ -40,84 +60,47 @@ class UserService{
     }
 
     logOut() {
-        console.log(322);
-        this.setData('userName', null);
-        this.setData('token', null);
-        this.setData('rating', null);
-
+        console.log('log out');
+        this.#userName = null;
+        this.#rating = null
+        this.#token = null;
+        this.#cache.clear();
         window.location.reload();
     }
 
-    setData(key: 'userName' | 'rating' | 'token', value: string | number | null) {
-
-        const localStorageJSON = localStorage.getItem('DenisChess');
-        const localStorageData = localStorageJSON ? JSON.parse(localStorageJSON) : {};
-
-        localStorageData[key] = value;
-        localStorage.setItem('DenisChess', JSON.stringify(localStorageData));
-
-        if(value) this.setLocalVariables(key, value);
-        
-    }
-
-    setLocalVariables(key: 'userName' | 'rating' | 'token', value: string | number) {
+    #setLocalVariables(key: UserDataKey, value: UserDataValue) {
         switch (key) {
             case 'userName':
-                if(typeof(value) != 'string') throw new TypeError;
-                this.#userName = value;
-                break;
+                if(typeof(value) != 'string' && value != null) throw new TypeError;
+                this.#userName = value; break;
             case 'rating':
-                if(typeof(value) != 'number') throw new TypeError;
-                this.#rating = value;
-                break;
+                if(typeof(value) != 'number' && value != null) throw new TypeError;
+                this.#rating = value; break;
             case 'token':
-                if(typeof(value) != 'string') throw new TypeError;
-                this.#token = value;
-                break;
+                if(typeof(value) != 'string' && value != null) throw new TypeError;
+                this.#token = value; break;
         }
     }
-
-    getData(type: 'userName' | 'token' | 'rating') {
-       
-        const localStorageJSON = localStorage.getItem('DenisChess');
-        if(!localStorageJSON) return null;
-        const localStorageData = JSON.parse(localStorageJSON);
-        
-        const data = localStorageData[type];
-        
-        if(!data && data !== 0) {
-            return;
-        }
-
-        this.setLocalVariables(type, data);
+    #getData(key: UserDataKey): UserDataValue {
+        const data = this.#cache.get(key);
+        this.#setLocalVariables(key, data);
         return data;
-
     }
 
-
-    #getToken() {
-        return this.getData('token');
-    }
-
-    #getRating() {
-        return this.getData('rating');
-    }
-    
-    #getUserName() {
-        return this.getData('userName');
+    setData(key: UserDataKey, value: UserDataValue) {
+        this.#cache.set(key, value);
+        this.#setLocalVariables(key, value);
     }
         
-    get userName() {
-        return this.#userName || this.#getUserName();
+    get userName(): string | null {
+        return this.#userName ?? this.#getData('userName') as string | null;
     }
 
-    get rating() {
-        return this.#rating || this.#getRating();
+    get rating(): number | null {
+        return this.#rating ?? this.#getData('rating') as number | null;
     }
 
-    get token() {
-        return this.#token || this.#getToken();
+    get token(): string | null {
+        return this.#token ?? this.#getData('token') as string | null;
     }
 }
-
-export const userService = new UserService();

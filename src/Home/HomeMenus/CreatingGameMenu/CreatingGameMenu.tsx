@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, Dispatch, SetStateAction } from 'react';
 
-import { userService } from '@/services/userService';
+import { userService } from '@/services/UserServiceProxy';
 import apiClient from '@/services/client';
 
 import TimePicker from './TimePicker';

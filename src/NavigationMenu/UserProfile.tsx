@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import React, { useSyncExternalStore } from 'react';
-import { userService } from "@/services/userService";
+import { userService } from "@/services/UserServiceProxy";
 
 const UserProfile = () => { 
     const [, setUpdate ] = useState(0);

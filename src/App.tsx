@@ -6,7 +6,7 @@ import Game from "./Game/Game";
 
 import { SocketContext } from '@/Context/SocketContext';
 import { socket } from '@/Context/SocketContext';
-import { userService } from './services/userService';
+import { userService } from './services/UserServiceProxy';
 import SavedGame from '@/Home/GameHistory/SavedGame';
 import NavigationMenu from './NavigationMenu/NavigationMenu';
 

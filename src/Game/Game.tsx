@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { SocketContext } from '@/Context/SocketContext';
 
 import { checkMove, getAvailableMoves, shahCheck} from 'rules-lib';
-import { userService } from '@/services/userService';
+import { userService } from '@/services/UserServiceProxy';
 
 import { AvailableMoves, ChatStory, MoveStory, SelectedCell, ServerData, Figure } from '../Interfaces/interface';
 
@@ -46,7 +46,6 @@ const defKingsPos: KingsPosition = {
 
 
 const Game = () => {
-    console.log('render');
     const socket = useContext(SocketContext);
 
     const [kingsPostion, setKingsPosition] = useState<KingsPosition>(defKingsPos);
@@ -75,7 +74,7 @@ const Game = () => {
 
     useEffect(() => {
         if(!roomId) return;
-
+        // userService.updateUser();
         const handleUpdateInfo = (data: ServerData) => {
             console.log('---update-info-handler---')
             getAvailableMoves.clear();
@@ -128,16 +127,13 @@ const Game = () => {
 
         } 
 
-        const handleInitializeGame = (data: ServerData & {field: (Figure | null)[][]}) => {
-            console.log('---initialize Game handler---');
-            
+        const handleInitializeGame = (data: ServerData & {field: (Figure | null)[][]}) => {            
             setField(data.field);
             setActiveSide(data.activeSide);
             setGameTimer({
                 whiteTimer: data.players.white.time, 
                 blackTimer: data.players.black.time
             });   
-            console.log(data.players.white.time);
             setMoveStory(data.moveStory);
             setGameStatus(data.gameInfo.status);
             setChatStory(data.chatStory);
@@ -301,7 +297,6 @@ const Game = () => {
         setTempField(historyField);
         setShowMoveStory(true);
     }
-    console.log("Рендер пропсів таймера:", gameTimer.whiteTimer);
     return (
         <div className="main-container">
             <div className="vertical-game-container">

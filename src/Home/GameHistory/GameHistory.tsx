@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { SocketContext } from '@/Context/SocketContext';
 
 import './GameHistory.css';
-import { userService } from '@/services/userService';
+import { userService } from '@/services/UserServiceProxy';
 
 const GameHistory = () => {
     const socket = useContext(SocketContext);
