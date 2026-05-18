@@ -71,6 +71,7 @@ app.post('/create-room', verifyToken, async (req: DecodedTokenReq, res) => {
     const roomId = roomNameGeneator.next().value as string;
     console.log('DEBUG-user', userId);
     gameData[roomId] = await Game.create({
+        roomId: roomId,
         timeLimit: time,
         [`${userSide}Id`] : userId
     });
@@ -88,7 +89,7 @@ app.post('/get-side', verifyToken, async (req: DecodedTokenReq, res) => {
         return;
     }
     
-    if(!gameData[roomId]) gameData[roomId] = await Game.create({});
+    if(!gameData[roomId]) gameData[roomId] = await Game.create({roomId: roomId});
     
     const side = await gameData[roomId].getUserSide(userId);
 
@@ -274,8 +275,6 @@ io.on('connection', (defSocket) => {
             sendChatMessage({ user: 'Сервер', text: 'Гра вже закінчилася!' });
             return;
         }
-
-        console.log('---   New move   ---');
 
         const userId = (socket as any).userId;
         if(!userId || !gameData[roomId]) return;

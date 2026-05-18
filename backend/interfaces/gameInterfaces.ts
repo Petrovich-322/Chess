@@ -1,4 +1,5 @@
 export interface CreateGameData {
+    roomId: string | null;
     timeLimit?: number;
     whiteId?: string | null;
     blackId?: string | null;

@@ -33,6 +33,7 @@ class Player {
 }
 
 class Game {
+    roomId: string | null;
     field: (Figure | null)[][];
     activeSide: 'white' | 'black' | 'spectator';
     players: {
@@ -60,6 +61,7 @@ class Game {
     gameEndTimer: any;
 
     constructor({ 
+        roomId = null,
         timeLimit = 600, 
         whiteId = null, 
         blackId = null,
@@ -67,6 +69,7 @@ class Game {
         blackPlayer,
 
     }: CreateGameConstructorData) {
+        this.roomId = roomId;
         this.field = createBoard();
         this.activeSide = 'spectator';
 
@@ -99,7 +102,7 @@ class Game {
         this.gameEndTimer = null;
     }
     
-    static async create({whiteId, blackId, timeLimit}: CreateGameData) {
+    static async create({whiteId, blackId, timeLimit, roomId}: CreateGameData) {
         
         const whiteUser = await userManager.getUserData(whiteId);
         const blackUser = await userManager.getUserData(blackId);
@@ -108,6 +111,7 @@ class Game {
         const blackPlayer = blackUser ?? {...defUser, userName: 'Чорний'};
 
         return new Game({
+            roomId,
             timeLimit,
             whiteId,
             blackId,
