@@ -29,7 +29,7 @@ apiClient.interceptors.response.use(
     async (err: AxiosError<ErrorMessage>) => {
         console.error('Axious error', err.message);
         if(!err.response || !err.config) {
-            userService.logOut;
+            userService.logOut();
             return Promise.reject(err);
         }
 

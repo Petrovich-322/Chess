@@ -1,5 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
+import Fastify from 'fastify';
+import fastifyCors from '@fastify/cors';
 import cors from 'cors';    
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
@@ -7,7 +9,7 @@ import cookieParser from 'cookie-parser';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 
-import { registration, login, refresh} from './Authorization.ts';
+import auth from './Authorization.ts';
 import { createRoomName } from "./room-generator.js";
 import { verifyToken } from './dataValidating.ts';
 import { userManager }  from './userManager.ts';
@@ -42,20 +44,17 @@ mongoose.connect('mongodb://0.0.0.0:27017/DenisChessDB')
 
 const roomNameGeneator = createRoomName();
 
-app.post('/registration', (req, res) => {
-    console.log('---Registration Request---');
-    registration(req, res);
+app.post('/registration', (req: any, res: any) => {
+    auth.registration(req, res);
 });
 
-app.post('/login', (req, res) => {
-    console.log('---Login Request---');
-    login(req, res);
+app.post('/login', (req: any, res: any) => {
+    auth.login(req, res);
 });
 
-app.post('/refresh', (req, res) => {
-    console.log('---Tokin Refresh---');
-    refresh(req, res);
-})
+app.post('/refresh', (req: any, res: any) => {
+    auth.refresh(req, res);
+});
 
 app.get('/update-user', verifyToken, async (req: DecodedTokenReq, res) => {
     res.json(await userManager.getUserData(req.decoded.user.userId));

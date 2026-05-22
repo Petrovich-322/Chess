@@ -27,6 +27,8 @@ const Home = () => {
             return false;
         }
                 
+        onLoginHandler(data);
+
         return true;
     }
 

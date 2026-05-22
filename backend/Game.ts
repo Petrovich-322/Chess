@@ -7,7 +7,7 @@ import { User } from './models/UserSchema.ts';
 import { userManager } from './userManager.ts';
 
 import { PlayerConstructor, CreateGameConstructorData, CreateGameData } from './interfaces/gameInterfaces.ts';
-import { log } from './Logger.ts';
+import { logMethod } from './Logger.ts';
 
 const serverUser = 'Сервер';
 
@@ -102,7 +102,7 @@ class Game {
         this.gameEndTimer = null;
     }
     
-    @log
+    @logMethod('INFO')
     static async create({whiteId, blackId, timeLimit, roomId}: CreateGameData) {
         
         const whiteUser = await userManager.getUserData(whiteId);
@@ -122,7 +122,6 @@ class Game {
 
     };
     
-    // @log
     checkMove(from: Position, to: Position) {
         
         const playerColor = this.activeSide;
@@ -149,7 +148,7 @@ class Game {
         return true;
     };
    
-    @log
+    @logMethod('ERROR')
     makeMove(from: Position, to: Position) {
         if(!from || !to) return;
         try {
@@ -263,7 +262,7 @@ class Game {
         this.lastMove = { ...this.lastMove, time: time}
     }
 
-    @log
+    @logMethod('ERROR')
     setGameStatus({status = null, winner = null}: {status?: string | null, winner?: 'white' | 'black' | null}) {
         this.gameInfo.status = status ?? this.gameInfo.status;
         this.gameInfo.winner = winner ?? this.gameInfo.winner;
