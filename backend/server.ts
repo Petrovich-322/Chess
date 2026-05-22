@@ -292,10 +292,8 @@ io.on('connection', (defSocket) => {
         game.changeActiveSide(); 
 
         if(isMove === 'Mate') {
-            
             console.log('---   Mate!   ---');   
             callGameEnd({ winnerSide: userSide });
-
         }
         
         callUpdateInfo();

@@ -102,6 +102,7 @@ class Game {
         this.gameEndTimer = null;
     }
     
+    @log
     static async create({whiteId, blackId, timeLimit, roomId}: CreateGameData) {
         
         const whiteUser = await userManager.getUserData(whiteId);
@@ -121,7 +122,7 @@ class Game {
 
     };
     
-    @log
+    // @log
     checkMove(from: Position, to: Position) {
         
         const playerColor = this.activeSide;
@@ -262,6 +263,7 @@ class Game {
         this.lastMove = { ...this.lastMove, time: time}
     }
 
+    @log
     setGameStatus({status = null, winner = null}: {status?: string | null, winner?: 'white' | 'black' | null}) {
         this.gameInfo.status = status ?? this.gameInfo.status;
         this.gameInfo.winner = winner ?? this.gameInfo.winner;

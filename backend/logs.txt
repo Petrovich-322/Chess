@@ -1,0 +1,45 @@
+LOG >>> 21.05.2026, 11:23:11 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.16
+LOG >>> 21.05.2026, 11:23:12 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.02
+LOG >>> 21.05.2026, 11:23:13 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.02
+LOG >>> 21.05.2026, 11:23:14 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.02
+LOG >>> 21.05.2026, 11:23:15 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.04
+LOG >>> 21.05.2026, 11:23:16 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.04
+LOG >>> 21.05.2026, 11:23:17 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.07
+--------------------New Server Start 21.05.2026, 11:23:57--------------------
+LOG >>> 21.05.2026, 11:24:02 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.14
+LOG >>> 21.05.2026, 11:24:03 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.02
+LOG >>> 21.05.2026, 11:24:04 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.03
+LOG >>> 21.05.2026, 11:24:05 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.02
+LOG >>> 21.05.2026, 11:24:08 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.04
+LOG >>> 21.05.2026, 11:24:10 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.02
+LOG >>> 21.05.2026, 11:24:11 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.03
+
+--------------------New Server Start 21.05.2026, 11:24:58--------------------
+
+LOG >>> 21.05.2026, 11:24:58 >>> [undefined]  Method: Function->create завершено за 6.92
+
+--------------------New Server Start 21.05.2026, 11:26:54--------------------
+
+LOG >>> 21.05.2026, 11:26:55 >>> [not created]  Method: Function->create завершено за 7.23
+LOG >>> 21.05.2026, 11:26:58 >>> [Pawn-resign-23]  Method: Game->setGameStatus завершено за 0.06
+LOG >>> 21.05.2026, 11:26:59 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.11
+LOG >>> 21.05.2026, 11:27:00 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.02
+LOG >>> 21.05.2026, 11:27:02 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.02
+LOG >>> 21.05.2026, 11:27:03 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.03
+LOG >>> 21.05.2026, 11:27:05 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.03
+LOG >>> 21.05.2026, 11:27:06 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.05
+LOG >>> 21.05.2026, 11:27:07 >>> [Pawn-resign-23]  Method: Game->makeMove завершено за 0.04
+LOG >>> 21.05.2026, 11:27:07 >>> [Pawn-resign-23]  Method: Game->setGameStatus завершено за 0.01
+
+--------------------New Server Start 22.05.2026, 13:29:56--------------------
+
+LOG >>> 22.05.2026, 13:40:25 >>> [not created]  Method: Function->create завершено за 3.18
+LOG >>> 22.05.2026, 13:40:48 >>> [Knight-draw-4]  Method: Game->setGameStatus завершено за 0.03
+LOG >>> 22.05.2026, 13:40:50 >>> [Knight-draw-4]  Method: Game->makeMove завершено за 0.12
+LOG >>> 22.05.2026, 13:40:52 >>> [Knight-draw-4]  Method: Game->makeMove завершено за 0.02
+LOG >>> 22.05.2026, 13:40:54 >>> [Knight-draw-4]  Method: Game->makeMove завершено за 0.02
+LOG >>> 22.05.2026, 13:40:54 >>> [Knight-draw-4]  Method: Game->makeMove завершено за 0.02
+LOG >>> 22.05.2026, 13:40:55 >>> [Knight-draw-4]  Method: Game->makeMove завершено за 0.02
+LOG >>> 22.05.2026, 13:40:56 >>> [Knight-draw-4]  Method: Game->makeMove завершено за 0.03
+LOG >>> 22.05.2026, 13:40:57 >>> [Knight-draw-4]  Method: Game->makeMove завершено за 0.03
+LOG >>> 22.05.2026, 13:40:57 >>> [Knight-draw-4]  Method: Game->setGameStatus завершено за 0.01
