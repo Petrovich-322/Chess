@@ -1,23 +1,24 @@
 import jwt from 'jsonwebtoken';
 import { responseData } from './interfaces/shared.ts';
+import { DecodedTokenReq } from './interfaces/serverInterfaces.ts';
+import { FastifyReply, FastifyRequest } from 'fastify';
 
 const { JsonWebTokenError } = jwt;
 
-export const verifyToken = (req: any, res: any, next: any) => {
+export const verifyToken = async (req: FastifyRequest, reply: FastifyReply) => {
     console.log('---verify token---');
 
     const authData = req.headers['authorization'];
-    const token = authData.split(' ')[1];
+    const token = authData?.split(' ')[1];
 
     if(!token) {
-        res.status(401).json({ message: 'Ви не авторизовані, запит неможливий' });
+        reply.code(401).send({ message: 'Ви не авторизовані, запит неможливий' });
         return;
     }
 
     try {
         const decoded = jwt.verify(token, process.env.ACCESS_KEY as string);
-        req.decoded = {user: decoded};
-        next();
+        (req as DecodedTokenReq).decoded = {user: decoded};
     } catch (err: unknown) {
         let message = 'Ви не авторизовані, запит неможливий';
         
@@ -32,19 +33,18 @@ export const verifyToken = (req: any, res: any, next: any) => {
             console.error(err.name, err.message);
         }
         
-        res.status(401).json({ message: message });
+        reply.code(401).send({ message: message });
+        return;
     }
 }
 
-export const validateAuth = (req: any, res: any, next: any) => {
-    const { userName, password } = req.body;
+export const validateAuth = (req: FastifyRequest, reply: FastifyReply) => {
+    const { userName, password } = req.body as any;
 
     if(!userName || !password) {
-        res.status(400).json(new responseData({ message: 'noData' }));
+        reply.code(400).send(new responseData({ message: 'noData' }));
         return;
     }
-
-    next();
 
 }
 

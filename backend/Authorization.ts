@@ -3,20 +3,11 @@ import jwt from 'jsonwebtoken';
 
 import { User } from './models/UserSchema';
 import { logMethod } from './Logger';
+import { FastifyReply, FastifyRequest } from 'fastify';
+import { responseData } from './interfaces/shared';
 
 // console.log('1',process.env.ACCESS_KEY);
 // console.log('2',process.env.REFRESH_KEY);
-class responseData {
-    message: string;
-    name: string;
-    constructor({ 
-        message = '', 
-        name = 'Server Response' 
-    } = {}) {
-        this.message = message,
-        this.name = name
-    }
-}
 
 const createAccessToken = (userId: Object, userName: string) => {
     const accessToken = jwt.sign(
@@ -38,89 +29,88 @@ const createRefreshToken = (userId: Object) => {
 
 class Authorization {
     @logMethod('DEBUG')
-    async refresh (req: any, res: any) {
+    async refresh (req: FastifyRequest, reply: FastifyReply) {
         const refreshToken = req.cookies.refreshToken;
         if(!refreshToken) {
-            return res.status(401).json({ message: 'noData' });
+            return reply.code(401).send({ message: 'noData' });
         }
         try { 
             const decoded: any = jwt.verify(refreshToken, process.env.REFRESH_KEY as string);
             const { userId } = decoded;
             const user = await User.findById(userId);
             if(!user) {
-                return res.status(401).json({ message: 'notExist' });
+                return reply.code(401).send({ message: 'notExist' });
             }
             const userName = user.userName;
             const newAccessToken = createAccessToken(userId, userName);
             const newRefreshToken = createRefreshToken(userId);
-            res.cookie('refreshToken', newRefreshToken, {
+            reply.cookie('refreshToken', newRefreshToken, {
                 httpOnly: true,
                 sameSite: 'lax',
                 maxAge: 10*24*60*60*1000,
                 secure: false
             });
-            res.json({ newAccessToken});
+            return { newAccessToken };
 
         } catch (err: unknown) {
             if(err instanceof Error) {
                 console.error(err.name, err.message);
             }
-            res.status(400).json({ message: 'invalid' });
+            reply.code(400).send({ message: 'invalid' });
         }
     }
 
     @logMethod('DEBUG')
-    async login (req: any, res: any) {
-        const { userName, password } = req.body;
+    async login (req: FastifyRequest, reply: FastifyReply) {
+        const { userName, password } = req.body as any;
+        
         try {
             const user = await User.findOne({ userName: userName });
             if(!user) {
-                res.status(400).json({ message: 'notExist' });
+                reply.code(400).send({ message: 'notExist' });
                 return;
             }
 
             const passwordCheck = await bcrypt.compare(password, user.password);
             if(!passwordCheck) {
-                res.status(400).json({ message: 'unCorPass' });
+                reply.code(400).send({ message: 'unCorPass' });
                 return;
             }
             
             const accessToken = createAccessToken(user._id, user.userName);
             const refreshToken = createRefreshToken(user._id);
 
-            res.cookie('refreshToken', refreshToken, {
+            reply.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
                 sameSite: 'lax',
                 maxAge: 10*24*60*60*1000,
                 secure: false
             });
 
-            res.json({
+            return {
                 accessToken,
                 userId: user._id,
                 userName: user.userName,
                 rating: user.rating
-            }); 
-
-            return;
+            }; 
         } catch(err: unknown) {
             if(err instanceof Error) {
                 console.error(err.name, err.message, 'Key');
-                res.status(500).json(new responseData({ message: err.message }));
+                reply.code(500).send(new responseData({ message: err.message }));
+                return;
             }
-            return;
         }
 
     }
 
     @logMethod('DEBUG')
-    async registration (req: any, res: any) {
-        const { userName, password } = req.body;
+    async registration (req: FastifyRequest, reply: FastifyReply) {
+        const { userName, password } = req.body as any; 
         try {
             const existingUser = await User.findOne({ userName: userName });
             
             if(existingUser) {
-                res.status(409).json(new responseData({ message: 'exist' }));
+                reply.code(409).send(new responseData({ message: 'exist' }));
                 return;
             }
 
@@ -134,10 +124,10 @@ class Authorization {
             await newUser.save();
 
 
-            res.status(201).json(new responseData({ message: 'succes' }));
+            reply.code(201).send(new responseData({ message: 'succes' }));
 
         } catch (err) {
-            res.status(500).json(new responseData({ message: 'registration fail' }));
+            reply.code(500).send(new responseData({ message: 'registration fail' }));
             console.log(err);
         }
     }

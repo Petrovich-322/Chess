@@ -51,7 +51,6 @@ export class UserService implements IUserService{
     #updatePage() {
         for (const listener of this.#listeners) {
             listener();
-            console.log(listener);
         }
     }
 
@@ -65,7 +64,8 @@ export class UserService implements IUserService{
         this.#rating = null
         this.#token = null;
         this.#cache.clear();
-        window.location.reload();
+        // window.location.reload();
+        this.#updatePage();
     }
 
     #setLocalVariables(key: UserDataKey, value: UserDataValue) {

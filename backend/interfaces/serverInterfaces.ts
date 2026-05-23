@@ -1,8 +1,11 @@
 import { Position } from '@shared/interfaces.ts';
-import express from 'express';
+import { FastifyRequest } from 'fastify';
+import { JwtPayload } from 'jsonwebtoken';
 
-export interface DecodedTokenReq extends express.Request {
-    decoded?: any;
+export interface DecodedTokenReq extends FastifyRequest {
+    decoded?: {
+        user: any
+    }
 }
 
 export interface OnNewMove {

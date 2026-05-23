@@ -1,13 +1,10 @@
 import 'dotenv/config';
-import express from 'express';
-import Fastify from 'fastify';
+import Fastify, { FastifyReply, FastifyRequest } from 'fastify';
 import fastifyCors from '@fastify/cors';
-import cors from 'cors';    
+import fastifySocketIO from 'fastify-socket.io';
 import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
-import cookieParser from 'cookie-parser';
-import { createServer } from 'http';
-import { Server, Socket } from 'socket.io';
+import { Socket } from 'socket.io';
 
 import auth from './Authorization.ts';
 import { createRoomName } from "./room-generator.js";
@@ -17,6 +14,7 @@ import { gameHistoryService } from './GameHistoryService.ts';
 import Game from './Game.ts'
 
 import { DecodedTokenReq, CallGameEnd, OnNewMove } from './interfaces/serverInterfaces.ts';
+import fastifyCookie from '@fastify/cookie';
 
 const PORT = 3000;
 const corsInfo = {
@@ -30,13 +28,11 @@ const corsInfo = {
 
 const gameData: Record<string, Game> = {};
 
-const app = express();
-app.use(express.json());
-app.use(cors(corsInfo));    
-app.use(cookieParser());
-
-const httpServer = createServer(app);
-const io = new Server(httpServer, {cors: corsInfo});
+const fastify = Fastify({ logger: true });
+await fastify.register(fastifyCors, corsInfo);
+await fastify.register(fastifySocketIO, { cors: corsInfo });
+await fastify.register(fastifyCookie);
+const io = fastify.io;
 
 mongoose.connect('mongodb://0.0.0.0:27017/DenisChessDB')
   .then(() => console.log('Connected to DB'))
@@ -44,47 +40,68 @@ mongoose.connect('mongodb://0.0.0.0:27017/DenisChessDB')
 
 const roomNameGeneator = createRoomName();
 
-app.post('/registration', (req: any, res: any) => {
-    auth.registration(req, res);
+fastify.post('/registration', async (req: FastifyRequest, res: FastifyReply) => {
+    return await auth.registration(req, res);
 });
 
-app.post('/login', (req: any, res: any) => {
-    auth.login(req, res);
+fastify.post('/login', async (req: FastifyRequest, res: FastifyReply) => {
+    return await auth.login(req, res);
 });
 
-app.post('/refresh', (req: any, res: any) => {
-    auth.refresh(req, res);
+fastify.post('/refresh', async (req: FastifyRequest, res: FastifyReply) => {
+    return await auth.refresh(req, res);
 });
 
-app.get('/update-user', verifyToken, async (req: DecodedTokenReq, res) => {
-    res.json(await userManager.getUserData(req.decoded.user.userId));
+fastify.post('/update-user', { preHandler: verifyToken }, async (req: DecodedTokenReq, reply: FastifyReply) => {
+    if(!req.decoded) {
+        reply.code(400).send({ message: 'NoToken' });
+        return;
+    };
+    const data = await userManager.getUserData(req.decoded.user.userId);
+    return data;
 });
 
-app.post('/create-room', verifyToken, async (req: DecodedTokenReq, res) => {
+fastify.post('/create-room', { preHandler: verifyToken }, async (req: DecodedTokenReq, reply: FastifyReply) => {
     console.log('---Create room request---');
-    if(!req.decoded.user.userId) return; 
+    if(!req.decoded?.user?.userId) {
+        reply.code(401).send({ message: 'Невалідні дані авторизації' });
+        return;
+    } 
+    const body = req.body as { time: number | null, side: string | null };
     
     const userId = req.decoded.user.userId;
-    const time = req.body.time ?? 600;
-    const userSide = req.body.side ?? 'white';
+    const time = body.time ?? 600;
+    const userSide = body.side ?? 'white';
     const roomId = roomNameGeneator.next().value as string;
-    console.log('DEBUG-user', userId);
-    gameData[roomId] = await Game.create({
-        roomId: roomId,
-        timeLimit: time,
-        [`${userSide}Id`] : userId
-    });
-    res.json({roomId: roomId});
+    
+    try {
+        gameData[roomId] = await Game.create({
+            roomId: roomId,
+            timeLimit: time,
+            [`${userSide}Id`] : userId
+        });
+
+        return { roomId: roomId };
+    } catch (error) {
+        reply.code(500).send({ message: 'Не вдалося створити кімнату' }) 
+    }
 });
 
-app.post('/get-side', verifyToken, async (req: DecodedTokenReq, res) => {
+fastify.post('/get-side', { preHandler: verifyToken }, 
+    async (req: DecodedTokenReq, reply: FastifyReply) => {
     console.log('---Get-Side-Request---');
+    
+    if(!req.decoded?.user?.userId) {
+        reply.code(401).send({ message: 'Невалідні дані авторизації' });
+        return;
+    } 
+    
     const userId = req.decoded.user.userId;
-    const roomId = req.query.roomId;
+    const roomId = ((req.query as any).roomId as string);
 
-    if(!roomId || typeof roomId !== 'string' || !userId) {
+    if(!roomId || !userId) {
         console.log(`get-side fail ${roomId} || ${userId}`);
-        res.json({ side: 'spectator', status: 'failed to get side' })
+        reply.code(400).send({ side: 'spectator', status: 'failed to get side' });
         return;
     }
     
@@ -92,7 +109,8 @@ app.post('/get-side', verifyToken, async (req: DecodedTokenReq, res) => {
     
     const side = await gameData[roomId].getUserSide(userId);
 
-    res.json({ side: side, status: 'success' });
+    return { side: side, status: 'success' };
+    
 });
 
 interface IDecoded {
@@ -103,7 +121,6 @@ interface DecodedSocket extends Socket, IDecoded {};
 
 io.use((defSocket, next) => {
     const socket = defSocket as DecodedSocket;
-
     const token = socket.handshake.auth.token;
 
     if(!token) {
@@ -112,15 +129,11 @@ io.use((defSocket, next) => {
     }   
 
     try {
-        
         const decoded = jwt.verify(token, process.env.ACCESS_KEY as string) as IDecoded;
         socket.userId = decoded.userId;
         next();
-
     } catch (error) {
-
         next(new Error('Авторизаційні данні на дійсні'));
-        
     }
     
 });
@@ -135,7 +148,7 @@ io.on('connection', (defSocket) => {
         const game = gameData[roomId];
         if(!roomId || !game) return;
 
-        const room = io.sockets.adapter.rooms.get(roomId);
+        const room = fastify.io.sockets.adapter.rooms.get(roomId);
         const usersCount = room ? room.size : 0;
         
         if(game.status === 'active' && usersCount === 0) {
@@ -167,7 +180,6 @@ io.on('connection', (defSocket) => {
 
         if(!roomId || !user || !text) return;
 
-
         if(text[0] === '/') {
             const command = text.slice(1).trim().toLowerCase();
             if(command === 'start') {
@@ -191,9 +203,7 @@ io.on('connection', (defSocket) => {
         }
         game.sendMessage(message);
 
-
         io.to(roomId).emit('chatUpdate', {newMessage: message});
-
     }
 
     const callGameEnd = ({ winnerSide }: CallGameEnd) => {
@@ -219,7 +229,6 @@ io.on('connection', (defSocket) => {
         });
 
         gameHistoryService.saveGame(game);
-    
     }   
 
     const callUpdateInfo = () => {
@@ -231,7 +240,6 @@ io.on('connection', (defSocket) => {
         const { field, ...gameInfo } = game;
         
         io.to(roomId).emit('updateInfo', gameInfo);
-        
     }
 
     const handleJoinRoom = ({ roomId }: {roomId: string}) => {
@@ -257,7 +265,6 @@ io.on('connection', (defSocket) => {
         io.to(roomId).emit('initializeGame', game);
         
         console.log(`User joined room: ${roomId}`); 
-
     }
 
     const onNewMove = async ({ move }: OnNewMove) => {
@@ -305,8 +312,4 @@ io.on('connection', (defSocket) => {
 
 });
 
-httpServer.listen(PORT, '127.0.0.1', () => {
-
-    console.log(`Local: http://localhost:${PORT}`);
-    
-});
+await fastify.listen({ port: PORT, host: '0.0.0.0' });
