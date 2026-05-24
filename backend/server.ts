@@ -52,7 +52,7 @@ fastify.post('/refresh', async (req: FastifyRequest, res: FastifyReply) => {
     return await auth.refresh(req, res);
 });
 
-fastify.post('/update-user', { preHandler: verifyToken }, async (req: DecodedTokenReq, reply: FastifyReply) => {
+fastify.get('/update-user', { preHandler: verifyToken }, async (req: DecodedTokenReq, reply: FastifyReply) => {
     if(!req.decoded) {
         reply.code(400).send({ message: 'NoToken' });
         return;
