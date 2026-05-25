@@ -105,9 +105,9 @@ class Game {
     @logMethod('INFO')
     static async create({whiteId, blackId, timeLimit, roomId}: CreateGameData) {
         
-        const whiteUser = await userManager.getUserData(whiteId);
-        const blackUser = await userManager.getUserData(blackId);
-    
+        const whiteUser = whiteId ? await userManager.getUserData(whiteId) : null;
+        const blackUser = blackId ? await userManager.getUserData(blackId) : null;
+
         const whitePlayer = whiteUser ?? {...defUser, userName: 'Білий'};
         const blackPlayer = blackUser ?? {...defUser, userName: 'Чорний'};
 

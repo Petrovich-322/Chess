@@ -1,8 +1,9 @@
 import { useState } from 'react';
 
 import CreatingGameMenu from './HomeMenus/CreatingGameMenu/CreatingGameMenu'
-import RegisterLogMenu from './HomeMenus/Authorization/Authorization';
+import AuthorizationMenu from './HomeMenus/Authorization/Authorization';
 import GameHistory from './GameHistory/GameHistory';
+import SearchingMenu from './HomeMenus/SearchingMenu/SearchingMenu';
 
 import { RegistrationService, LoginService } from '@/services/authorization';
 import { userService } from '@/services/UserServiceProxy';
@@ -42,18 +43,17 @@ const Home = () => {
         } 
         
         try {
-            userService.setData('token', response.data.accessToken);
-            userService.setData('userName',response.data.userName);
-            userService.setData('rating', response.data.rating);
+            userService.setData({
+                token: response.data.accessToken,
+                userName: response.data.userName,
+                rating: response.data.rating
+            });
         } catch (err: unknown) {
             if(err instanceof Error) {
                 console.error('Невдалося зберегти інфо', err.name, err.message);
             }
             console.error('Невідома помилка')
         }
-
-        window.location.reload();
-
         return true;
     }
 
@@ -76,6 +76,12 @@ const Home = () => {
                         Створити гру
                     </button>
                     <button
+                        className="main-menu-btn start-btn"
+                        onClick={() => setOnClick('findGame')}
+                    >
+                        Пошук гри
+                    </button>
+                    <button
                         className="main-menu-btn new-user-btn"
                         onClick={() => setOnClick('login')}
                     >
@@ -90,21 +96,24 @@ const Home = () => {
                     
                 </div>
                 {onClick === 'createGame' && <CreatingGameMenu
-                    setOnClick = {setOnClick}
+                    setOnClick = {() => setOnClick('')}
                 />}
-                {onClick === 'registration' && <RegisterLogMenu 
+                {onClick === 'findGame' && <SearchingMenu
+                    setOnClick = {() => setOnClick('')}
+                />}
+                {onClick === 'registration' && <AuthorizationMenu 
                     confirmBtnHandler = {wrapper(onRegistrationHandler)}
                     title = "Реєстрація"
                     message = {message}
                     setMessage = {setMessage}
-                    setOnClick  = {setOnClick}
+                    setOnClick  = {() => setOnClick('')}
                 />}
-                {onClick === 'login' && <RegisterLogMenu
+                {onClick === 'login' && <AuthorizationMenu
                     confirmBtnHandler = {wrapper(onLoginHandler)}
                     title = "Логін" 
                     message = {message}
                     setMessage = {setMessage}
-                    setOnClick = {setOnClick}
+                    setOnClick = {() => setOnClick('')}
                 />}
             </div>
             

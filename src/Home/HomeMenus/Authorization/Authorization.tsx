@@ -12,7 +12,7 @@ interface RegisterLogMenuProps {
     setOnClick: Dispatch<SetStateAction<string>>,
     setMessage: Dispatch<SetStateAction<string>>
 }
-const RegisterLogMenu = (props: RegisterLogMenuProps) => {
+const AuthorizationMenu = (props: RegisterLogMenuProps) => {
     const {
         title,
         message,
@@ -59,4 +59,4 @@ const RegisterLogMenu = (props: RegisterLogMenuProps) => {
     )
 }
 
-export default RegisterLogMenu;
+export default AuthorizationMenu;

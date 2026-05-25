@@ -1,4 +1,4 @@
-import { IUserService, UserDataKey, UserDataValue, UserService } from './UserService.ts';
+import { IUserService, UserDataKey, UserDataValue, UserService, SetDataParams } from './UserService.ts';
 
 class UserServiceProxy implements IUserService {
     #service: UserService;
@@ -37,8 +37,12 @@ class UserServiceProxy implements IUserService {
         this.#lastUpdate = 0;
     }
 
-    setData(key: UserDataKey, value: UserDataValue) {
-        this.#service.setData(key, value);
+    setData(data: SetDataParams) {
+        this.#service.setData(data);
+    }
+
+    setToken(token: string) {
+        this.#service.setToken(token);
     }
 
     get userName () {

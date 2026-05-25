@@ -5,6 +5,7 @@ import { JwtPayload } from 'jsonwebtoken';
 export interface DecodedTokenReq extends FastifyRequest {
     decoded?: {
         user: any
+        userId: string
     }
 }
 

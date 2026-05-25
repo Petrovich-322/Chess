@@ -47,7 +47,7 @@ class Authorization {
             reply.cookie('refreshToken', newRefreshToken, {
                 httpOnly: true,
                 sameSite: 'lax',
-                maxAge: 10*24*60*60*1000,
+                maxAge: 10*24*60*60,
                 secure: false
             });
             return { newAccessToken };
@@ -83,7 +83,7 @@ class Authorization {
             reply.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
                 sameSite: 'lax',
-                maxAge: 10*24*60*60*1000,
+                maxAge: 10*24*60*60,
                 secure: false
             });
 

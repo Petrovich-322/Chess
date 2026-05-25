@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useContext } from 'react';
 import { useParams } from 'react-router-dom';
+import { Socket } from 'socket.io-client';
 
 import { SocketContext } from '@/Context/SocketContext';
 
-import { checkMove, getAvailableMoves, shahCheck} from 'rules-lib';
+import { checkMove, getAvailableMoves, shahCheck } from 'rules-lib';
 import { userService } from '@/services/UserServiceProxy';
 
 import { AvailableMoves, ChatStory, MoveStory, SelectedCell, ServerData, Figure } from '../Interfaces/interface';
@@ -13,7 +14,6 @@ import createBoard from '@shared/createBoard';
 import Board from './Board/Board'
 import PlayerInfo from './PlayerInfo/PlayerInfo';
 import GameInfo from './GameInfo/GameInfo';
-import NavigationMenu from '../NavigationMenu/NavigationMenu';
 
 import './Game.css';
 import apiClient from '@/services/client';
@@ -44,10 +44,26 @@ const defKingsPos: KingsPosition = {
     blackKing: {row: 0, col: 4}
 }
 
+interface GameProps {
+    socket: Socket;
+}
 
-const Game = () => {
-    const socket = useContext(SocketContext);
+const GameWrapper = () => {
+    const socket = useContext(SocketContext);   
+    console.log('Game Wrapper >>> socket:', socket);
+    if(!socket) {
+        return (
+            <div className='loading__container'>
+                <p>Loading...</p>
+            </div>
+        );
+    }
 
+    return <Game socket = {socket}/>;
+}
+
+const Game = (props: GameProps) => {
+    const { socket } = props;
     const [kingsPostion, setKingsPosition] = useState<KingsPosition>(defKingsPos);
     const [field, setField] = useState(createBoard());
     const [tempField, setTempField] = useState(createBoard());
@@ -75,6 +91,29 @@ const Game = () => {
     useEffect(() => {
         if(!roomId) return;
         // userService.updateUser();
+
+        const handleInitializeGame = (data: ServerData & {field: (Figure | null)[][]}) => {            
+            setField(data.field);
+            setActiveSide(data.activeSide);
+            setGameTimer({
+                whiteTimer: data.players.white.time, 
+                blackTimer: data.players.black.time
+            });   
+            setMoveStory(data.moveStory);
+            setGameStatus(data.gameInfo.status);
+            setChatStory(data.chatStory);
+            
+            setWhitePlayerInfo({
+                side: 'white',
+                userName: data.players.white.userName ?? 'Білий'
+            });
+            setBlackPlayerInfo({
+                side: 'black',
+                userName: data.players.black.userName ?? 'Чорний'
+            });
+
+        };
+
         const handleUpdateInfo = (data: ServerData) => {
             console.log('---update-info-handler---')
             getAvailableMoves.clear();
@@ -127,28 +166,6 @@ const Game = () => {
 
         } 
 
-        const handleInitializeGame = (data: ServerData & {field: (Figure | null)[][]}) => {            
-            setField(data.field);
-            setActiveSide(data.activeSide);
-            setGameTimer({
-                whiteTimer: data.players.white.time, 
-                blackTimer: data.players.black.time
-            });   
-            setMoveStory(data.moveStory);
-            setGameStatus(data.gameInfo.status);
-            setChatStory(data.chatStory);
-            
-            setWhitePlayerInfo({
-                side: 'white',
-                userName: data.players.white.userName ?? 'Білий'
-            });
-            setBlackPlayerInfo({
-                side: 'black',
-                userName: data.players.black.userName ?? 'Чорний'
-            });
-
-        };
-
         const handleGameEnd = (data: {winner: string, activeSide: string}) => {
             if(!data.winner) {
                 console.log('---game end, winner is undefinded---');
@@ -182,9 +199,9 @@ const Game = () => {
                 });
 
                 if (socket.connected) {
-                    socket.emit('joinRoom', {roomId: roomId});
+                    socket.emit('joinRoom', { roomId });
                 } else {
-                    socket.once('connect', () => socket.emit('joinRoom', {roomId: roomId}));
+                    socket.once('connect', () => socket.emit('joinRoom', { roomId }));
                 } 
             } catch (err) {
                 console.error('Error in initializing game:', err);
@@ -337,4 +354,4 @@ const Game = () => {
     );
 }
 
-export default Game;
+export default GameWrapper;

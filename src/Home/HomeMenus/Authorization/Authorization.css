@@ -16,13 +16,6 @@
     }
 }
 
-.open-menu__title{
-    text-align: center;
-    padding: 0;
-    margin-bottom: 10px;
-    padding-top: 10px;
-}
-
 .open-menu__message{
     color: rgb(208, 117, 117);
     text-align: center;

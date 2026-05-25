@@ -12,7 +12,13 @@ const GameHistory = () => {
 
     const [gameHistory, setGameHistory] = useState<any[]>([]);
     
+    userService.subscribe(() => {
+        setGameHistory([]);
+        if(socket) socket.emit('get-game-history');
+    });
+    
     useEffect(() => {
+        if(!socket) return;
         setGameHistory([]);
         
         socket.emit('get-game-history');
@@ -24,7 +30,7 @@ const GameHistory = () => {
         return () => {
             socket.off('update-game-history');
         };
-    }, []);
+    }, [socket]);
 
     const onClick = (game: any) => {
         navigate('./savedGame', {state: { game }});

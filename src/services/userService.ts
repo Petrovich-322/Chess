@@ -4,6 +4,7 @@ import { UserCache, userCache } from "./UserServiceCache";
 
 export type UserDataKey = 'userName' | 'token' | 'rating';
 export type UserDataValue = string | number | null;
+export type SetDataParams = { token: string; userName: string; rating: number; }
 export interface IUserService {
     readonly userName: string | null;
     readonly rating: number | null;
@@ -12,8 +13,9 @@ export interface IUserService {
     updateUser(): Promise<void>;
     subscribe(callback: () => void): void;
     logOut(): void; 
-
-    setData(key: UserDataKey, value: UserDataValue): void;
+    
+    setToken(token: string): void;
+    setData({ token, userName, rating }: SetDataParams): void;
 }
 
 export class UserService implements IUserService{
@@ -35,8 +37,8 @@ export class UserService implements IUserService{
             const response = await apiClient.get('/update-user');
             const { userName, rating } = response.data;
 
-            if(userName) this.setData('userName', userName);
-            if(rating) this.setData('rating', rating);
+            if(userName) this.#setLocalVariables('userName', userName);
+            if(rating) this.#setLocalVariables('rating', rating);
 
             this.#updatePage();
         } catch (err: unknown) {
@@ -81,15 +83,39 @@ export class UserService implements IUserService{
                 this.#token = value; break;
         }
     }
+
+    setToken(token: string) {
+        try {
+            this.#setLocalVariables('token', token);
+        } catch (err) {
+            console.error('Помилка при збереженні токена', err);
+            return;
+        }   
+        this.#cache.set('token', token);
+    }
+
     #getData(key: UserDataKey): UserDataValue {
         const data = this.#cache.get(key);
         this.#setLocalVariables(key, data);
         return data;
     }
 
-    setData(key: UserDataKey, value: UserDataValue) {
-        this.#cache.set(key, value);
-        this.#setLocalVariables(key, value);
+    setData(data: SetDataParams): void {
+        const keys = Object.keys(data) as UserDataKey[];
+
+        for(const key of keys) {
+            const value = data[key];
+            try{
+                this.#setLocalVariables(key, value);
+            } catch (err) {
+                console.error('Помилка при збереженні даних користувача', err);
+                continue;
+            }
+            this.#cache.set(key, value);
+        }
+
+        // this.updateUser();
+        this.#updatePage();
     }
         
     get userName(): string | null {

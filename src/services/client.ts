@@ -36,24 +36,23 @@ apiClient.interceptors.response.use(
         const request = err.config;
         if(err.response.status === 401) {
             if(err.response.data.message !== 'tokenExpired') {
-                userService.logOut;
+                userService.logOut();  
                 return Promise.reject(err);
             } 
             try {
                 const res = await axios.post(`${hostAddress}/refresh`, {}, { 
                     withCredentials: true
                 });
-                const accessToken = res.data.accessToken as string;
-                userService.setData('token', accessToken);
+                const accessToken = res.data.newAccessToken as string;
+                userService.setToken(accessToken);
                 console.log('success updating token');
 
-                if (request.headers) {
-                    request.headers['Authorization'] = `Bearer ${accessToken}`;
-                }
+                request.headers['Authorization'] = `Bearer ${accessToken}`;
+                console.log('retrying request with new token '); 
                 return apiClient(request);
-
             } catch (fetchError) {
-                userService.logOut;
+                console.log('Error refreshing token', fetchError);
+                userService.logOut();
                 return Promise.reject(err);
             }
         }

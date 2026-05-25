@@ -5,22 +5,33 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 
 const { JsonWebTokenError } = jwt;
 
-export const verifyToken = async (req: FastifyRequest, reply: FastifyReply) => {
+const __errMessage = 'Невалідні дані авторизації';
+
+export const verifyToken = async (req: DecodedTokenReq, reply: FastifyReply) => {
     console.log('---verify token---');
 
     const authData = req.headers['authorization'];
     const token = authData?.split(' ')[1];
 
     if(!token) {
-        reply.code(401).send({ message: 'Ви не авторизовані, запит неможливий' });
+        reply.code(401).send({ message: __errMessage });
         return;
     }
 
     try {
         const decoded = jwt.verify(token, process.env.ACCESS_KEY as string);
-        (req as DecodedTokenReq).decoded = {user: decoded};
+        if(typeof decoded !== 'object' || !decoded) {
+            reply.code(401).send({ message: __errMessage });
+            throw new Error();
+        }
+        if(!('userId' in decoded)) {
+            reply.code(401).send({ message: __errMessage });
+            throw new Error();
+        } 
+        
+        req.decoded = { user: decoded, userId: decoded.userId };
     } catch (err: unknown) {
-        let message = 'Ви не авторизовані, запит неможливий';
+        let message = __errMessage;
         
         if(err instanceof JsonWebTokenError) {
             if(err.name === 'TokenExpiredError') {

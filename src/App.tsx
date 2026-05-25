@@ -1,35 +1,37 @@
-import { useEffect, useState, createContext } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom'; 
 
 import Home from "./Home/Home";
-import Game from "./Game/Game";  
+import GameWrapper from "./Game/Game";  
 
-import { SocketContext } from '@/Context/SocketContext';
-import { socket } from '@/Context/SocketContext';
+import { SocketProvider } from './Context/SocketProvider';
 import { userService } from './services/UserServiceProxy';
 import SavedGame from '@/Home/GameHistory/SavedGame';
 import NavigationMenu from './NavigationMenu/NavigationMenu';
 
 const App = () => {
+    const [loggedIn, setLoggedIn] = useState<boolean>(!!userService.token);
+    userService.subscribe(() => setLoggedIn(!!userService.token));
 
     useEffect(() => {
-        if(userService.token) userService.updateUser();
-    }, []);
+        if(loggedIn) userService.updateUser();
+        console.log('app update', loggedIn);
+    }, [loggedIn]);
  
     return (
         <BrowserRouter>
-            <SocketContext.Provider value={socket}>
+            <SocketProvider>
                 <div className='app__container'>
                     <NavigationMenu />
                     <div className='main-route__container'>
                         <Routes>
                             <Route path="/" element={<Home />} />
-                            <Route path="/game/:roomId" element={<Game />} />
+                            <Route path="/game/:roomId" element={<GameWrapper />} />
                             <Route path="/savedGame" element={<SavedGame />} />
                         </Routes>
                     </div>
                 </div>
-            </SocketContext.Provider>
+            </SocketProvider>
         </BrowserRouter>
   );
 }

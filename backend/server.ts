@@ -7,11 +7,10 @@ import jwt from 'jsonwebtoken';
 import { Socket } from 'socket.io';
 
 import auth from './Authorization.ts';
-import { createRoomName } from "./room-generator.js";
 import { verifyToken } from './dataValidating.ts';
 import { userManager }  from './userManager.ts';
 import { gameHistoryService } from './GameHistoryService.ts';
-import Game from './Game.ts'
+import GamesManager from './GamesManager.ts';
 
 import { DecodedTokenReq, CallGameEnd, OnNewMove } from './interfaces/serverInterfaces.ts';
 import fastifyCookie from '@fastify/cookie';
@@ -24,9 +23,8 @@ const corsInfo = {
     ],
     credentials: true,
     methods: ["GET", "POST"]
-}
+};
 
-const gameData: Record<string, Game> = {};
 
 const fastify = Fastify({ logger: true });
 await fastify.register(fastifyCors, corsInfo);
@@ -34,11 +32,11 @@ await fastify.register(fastifySocketIO, { cors: corsInfo });
 await fastify.register(fastifyCookie);
 const io = fastify.io;
 
+const gamesManager = GamesManager.getInstance({ io: io });
+
 mongoose.connect('mongodb://0.0.0.0:27017/DenisChessDB')
   .then(() => console.log('Connected to DB'))
   .catch(err => console.error('Connection error:', err));
-
-const roomNameGeneator = createRoomName();
 
 fastify.post('/registration', async (req: FastifyRequest, res: FastifyReply) => {
     return await auth.registration(req, res);
@@ -57,38 +55,72 @@ fastify.get('/update-user', { preHandler: verifyToken }, async (req: DecodedToke
         reply.code(400).send({ message: 'NoToken' });
         return;
     };
-    const data = await userManager.getUserData(req.decoded.user.userId);
+    const data = await userManager.getUserData(req.decoded.userId);
     return data;
 });
 
-fastify.post('/create-room', { preHandler: verifyToken }, async (req: DecodedTokenReq, reply: FastifyReply) => {
-    console.log('---Create room request---');
-    if(!req.decoded?.user?.userId) {
-        reply.code(401).send({ message: 'Невалідні дані авторизації' });
+fastify.post('/create-game', { preHandler: verifyToken }, async (req: DecodedTokenReq, reply: FastifyReply) => {
+    console.log('---Create game request---');
+    if(!req.decoded) {
+        reply.code(400).send({ message: 'NoToken' });
         return;
-    } 
+    };
     const body = req.body as { time: number | null, side: string | null };
     
-    const userId = req.decoded.user.userId;
+    const userId = req.decoded.userId;
     const time = body.time ?? 600;
     const userSide = body.side ?? 'white';
-    const roomId = roomNameGeneator.next().value as string;
     
     try {
-        gameData[roomId] = await Game.create({
-            roomId: roomId,
-            timeLimit: time,
-            [`${userSide}Id`] : userId
-        });
-
-        return { roomId: roomId };
+        const roomId = await gamesManager.createGame({ userId, time, userSide });
+        return { roomId };
     } catch (error) {
-        reply.code(500).send({ message: 'Не вдалося створити кімнату' }) 
+        let errorMessage = 'Не вдалося створити кімнату';
+        if(error instanceof Error) {
+            errorMessage = error.message || errorMessage;
+        }
+        reply.code(500).send({ message: errorMessage });
     }
 });
 
-fastify.post('/get-side', { preHandler: verifyToken }, 
-    async (req: DecodedTokenReq, reply: FastifyReply) => {
+fastify.post('/find-game', { preHandler: verifyToken }, async (req: DecodedTokenReq, reply: FastifyReply) => {
+    console.log('---Find game request---'); 
+    if(!req.decoded) {
+        reply.code(401).send({ message: 'Невалідні дані авторизації' });
+        return;
+    };
+
+    const userId = req.decoded.userId;
+    try {
+        gamesManager.joinQueue(userId);
+    } catch (error) {
+        let errorMessage = 'Сталася помилка при пошуку гри';
+        if(error instanceof Error) {
+            errorMessage = error.message || errorMessage;
+        }
+        reply.code(500).send({ message: errorMessage });
+    }
+});
+
+fastify.post('/leave-queue', { preHandler: verifyToken }, async (req: DecodedTokenReq, reply: FastifyReply) => {
+    console.log('---Leave queue request---');   
+    if(!req.decoded) {  
+        reply.code(401).send({ message: 'Невалідні дані авторизації' });
+        return;
+    }
+    const userId = req.decoded.userId;
+    try {
+        gamesManager.leaveQueue(userId);
+    } catch (error) {
+        let errorMessage = 'Сталася помилка при виході з черги';
+        if(error instanceof Error) {
+            errorMessage = error.message || errorMessage;
+        }
+        reply.code(500).send({ message: errorMessage });
+    }
+});
+
+fastify.post('/get-side', { preHandler: verifyToken }, async (req: DecodedTokenReq, reply: FastifyReply) => {
     console.log('---Get-Side-Request---');
     
     if(!req.decoded?.user?.userId) {
@@ -99,18 +131,16 @@ fastify.post('/get-side', { preHandler: verifyToken },
     const userId = req.decoded.user.userId;
     const roomId = ((req.query as any).roomId as string);
 
-    if(!roomId || !userId) {
-        console.log(`get-side fail ${roomId} || ${userId}`);
-        reply.code(400).send({ side: 'spectator', status: 'failed to get side' });
+    const game = gamesManager.gameById(roomId);
+
+    if(!roomId || !userId || !game) {
+        reply.code(400).send({ side: 'spectator' });
         return;
     }
     
-    if(!gameData[roomId]) gameData[roomId] = await Game.create({roomId: roomId});
-    
-    const side = await gameData[roomId].getUserSide(userId);
+    const side = await game.getUserSide(userId);
 
-    return { side: side, status: 'success' };
-    
+    return { side };
 });
 
 interface IDecoded {
@@ -143,9 +173,20 @@ io.on('connection', (defSocket) => {
 
     const socket = defSocket as DecodedSocket;
 
+    const userId = socket.userId;
+    if(!userId) {
+        console.log('Socket connection error: no user id');
+        socket.disconnect();
+        return;
+    }
+
+    if(userId) {
+        socket.join(userId);    
+    }
+
     socket.on('disconnect', async () => {
         const roomId = socket.roomId;
-        const game = gameData[roomId];
+        const game = gamesManager.gameById(roomId);
         if(!roomId || !game) return;
 
         const room = fastify.io.sockets.adapter.rooms.get(roomId);
@@ -157,7 +198,7 @@ io.on('connection', (defSocket) => {
                 
                 callGameEnd({ winnerSide: game.activeSide === 'white' ? 'black' : 'white' });
                 
-                delete gameData[roomId];
+                gamesManager.deleteById(roomId);
             }, 60000);
         }
 
@@ -177,26 +218,25 @@ io.on('connection', (defSocket) => {
     const sendChatMessage = ({ user, text }: 
         { user: string, text: string}) => {
         const roomId = socket.roomId;
-
-        if(!roomId || !user || !text) return;
+        const game = gamesManager.gameById(roomId);
+        if(!roomId || !user || !text || !game) return;
 
         if(text[0] === '/') {
             const command = text.slice(1).trim().toLowerCase();
             if(command === 'start') {
-                if(gameData[roomId].status !== 'prepearing' || !gameData[roomId].isAllPlayers) {
+                if(game.status !== 'prepearing' || !game.isAllPlayers) {
                     sendChatMessage({ user: 'Сервер', text: 'Цю команду не можливо виконати'});
                     return;
                 }
                 sendChatMessage({ user: 'Сервер', text: 'Гру успішно почато'});
-                gameData[roomId].startTimer();
-                gameData[roomId].activeSide = 'white';
-                gameData[roomId].setGameStatus({ status: 'active' });    
+                game.startTimer();
+                game.activeSide = 'white';
+                game.setGameStatus({ status: 'active' });    
                 handleJoinRoom({ roomId: roomId });
                 return;
             }
         }
 
-        const game = gameData[roomId];
         const message = {
             user: user,
             text: text
@@ -211,7 +251,9 @@ io.on('connection', (defSocket) => {
         console.log('---call game end---');
         if(!roomId || !winnerSide) return;
 
-        const game = gameData[roomId];
+        const game = gamesManager.gameById(roomId);
+        if(!game) return;
+
         game.setGameStatus({status: 'finished', winner: winnerSide});
 
         const winner = game.getPlayerId(winnerSide);
@@ -236,7 +278,9 @@ io.on('connection', (defSocket) => {
 
         if(!roomId) return;
 
-        const game = gameData[roomId];
+        const game = gamesManager.gameById(roomId);
+        if(!game) return;
+
         const { field, ...gameInfo } = game;
         
         io.to(roomId).emit('updateInfo', gameInfo);
@@ -244,7 +288,7 @@ io.on('connection', (defSocket) => {
 
     const handleJoinRoom = ({ roomId }: {roomId: string}) => {
 
-        if(!roomId || !gameData[roomId]) { 
+        if(!roomId || !gamesManager.gameById(roomId)) { 
             console.log(`join room -> no room id ${roomId}`);
             return;
         }
@@ -252,7 +296,9 @@ io.on('connection', (defSocket) => {
         socket.roomId = roomId;
         socket.join(roomId);
 
-        const game = gameData[roomId];
+        const game = gamesManager.gameById(roomId);
+        if(!game) return;
+
         if(game.gameEndTimer) {
             console.log('Cancel game end (user returned)');
             clearTimeout(game.gameEndTimer);
@@ -272,23 +318,24 @@ io.on('connection', (defSocket) => {
 
         if(!roomId || !move) return;
         
-        if(gameData[roomId].gameInfo.status === 'prepearing') {
+        const game = gamesManager.gameById(roomId);
+        if(!game) return;
+
+        if(game.gameInfo.status === 'prepearing') {
             sendChatMessage({ user: 'Сервер', text: 'Гра ще не почалася!' });
             return;
         }
 
-        if(gameData[roomId].gameInfo.status === 'finished') {
+        if(game.gameInfo.status === 'finished') {
             sendChatMessage({ user: 'Сервер', text: 'Гра вже закінчилася!' });
             return;
         }
 
         const userId = (socket as any).userId;
-        if(!userId || !gameData[roomId]) return;
+        if(!userId || !game) return;
         
-        const userSide = await gameData[roomId].getUserSide(userId);
+        const userSide = await game.getUserSide(userId);
         if(userSide === 'spectator') return;
-        
-        const game = gameData[roomId];
 
         const isMove = game.checkMove(move.from, move.to);
         if(!isMove) return;

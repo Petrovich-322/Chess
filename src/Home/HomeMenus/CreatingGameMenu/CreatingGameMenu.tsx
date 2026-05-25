@@ -21,6 +21,7 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
     const [minutes, setMinutes] = useState<number>(10);
     const [seconds, setSeconds] = useState<number>(0);
     const [side, setSide] = useState<string>('white');
+    
 
     const setTimer = (minutes: number) => {
         setMinutes(minutes);
@@ -34,7 +35,6 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
     const navigate = useNavigate();
     
     const onCreateGameHandler = async () => {
-
         const time = minutes * 60 + seconds;
         const randomSide = getRandomInt(0,1) === 0 ? 'white' : 'black';      
         const finalSide = side != 'random' ? side : randomSide;    
@@ -51,7 +51,7 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
         }
 
         try {
-            const response = await apiClient.post('/create-room', createRoomData);
+            const response = await apiClient.post('/create-game', createRoomData);
             const roomId = response.data.roomId;    
             
             navigate(`/game/${roomId}`);
@@ -82,7 +82,7 @@ const CreatingGameMenu = (props: CreatingGameMenuProps) => {
 
             <HomeMenuNavBtns 
                 confirmBtnHandler = {() => onCreateGameHandler()}
-                returnBtnHandler = {() => setOnClick('')}
+                returnBtnHandler = {setOnClick}
                 confirmBtnTitle = "Створити"
                 returnBtnTitle = "Повернутися"
             />
