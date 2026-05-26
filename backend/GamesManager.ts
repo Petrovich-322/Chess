@@ -2,19 +2,20 @@ import Game from './Game.ts';
 import { Server } from 'socket.io';
 import { createRoomName } from './room-generator.ts';
 import { logMethod } from './Logger.ts';
+import { gameHistoryService } from './GameHistoryService.ts';
+import { userManager } from './userManager.ts';
 
 const roomNameGeneator = createRoomName();
-
 
 class GamesManager {
     static #instance: GamesManager | null = null;
 
-    #gamesData: Record<string, Game>;
+    #games: Record<string, Game>;
     #playersQueue: string[];
     #io: Server;
 
     constructor(io: Server) {
-        this.#gamesData = {};
+        this.#games = {};
         this.#playersQueue = [];
         this.#io = io;
     }
@@ -27,12 +28,12 @@ class GamesManager {
     }
 
     @logMethod('DEBUG')
-    async createGame({ userId, time, userSide }: { userId?: string, time?: number, userSide?: string }) {
+    async createGame({ userId, time, userSide }: { userId?: string, time?: number, userSide?: 'white' | 'black' }) {
         const roomId = roomNameGeneator.next().value;
         if(!roomId) throw new Error('Не вдалося згенерувати назву кімнати');
         
         try {
-            this.#gamesData[roomId] = await Game.create({
+            this.#games[roomId] = await Game.create({
                 roomId: roomId,
                 timeLimit: time,
                 [`${userSide}Id`] : userId
@@ -51,16 +52,10 @@ class GamesManager {
         }
         this.#playersQueue.push(userId);
 
-        if(this.#playersQueue.length >= 2) {
-            console.log(this.#playersQueue);
-            const firstPlayerId = this.#playersQueue.shift();
-            const secondPlayerId = this.#playersQueue.shift();
-            
-            if(!firstPlayerId || !secondPlayerId) {
-                throw new Error('Помилка при отриманні гравців з черги');
-            }
-            
-            this.joinGame({ firstPlayerId, secondPlayerId });  
+        try {
+            this.#getPlayers();
+        } catch (error) {
+            throw error;
         }
     }
 
@@ -73,10 +68,30 @@ class GamesManager {
         this.#playersQueue.splice(index, 1);
     }
 
+    #getPlayers() {
+        if(this.#playersQueue.length >= 2) {
+            console.log(this.#playersQueue);
+            const firstPlayerId = this.#playersQueue.shift();
+            const secondPlayerId = this.#playersQueue.shift();
+            
+            if(!firstPlayerId || !secondPlayerId) {
+                if(firstPlayerId) this.#playersQueue.unshift(firstPlayerId);
+                if(secondPlayerId) this.#playersQueue.unshift(secondPlayerId);
+                throw new Error('Помилка при отриманні гравців з черги');
+            }
+            
+            this.joinGame({ firstPlayerId, secondPlayerId });  
+        }
+    }
+
     @logMethod('DEBUG')
     async joinGame({ firstPlayerId, secondPlayerId }: { firstPlayerId: string, secondPlayerId: string }) {
         try {
-            const roomId = await this.createGame({ time: 600, userSide: 'white' });
+            const roomId = await this.createGame({ 
+                userId: firstPlayerId,
+                time: 600, 
+                userSide: 'white' 
+            });
 
             this.#io.to(firstPlayerId).emit('join-game', { roomId });
             this.#io.to(secondPlayerId).emit('join-game', { roomId });
@@ -85,13 +100,37 @@ class GamesManager {
         }
     }
 
+    endGame(roomId: string, winnerSide: 'white' | 'black') {
+        const game = this.gameById(roomId);
+        if(!game) return null;
+
+        game.setGameStatus({ status: 'finished', winner: winnerSide });
+
+        const winner = game.getPlayer(winnerSide);
+        const looser = game.getPlayer(winnerSide === 'white' ? 'black' : 'white');
+        
+        if(!winner || !looser || !winner.id || !looser.id) return null;
+
+        userManager.changeRating({ dRating: +30, userId: winner.id });
+        userManager.changeRating({ dRating: -30, userId: looser.id });
+
+        this.#io.to(roomId).emit('gameEnd', {
+            winner: winnerSide,
+            activeSide: 'spectator'
+        });
+
+        gameHistoryService.saveGame(game);
+
+        return { winner };
+    }
+
     gameById(roomId: string) {
         if(!roomId) return null;
-        return this.#gamesData[roomId] || null;
+        return this.#games[roomId] || null;
     }
 
     deleteById(roomId: string) {
-        delete this.#gamesData[roomId];
+        delete this.#games[roomId];
     }
 }
 

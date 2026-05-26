@@ -12,7 +12,7 @@ interface ChangeRating {
 
 class UserManager {
     
-    async getUserData (userId: string | null | undefined) {
+    async getUser (userId: string | null | undefined) {
         if(!userId) return;
         const user = await User.findById(userId);
         if(!user) {

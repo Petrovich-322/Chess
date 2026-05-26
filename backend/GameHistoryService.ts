@@ -34,7 +34,7 @@ class GameHistoryService {
         await newGame.save();
     }
 
-    async *getHistoryGenerator(userId: string) {
+    async *historyGenerator(userId: string) {
 
         const cursor = SavedGame.find({
             $or: [

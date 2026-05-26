@@ -1,13 +1,5 @@
 import { Position } from '@shared/interfaces.ts';
-import { FastifyRequest } from 'fastify';
 import { JwtPayload } from 'jsonwebtoken';
-
-export interface DecodedTokenReq extends FastifyRequest {
-    decoded?: {
-        user: any
-        userId: string
-    }
-}
 
 export interface OnNewMove {
     side: 'white' | 'black', 
@@ -16,4 +8,18 @@ export interface OnNewMove {
 
 export interface CallGameEnd {
     winnerSide: 'white' | 'black',
+}
+
+export interface IDecoded {
+    roomId: string,
+    userId: string
+}
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    decoded: {
+      user: string | JwtPayload;
+      userId: string;
+    };
+  }
 }

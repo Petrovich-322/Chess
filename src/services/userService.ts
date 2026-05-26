@@ -5,6 +5,7 @@ import { UserCache, userCache } from "./UserServiceCache";
 export type UserDataKey = 'userName' | 'token' | 'rating';
 export type UserDataValue = string | number | null;
 export type SetDataParams = { token: string; userName: string; rating: number; }
+
 export interface IUserService {
     readonly userName: string | null;
     readonly rating: number | null;
@@ -12,6 +13,7 @@ export interface IUserService {
 
     updateUser(): Promise<void>;
     subscribe(callback: () => void): void;
+    unsubscribe(callback: () => void): void;
     logOut(): void; 
     
     setToken(token: string): void;
@@ -58,6 +60,13 @@ export class UserService implements IUserService{
 
     subscribe(callback: () => void) {
         this.#listeners.push(callback);
+    }
+
+    unsubscribe(callback: () => void) {
+        const index = this.#listeners.indexOf(callback);
+        if (index !== -1) {
+            this.#listeners.splice(index, 1);
+        }
     }
 
     logOut() {

@@ -12,10 +12,20 @@ const UserProfile = () => {
         rating: userService.rating
     });
     const isLoggedIn = !!userService.token;
-    userService.subscribe(() => setUser({
-        name: userService.userName,
-        rating: userService.rating
-    }));
+    
+    useEffect(() => {
+        userService.subscribe(() => setUser({
+            name: userService.userName,
+            rating: userService.rating
+        }));
+
+        return () => {
+            userService.unsubscribe(() => setUser({
+                name: userService.userName,
+                rating: userService.rating
+            }));
+        }
+    }, []);
 
     return (
         <div className="user-profile__container">

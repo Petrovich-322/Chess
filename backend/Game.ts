@@ -105,8 +105,8 @@ class Game {
     @logMethod('INFO')
     static async create({whiteId, blackId, timeLimit, roomId}: CreateGameData) {
         
-        const whiteUser = whiteId ? await userManager.getUserData(whiteId) : null;
-        const blackUser = blackId ? await userManager.getUserData(blackId) : null;
+        const whiteUser = whiteId ? await userManager.getUser(whiteId) : null;
+        const blackUser = blackId ? await userManager.getUser(blackId) : null;
 
         const whitePlayer = whiteUser ?? {...defUser, userName: 'Білий'};
         const blackPlayer = blackUser ?? {...defUser, userName: 'Чорний'};
@@ -185,7 +185,7 @@ class Game {
                 field[from.row][rookFromCol] = null;
 
                 this.addMove({
-                    move: {from: {row: from.row, col: rookFromCol}, to: {row: from.row, col: rookToCol}},
+                    move: {from: {row: from.row, col: rookFromCol}, to: { row: from.row, col: rookToCol }},
                     firstFigure: field[from.row][rookToCol],
                     secondFigure: null
                 })
@@ -200,7 +200,7 @@ class Game {
                 };
             }
 
-            this.lastMove = {...this.lastMove, player: this.activeSide};
+            this.lastMove = { ...this.lastMove, player: this.activeSide };
 
             getAvailableMoves.clear();
         } catch (err) {
@@ -223,7 +223,7 @@ class Game {
             this.players[newSide].id = userId;
             this.players[newSide].userName = userName;
             this.players[newSide].status = 'active';
-            this.sendMessage({user: serverUser, text: `Користувач ${userName} приєднався`});
+            this.sendMessage({ user: serverUser, text: `Користувач ${userName} приєднався` });
 
             return newSide;
 
@@ -279,7 +279,7 @@ class Game {
                 const user =this.players[side];
 
                 user.status === 'offline';
-                this.sendMessage({user: serverUser, text: `Користувач ${user.userName} вийшов`});
+                this.sendMessage({ user: serverUser, text: `Користувач ${user.userName} вийшов`});
             }
         }
     }
@@ -290,6 +290,14 @@ class Game {
     
     getPlayerId(side: 'white' | 'black') {
         return this.players[side].id ?? null;
+    }
+
+    getPlayerName(side: 'white' | 'black') {
+        return this.players[side].userName ?? null;
+    }
+
+    getPlayer(side: 'white' | 'black') {
+        return this.players[side] ?? null;
     }
 
     get isAllPlayers() {

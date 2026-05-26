@@ -32,6 +32,10 @@ class UserServiceProxy implements IUserService {
         this.#service.subscribe(callback);
     }
 
+    unsubscribe(callback: () => void): void {
+        this.#service.unsubscribe(callback);
+    }
+
     logOut(): void {
         this.#service.logOut();
         this.#lastUpdate = 0;

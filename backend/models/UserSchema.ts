@@ -15,6 +15,25 @@ const userSchema = new mongoose.Schema({
     rating: {
         type: Number,
         default: 0
+    },
+    statistics: {
+        gamesPlayed: {
+            type: Number,
+            default: 0
+        },
+        wins: {
+            type: Number,  
+            default: 0
+        },
+        losses: {   
+            type: Number,
+            default: 0
+        },
+        draws: {
+            type: Number,
+            default: 0
+        },
+        
     }
 });
 

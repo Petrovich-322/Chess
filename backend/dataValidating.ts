@@ -1,15 +1,14 @@
 import jwt from 'jsonwebtoken';
 import { responseData } from './interfaces/shared.ts';
-import { DecodedTokenReq } from './interfaces/serverInterfaces.ts';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 const { JsonWebTokenError } = jwt;
 
 const __errMessage = 'Невалідні дані авторизації';
 
-export const verifyToken = async (req: DecodedTokenReq, reply: FastifyReply) => {
+export const verifyToken = async (req: FastifyRequest, reply: FastifyReply) => {
     console.log('---verify token---');
-
+    
     const authData = req.headers['authorization'];
     const token = authData?.split(' ')[1];
 

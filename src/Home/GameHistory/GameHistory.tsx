@@ -12,15 +12,23 @@ const GameHistory = () => {
 
     const [gameHistory, setGameHistory] = useState<any[]>([]);
     
-    userService.subscribe(() => {
+    const updateHandler = () => {
         setGameHistory([]);
-        if(socket) socket.emit('get-game-history');
-    });
-    
+    }
+
     useEffect(() => {
-        if(!socket) return;
-        setGameHistory([]);
-        
+        userService.subscribe(updateHandler);
+
+        return () => {
+            userService.unsubscribe(updateHandler);
+        }
+    }, []);
+
+    useEffect(() => {
+        if(!socket) {
+            setGameHistory([]);
+            return;
+        }
         socket.emit('get-game-history');
 
         socket.on('update-game-history', (game) => {

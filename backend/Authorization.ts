@@ -134,5 +134,4 @@ class Authorization {
 
 }
 
-const auth = new Authorization();
-export default auth;
+export const authorization = new Authorization();
